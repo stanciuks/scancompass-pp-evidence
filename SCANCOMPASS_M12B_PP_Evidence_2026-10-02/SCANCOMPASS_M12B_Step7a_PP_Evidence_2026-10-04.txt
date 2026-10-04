@@ -1,0 +1,310 @@
+SCANCOMPASS — M12B STEP 7A PERSONAL PROJECT EVIDENCE
+Operator invite CLI — SOURCE PREPARATION ONLY
+Review date: 4 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M12B-7A SOURCE PREPARED ONLY. NOT EXECUTED. NOT MERGED. NOT DEPLOYED.
+The work exists as a DRAFT pull request against main and has not been merged.
+Production was not accessed or changed: no environment file was edited, no
+feature flag was flipped, no account or credential was created, no email was
+sent, and no live database was written. [S1,S2,S5]
+
+M12B-7 is separately recorded as COMPLETED AND ACCEPTED IN PRODUCTION; see
+SCANCOMPASS_M12B_Step7_PP_Evidence_2026-10-04.txt. This file covers only the
+source change that makes M12B-7A possible. It authorises nothing.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection. Reflection prompts are carried unanswered in section 10.
+
+1. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Branch: m12b7a-operator-invite
+Branch point / parent: 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca
+Commit: 4d0e9ba418303be8ea5e2c47a98f7b388d2bf4a2
+Subject: feat(m12b): add the operator invite CLI that unblocks M12B-7A
+Commit timestamp: 2026-10-04 21:55:18 UTC
+
+Pull request: #16
+Title: M12B-7A: operator invite CLI (prepare only — not executed, not merged)
+Base: main          Head: m12b7a-operator-invite
+Opened: 2026-10-04 21:55:57 UTC
+Draft: true         State: OPEN         Mergeable: MERGEABLE
+Commits in PR: 1
+Diff: 9 files changed, 2004 insertions, 0 deletions
+
+main remained at 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca throughout; nothing
+was pushed to it. [S1,S5]
+
+2. THE GAP THIS CLOSES
+
+M12B-7A needs ONE controlled operator account while public signup stays
+closed, and at the parent commit the source offered no way to obtain one.
+
+  Writer of account_signup_challenges — requestSignupChallenge — is reachable
+  only through POST /api/account/signup, whose FIRST statement is the signup
+  gate.
+
+  Writer of account_email_challenges — the password-reset path — requires an
+  account that does not exist yet.
+
+  Writer of accounts and the initial credential — completeSignup, reached
+  through POST /api/account/verify — is deliberately NOT gated, but it consumes
+  a challenge that cannot be created.
+
+So the completion half already worked. What was missing was any way to produce
+the challenge it consumes. The gate is a PUBLIC-REGISTRATION control, and an
+operator with shell access to the host and the application role's credentials
+is not the party it exists to stop — but nothing in the source expressed that
+distinction, so no path existed at all. [S3,S4]
+
+3. REJECTED ALTERNATIVES
+
+  Temporarily set ACCOUNT_SIGNUP_ENABLED=1 — opens registration to the entire
+  internet for as long as an operator's attention lasts, with unbounded
+  exposure and no artifact saying it happened.
+
+  Hand-write accounts and account_credentials rows in SQL — requires producing
+  an Argon2id digest by hand in the project's exact parameter string plus a
+  state value, a verification timestamp and a credential row the login service
+  will accept. Every one of those is a place to be silently wrong, and a wrong
+  row looks exactly like a right one until a login fails.
+
+  Generate a challenge token and INSERT it directly — duplicates the token
+  minter, the digest, the TTL and the cap, all free to drift from the product.
+
+  A new HTTP route behind a header, IP allowlist or one-time secret — a second
+  permanently deployed public attack surface, with its own origin check, rate
+  limit, client identity and audit story, for something done once.
+
+  A new table, migration or grant — migration 0002 is applied in production
+  and nothing about issuing one challenge needs new storage.
+
+  A new container image — unnecessary; the existing maintenance image already
+  contains the scripts and source tree. [S4]
+
+4. WHAT WAS ADDED
+
+Nine files, 2004 insertions, no deletions. Eight are new; one existing file
+received a single list entry.
+
+  scripts/account-invite.ts                            309 lines, new
+  scripts/src-alias-hook.mjs                           117 lines, new
+  deploy/account-invite.env.example                     79 lines, new
+  tests/unit/server/account-invite-cli.test.ts         447 lines, new
+  tests/unit/server/src-alias-hook.test.ts             137 lines, new
+  tests/integration/persistence-account-invite.test.ts 458 lines, new
+  docs/evidence/M12B7A_OPERATOR_INVITE_2026-10-04.md        new
+  docs/MILESTONES.md                                        appended
+  scripts/acceptance/m12b6-acceptance.mjs              +8 lines
+
+The application source tree src/** is UNTOUCHED. No HTTP route, no table, no
+migration, no grant, no schema change, no policy change, and no change to
+package.json, the lockfile or any Dockerfile. The build still reports 14
+/api/ routes, unchanged. [S1,S4]
+
+5. DESIGN OF THE CLI
+
+scripts/account-invite.ts is a one-shot operator command, not a route. It
+mirrors the signup route's order with the public gate removed and nothing else
+changed:
+
+  1. account-email delivery availability   — config only; unavailable => exit 2
+  2. application database availability      — config only; unavailable => exit 3
+  3. read ONE address from stdin
+  4. canonicalise it with the real parser
+  5. requestSignupChallenge(db, {entered, canonical, now})  <- TWO arguments
+  6. CREATED => send; a DEFINITE provider failure => discard the challenge
+  7. print "operator invite request completed"
+
+Step 5 passes TWO arguments, never three. The third parameter is the service's
+dependency bag, and omitting it is what guarantees the service's own token
+minter, digest, TTL, expiry sweep, per-address cap and per-address email lock
+are used — so the CLI cannot become a second challenge generator. A test
+asserts the argument count so this cannot regress.
+
+The CLI creates no account, no credential and no password. The operator still
+completes signup in a browser through the production verify route, proving
+mailbox control and choosing a password under the real policy. [S4]
+
+Both availability checks precede reading an address. At the route that ordering
+is the enumeration defence; here it additionally means an operator learns that
+mail is switched off BEFORE typing anything, rather than after a challenge row
+exists that nobody can receive.
+
+6. DISCLOSURE PROPERTIES
+
+  - the address arrives on stdin, never in command-line arguments, so it
+    reaches neither shell history nor the process table;
+  - at a terminal the prompt reads with echo suppressed and prints no
+    placeholder, because a row of asterisks would disclose the length;
+  - the three service outcomes — challenge created, account already exists,
+    live-challenge cap reached — produce BYTE-IDENTICAL output, so the tool
+    cannot answer whether an address already has an account;
+  - non-zero exits are operational only: each is a function of configuration
+    or of the SHAPE of the input, never of any address's state in the
+    database;
+  - nothing printed contains the address, the challenge secret, the challenge
+    identifier, the verification link, a connection string or a provider key.
+
+One divergence from the route is deliberate and stated rather than hidden: a
+MALFORMED address is refused instead of being collapsed into "accepted". The
+route collapses it because answering differently would tell an anonymous
+caller which spellings the server finds plausible; here the caller typed the
+address at their own terminal, so there is no enumeration oracle to protect,
+and silently accepting a typo would leave the operator waiting for a message
+that can never arrive. The refusal still never echoes what was typed. [S4]
+
+7. AUTHORITY BOUNDARY
+
+  Database role        the APPLICATION role only, through the same accessor
+                       the routes use, wrapping the same single pool.
+  Migration role       never. The migration-role variable name appears
+                       nowhere in the CLI's code; a test asserts this against
+                       comment-stripped source.
+  Superuser            never.
+  Schema changes       impossible — the live acceptance run observed the
+                       application role refused CREATE TABLE with SQLSTATE
+                       42501.
+  Direct writes        none. The CLI contains no SQL and no insert builder.
+  Credentials          none created. The password hasher and the signup
+                       completion function appear nowhere in it.
+  Reachability         nothing under src/** imports the script; a test globs
+                       the source tree and asserts the set is empty.
+  Signup gate          never consulted. The gate function, its module and its
+                       environment variable appear nowhere in the CLI's code.
+
+Environment separation follows the project's existing reasoning for the
+maintenance container. The already-deployed persistence environment file
+supplies the application role's database URL; a NEW narrow root-owned 0600
+file supplies account-mail configuration only. The main application
+environment file is NOT passed, so the one-shot never sees the reverse-proxy
+trust token, the report-recipient HMAC key or the scanner identity. A template
+containing no real values is committed. [S4]
+
+8. TESTS
+
+Real PostgreSQL 18.6, committed role/grant templates, real migrations, a
+disposable scratch database, and ACCOUNT_SIGNUP_ENABLED DELETED throughout —
+12 assertions, 12 passed:
+
+  - a challenge is issued with the signup flag absent, which is the gap;
+  - the connection is the application role, asked of the database rather than
+    inferred, and that role is refused CREATE TABLE with SQLSTATE 42501;
+  - with account mail off the command fails closed and creates nothing;
+  - the row carries a 32-byte digest, an expiry exactly 3,600,000 ms after
+    creation, a zero attempt count, the entered spelling preserved and the
+    canonical form lower-cased;
+  - the mailed capability is NOT recoverable from the stored row cast to text;
+  - the live-challenge cap is exact at 3 across four runs, with ONE distinct
+    answer and three outbound messages;
+  - an address that already has an account produces no row, no outbound
+    message and the same answer;
+  - a DEFINITE provider refusal removes the row; an INDETERMINATE answer
+    keeps it;
+  - the capability parsed out of the RECORDED PROVIDER PAYLOAD completes a
+    signup, creating exactly one account and consuming the challenge;
+  - the same capability cannot be used twice.
+
+The capability used for the completion proofs is read from the recorded
+provider payload rather than from a return value, so the thing proven usable is
+the link that would have gone to a mailbox. The single outbound boundary is
+replaced: no DNS lookup, no socket, and no message to any address.
+
+Hermetic suites: 31 of 31 and 6 of 6. These cover the disclosure properties
+with the service injected, including that stdin is NEVER read when mail is
+unavailable, terminal echo suppression with raw mode entered and then left,
+cancellation keys, a 4096-byte input bound, and nine source boundaries. The
+resolver-hook suite includes a NEGATIVE CONTROL proving the same import fails
+without the hook, so the claim is falsifiable rather than assumed. [S4]
+
+9. GATES AND REGRESSION POSTURE
+
+  git diff --check   clean
+  typecheck          0
+  lint               0
+  full test suite    188 files (187 passed, 1 skipped);
+                     7,151 tests — 6,814 passed, 337 skipped, 0 failed
+  production build   clean, 14 /api/ routes, unchanged
+
+The baseline at the branch point was 185 files and 7,102 tests. The delta is
+accounted for exactly by the three new suites. No existing test was modified,
+and no baseline failure was hidden. A load-sensitivity timeout recorded as an
+open observation during M12B-6 did not recur in any run.
+
+The full M12B-6 acceptance runner was re-executed against a fresh disposable
+PostgreSQL 18.6 and exited 0, with its combined guarded phase reporting 347
+passed across 14 files where the M12B-6 record shows 335 across 13 — a
+difference of exactly this change's 12 assertions and one file. That phase
+enumerates the integration directory with EXACT file membership, so the new
+suite was added to its required list; the refusal it would otherwise have
+produced is the check working, not a reason to loosen it. [S4]
+
+The intended production invocation was rehearsed in a LOCALLY BUILT copy of the
+maintenance image — no image change is needed — running read-only with all
+capabilities dropped, no new privileges, no published port, no container
+socket and no bind mount. It failed closed in both orders: exit 2 with mail
+unavailable and exit 3 with no database. Nothing was run against production.
+
+Known limitations, stated rather than hidden:
+  1. the resolver hook is a non-obvious startup flag an operator must not
+     forget; omitting it fails loudly, which is the mitigation rather than an
+     absence of risk;
+  2. the dependency bag is a test seam in a file that handles an address,
+     though production constructs the call without it;
+  3. the malformed-address divergence is the one place this command answers
+     something the route collapses;
+  4. a timing residual remains, as at the route;
+  5. one container-networking detail of the operator procedure is deliberately
+     left unsettled;
+  6. M12B-7A STILL REQUIRES a separate authorisation to enable account mail
+     for the one-shot. Production has it disabled today and the CLI correctly
+     refuses in that state. This change does not grant that authorisation.
+
+10. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+AI-assisted tools were used for design proposal, implementation of the CLI, the
+resolver hook, the three test suites and the environment template; for running
+the gates, the disposable-PostgreSQL suite, the acceptance runner and the
+container rehearsal; and for drafting the repository evidence document. Six
+real failures and corrections encountered during the work are recorded in that
+document rather than omitted.
+
+The branch is a DRAFT pull request specifically so that owner review happens
+before anything reaches main. No AI-assisted change was merged or deployed.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. Nothing in this file is a reflection.
+
+  1. Why was the missing operator-account path treated as a source gap to fix
+     rather than something to work around with direct SQL?
+  2. What is the difference between bypassing the public signup GATE and
+     bypassing the signup SERVICE, and why does only one of those preserve the
+     system's guarantees?
+  3. Why does the command deliberately give the same answer for "challenge
+     created" and "account already exists"?
+  4. Why was a draft pull request the right place for this work to stop?
+
+11. SOURCE LOCATORS
+
+[S1] Commit 4d0e9ba418303be8ea5e2c47a98f7b388d2bf4a2 on branch
+     m12b7a-operator-invite in stanciuks/site-security, parent
+     66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca.
+[S2] GitHub pull request stanciuks/site-security#16, draft, open, unmerged;
+     metadata as recorded in section 1.
+[S3] At the parent commit: src/app/api/account/signup/route.ts,
+     src/app/api/account/reset/route.ts, src/app/api/account/verify/route.ts,
+     src/server/account/signup.ts and src/server/account/signup-gate.ts — the
+     modules whose ordering produces the gap in section 2.
+[S4] docs/evidence/M12B7A_OPERATOR_INVITE_2026-10-04.md and the M12B-7A entry
+     in docs/MILESTONES.md, both at commit 4d0e9ba.
+[S5] Branch comparison 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca to
+     4d0e9ba418303be8ea5e2c47a98f7b388d2bf4a2.
+
+No credential, challenge token, session token, password, capability value,
+email address, database URL, host identifier or provider API key appears in
+this evidence note. No production system was contacted in the course of the
+work this note records.
+
+END OF EVIDENCE

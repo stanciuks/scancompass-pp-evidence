@@ -1,0 +1,320 @@
+SCANCOMPASS — M12B STEP 7 PERSONAL PROJECT EVIDENCE
+Staged production migration and closed-gate account deployment
+Review date: 4 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M12B-7 COMPLETED AND CLOSED IN PRODUCTION.
+Migration 0002 is applied, the M12B account/session schema is live, the M12B
+candidate application is deployed, and anonymous scanning is enabled and
+re-proven. Public signup, account email and report email all remain CLOSED.
+No account exists, no credential exists and no email was sent. [R1,S4]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection. Reflection prompts are carried unanswered in section 11; they must
+be written separately in the student's own words.
+
+1. REVIEWED VERSION AND DEPLOYED STATE
+
+Repository: stanciuks/site-security
+Deployed commit: 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca
+Subject: fix(m12b): await restart-child handoff before cleanup
+Deployment date: 4 October 2026
+
+The deployed checkout was detached at that commit and clean. No source change
+was made as part of M12B-7; the step deployed the already-approved M12B-6
+source. [S1,S4]
+
+2. PURPOSE OF THE STEP
+
+Deploy the M12B account/session foundation to production while:
+  - preserving the existing anonymous free scan;
+  - keeping public signup closed;
+  - keeping account-email delivery closed;
+  - keeping report-email delivery closed;
+  - preserving least-privilege database ownership and grants;
+  - proving backup recovery BEFORE the schema change;
+  - keeping a verified rollback path for the application deployment. [R1]
+
+3. EVIDENCE PROVENANCE
+
+This summary was assembled from three sources:
+  1. operator terminal output from the production migration and deployment
+     work carried out on 4 October 2026;
+  2. the committed repository state at the deployed commit;
+  3. independent review of the deployment wrappers and of the production
+     acceptance results. [R1,S1]
+
+4. PRE-DEPLOYMENT HARD GATES
+
+A fresh encrypted production backup was created and observed off-host. The
+exact uploaded object was then retrieved through the read-only restore path and
+its ciphertext identity matched the uploaded object. Decryption happened only
+on the operator workstation. [R1]
+
+The backup was restored into an isolated disposable PostgreSQL 18.6 instance
+and validated:
+  - 7 pre-M12B schema tables present;
+  - migration ledger exactly 0000 + 0001, with the committed checksums;
+  - restored row relationships had ZERO orphan counts;
+  - frozen report artifact byte sizes and SHA-256 values matched;
+  - the disposable database and container, the downloaded ciphertext and the
+    decrypted plaintext were all destroyed afterwards.
+
+Recovery verification exited 0. The schema change was not attempted until this
+gate had passed. Proving that the backup RESTORES is a different claim from
+proving that a backup FILE exists, and only the former is a recovery
+guarantee. [R1]
+
+5. PRODUCTION MIGRATION
+
+Migration applied: 0002_m12b_accounts_sessions
+Committed checksum:
+  1b7a8305a25c0fb6028ff02a30e1d0db491a8dedc8d14356603154e3ac1580ca
+
+Observed result:
+  migrations ok  applied=1  skipped=2
+
+Post-migration ledger, in order:
+  0000_m11_persistence
+  0001_report_deliveries_fk_indexes
+  0002_m12b_accounts_sessions
+
+Post-migration table count: 12
+
+New M12B tables:
+  accounts
+  account_credentials
+  sessions
+  account_signup_challenges
+  account_email_challenges
+
+Immediately after the migration all five new tables contained 0 rows. The
+migration was executed as the dedicated migration role; the superuser was not
+used to bypass the migration-role design. [R1,S4]
+
+6. OWNERSHIP AND LEAST PRIVILEGE
+
+All 12 tables remained owned by the migration role, scancompass_migrator.
+
+Application-role privileges on the new tables:
+  accounts                     INSERT, SELECT, UPDATE
+  account_credentials          DELETE, INSERT, SELECT, UPDATE
+  sessions                     DELETE, INSERT, SELECT, UPDATE
+  account_signup_challenges    DELETE, INSERT, SELECT, UPDATE
+  account_email_challenges     DELETE, INSERT, SELECT, UPDATE
+
+Negative controls, each verified rather than assumed:
+  - accounts had NO DELETE privilege;
+  - the application role had NO privilege on schema_migrations;
+  - application schema privileges remained USAGE=true, CREATE=false;
+  - PUBLIC had no table, column, schema or sequence privilege;
+  - the default ACL baseline remained none;
+  - all 8 indexes declared by 0002 were present;
+  - the 3 expected ON DELETE CASCADE foreign keys were present. [R1]
+
+The PUBLIC checks are recorded separately because an earlier draft of the
+verification queried a catalogue view that omits privileges granted to the
+PUBLIC pseudo-role, so a reported zero would have been vacuous. The corrected
+queries observe PUBLIC directly. [R1]
+
+7. APPLICATION DEPLOYMENT
+
+Reviewed candidate application image:
+  sha256:a48a7b7acf5bb9bd55953c028020e03b4df6976b38435b035cb7d64574e63b4b
+Reviewed candidate maintenance image:
+  sha256:dfcf129860eb2c6da452557a4e293d5eb75499766722eb20234a2803fa32b7ed
+
+Production configuration after successful deployment:
+  SCAN_PRODUCTION_ENABLED=1
+  ACCOUNT_SIGNUP_ENABLED=0
+  ACCOUNT_EMAIL_ENABLED=0
+  EMAIL_DELIVERY_ENABLED=0
+  DATABASE_MIGRATION_URL absent from the application
+
+The scanner and PostgreSQL containers were not recreated by the application
+deployment. [R1]
+
+8. FIRST ATTEMPT — FAIL-CLOSED ROLLBACK
+
+The first candidate deployment itself reached a healthy state:
+  - candidate image running, restart count 0, no OOM;
+  - /api/health returned 200 with {"status":"ok"};
+  - launch readiness: productionScanningEnabled=true, readyForProduction=true,
+    blockerCount=0;
+  - persistence readiness: READY / OK / m12b-0002;
+  - scanner-worker readiness: READY / OK;
+  - the signup and reset API routes both returned the committed closed-gate
+    503 response;
+  - all five account tables remained empty.
+
+The acceptance wrapper then requested GET /account/login and observed 404.
+
+Independent source review established that this was an ACCEPTANCE TEST ERROR,
+not an application fault:
+  - the real sign-in page is /account;
+  - /account/login does not exist by design;
+  - /account/reset does exist.
+
+The wrapper treated the unexpected 404 as a post-deployment failure and
+executed the pre-designed rollback rather than waiving the discrepancy.
+
+Observed rollback result: ROLLBACK_CONFIRMED
+
+Rollback proof included:
+  - exact pre-stage application environment bytes restored and compared;
+  - root:root 0600 environment-file posture restored;
+  - known-good application and maintenance local tags restored;
+  - the application tag verified as the known-good image BEFORE recreation;
+  - the old application recreated and healthy;
+  - SCAN_PRODUCTION_ENABLED still 1;
+  - health 200 with the expected payload;
+  - scanner identity unchanged;
+  - database identity unchanged;
+  - migration 0002 intentionally left in place.
+
+This is useful evidence of a fail-closed deployment process: an incorrect
+acceptance assumption was not waived, and production was returned to the
+known-good application while the discrepancy was investigated. The database was
+NOT rolled back and is not claimed to have been. [R1]
+
+9. CORRECTED DEPLOYMENT AND CLOSED-GATE ACCEPTANCE
+
+The corrected wrapper changed only the invalid UI probe:
+  /account/login -> /account
+
+The second deployment passed.
+
+Observed final application state:
+  - candidate application image running, restart count 0, OOM=false;
+  - application listener loopback-only on port 3000;
+  - no host listener on the database port;
+  - no host listener on the scanner port;
+  - scanner container unchanged;
+  - database container unchanged.
+
+Readiness:
+  productionScanningEnabled=true
+  readyForProduction=true
+  blockerCount=0
+  launch_blocker absent
+  persistence status=READY, reason=OK
+  expectedSchemaContract=m12b-0002
+  scanner-worker status=READY, reason=OK
+
+Closed-gate route acceptance. Before AND after the route probes:
+  accounts=0
+  account_credentials=0
+  sessions=0
+  account_signup_challenges=0
+  account_email_challenges=0
+
+Route results:
+  POST /api/account/signup  -> 503 + committed TEMPORARILY_UNAVAILABLE payload
+  POST /api/account/reset   -> 503 + committed TEMPORARILY_UNAVAILABLE payload
+  GET  /api/session         -> 200 {"authenticated":false}
+  GET  /account             -> 200
+  GET  /account/reset       -> 200
+  Set-Cookie headers from the acceptance probes -> 0
+
+The database ownership, grant, PUBLIC and default-ACL posture was re-proven
+after deployment and remained unchanged. [R1]
+
+10. OWNER-AUTHORISED ANONYMOUS SCAN
+
+A single owner-authorised production scan of the project's own domain,
+scancompass.com, was run after deployment.
+
+Observed durable scan:
+  hostname  scancompass.com
+  state     COMPLETED
+  score     89
+  grade     B
+  qualifying persisted owner scans in the verification window: 1
+
+After the scan all five M12B account/session/challenge tables still contained
+0 rows, and the runtime was unchanged: candidate image still running,
+running=true, health=healthy, restart count=0, OOM=false, /api/health
+{"status":"ok"}. [R1]
+
+11. RESULT, AND THE GAP FOUND IMMEDIATELY AFTER
+
+M12B-7 is CLOSED. Production now has migration 0002 applied, the M12B
+account/session schema live, the M12B candidate application live, anonymous
+scanning enabled and re-proven, and public signup, account email and report
+email all closed.
+
+A source audit for the next step then found that the controlled operator
+account required by M12B-7A CANNOT be created while public signup remains
+closed. At the deployed commit:
+  - the only signup-challenge insertion path is reached through
+    POST /api/account/signup;
+  - that route returns before challenge creation while
+    ACCOUNT_SIGNUP_ENABLED=0;
+  - password-reset challenge creation requires an existing account;
+  - there are no accounts;
+  - /api/account/verify can complete a valid signup challenge but cannot
+    mint one;
+  - there is no committed operator-account or invite CLI.
+
+The result is a closed loop:
+    no account       -> reset cannot mint a challenge
+    signup closed    -> signup cannot mint a challenge
+    verify           -> needs a challenge that cannot exist
+
+This was treated as a SOURCE / PRODUCT GAP rather than bypassed with
+hand-written SQL. The recommended smallest fix was a reviewed one-shot
+operator invite CLI reusing the existing signup-challenge service and delivery
+path while bypassing only the public signup HTTP gate — no schema change, no
+public route expansion, and no direct credential or challenge-row fabrication.
+That fix is recorded separately as M12B-7A. [S3,S4]
+
+12. AI AND TOOLING TRANSPARENCY
+
+AI-assisted tools were used for implementation support, operator-wrapper
+construction, independent wrapper review, source inspection, and test-case
+generation and review.
+
+The operator personally reviewed every command before production execution,
+entered credentials privately, ran the production commands, performed the
+owner-authorised browser scan, and supplied the observed outputs for
+independent review. [R1]
+
+13. STUDENT REFLECTION PROMPTS — NOT WRITTEN REFLECTION
+
+These are carried forward UNANSWERED and must be written later in the
+student's own words. Nothing in this file should be read as a reflection.
+
+  1. Why was proving restoreability more important than merely proving that a
+     backup file existed?
+  2. What did the failed /account/login acceptance probe show about fail-closed
+     deployment design?
+  3. Why was migration 0002 left in place during application rollback?
+  4. Why is the missing operator-account path being fixed in source instead of
+     bypassed with SQL?
+  5. How did separating public signup, account email and report email into
+     independent gates reduce deployment risk?
+
+14. SOURCE LOCATORS
+
+[S1] Commit 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca in
+     stanciuks/site-security, and its committed tree.
+[S2] db/migrations/0002_m12b_accounts_sessions and the migration ledger table
+     scancompass.schema_migrations.
+[S3] src/app/api/account/signup/route.ts, src/app/api/account/reset/route.ts
+     and src/app/api/account/verify/route.ts at that commit — the routes whose
+     ordering produces the closed loop in section 11.
+[S4] docs/evidence/M12B6_ACCEPTANCE_2026-10-03.md and docs/MILESTONES.md at
+     that commit.
+[R1] Operator terminal output from the production migration, deployment,
+     rollback, corrected deployment, closed-gate acceptance and
+     owner-authorised scan carried out on 4 October 2026, supplied by the
+     operator for independent review. Raw operator transcripts, host
+     identifiers, credentials, connection strings, backup object names and
+     provider keys are deliberately NOT reproduced here.
+
+No production credential, challenge token, session token, password, capability
+value, email address, database URL, host identifier or provider API key appears
+in this evidence note.
+
+END OF EVIDENCE
