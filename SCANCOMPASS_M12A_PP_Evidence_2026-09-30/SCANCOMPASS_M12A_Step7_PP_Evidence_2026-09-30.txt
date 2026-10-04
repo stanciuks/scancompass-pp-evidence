@@ -1,0 +1,181 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 30 September 2026
+
+ACADEMIC-INTEGRITY / TIMING NOTE
+This record was created on 30 September 2026 after the implementation step had been completed,
+committed, pushed, and independently reviewed against the repository state. It is a technical
+evidence record, not a substitute for the student's own Process Journal reflection.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-7 — Scanner-worker readiness + structural independence
+STATUS: COMPLETE
+
+IMPLEMENTATION COMMIT:
+- 6a4b48165314e7e284d58b02bc25eeb1c75ee120
+
+CORRECTIVE COMMIT:
+- 0f65fe313379410db681fcc2da8ff9d1bbfa791f
+
+PURPOSE
+Add one private boot-time observation of scanner-worker availability without turning worker
+availability into a production launch control or coupling it to persistence readiness.
+
+THREE DISTINCT READINESS DOMAINS
+1. launch_readiness
+   - authorization/configuration
+   - answers whether production scanning is permitted/configured
+
+2. persistence_readiness
+   - optional durability subsystem
+   - observes whether durable report storage is available
+
+3. scanner_worker_readiness
+   - runtime availability observation
+   - observes whether the worker was serving HTTP at application startup
+
+The scanner worker is NOT a thirteenth launch control. A runtime restart/outage is treated as
+availability "weather", not deployment misconfiguration. Runtime scan-time worker failure remains
+handled by M12A-5 as an opaque public SCAN_DISABLED response.
+
+READINESS PROBE
+New server-only module:
+- src/server/assessment/worker-readiness.ts
+
+Production probe:
+- fixed worker service: scanner
+- fixed port: 8787
+- fixed path: /healthz
+- GET only
+- no redirects
+- no scan command
+- no target hostname
+- no scanner identity
+- no target traffic
+- no environment-configurable destination
+
+Health response contract:
+{"status":"ok"}
+
+The response is validated strictly so /healthz cannot quietly expand into a configuration,
+capacity or identity endpoint.
+
+BOUNDS
+- absolute health-probe timeout: 2,000 ms
+- bounded response body: 240 bytes
+- no inactivity-only timeout
+- no retry
+- no polling
+- no recurring background monitor
+- no cache
+
+The body limit is derived from the fixed 15-byte health JSON payload with 16x headroom rather
+than reusing the much larger scan-result bound.
+
+RESULT VOCABULARY
+Status:
+- READY
+- UNAVAILABLE
+
+Stable code-owned reasons:
+- OK
+- PROBE_TIMEOUT
+- CONNECT_FAILED
+- UNEXPECTED_HTTP_RESPONSE
+- MALFORMED_HEALTH_RESPONSE
+- RESPONSE_TOO_LARGE
+- PROBE_ERROR
+
+No arbitrary error message, response body, response header, address, stack or target-derived
+string is included in the readiness log payload.
+
+STARTUP DETACHMENT
+src/instrumentation.ts now starts persistence and scanner-worker readiness as two separate detached
+tasks after launch readiness/blockers have already been emitted.
+
+There is no Promise.all, Promise.allSettled or Promise.race joining the two probes.
+
+Each task:
+- is not awaited by register();
+- owns its own rejection handling;
+- cannot block application startup;
+- emits at most one settled readiness outcome;
+- cannot suppress the other task's outcome.
+
+THREE-WAY INDEPENDENCE EVIDENCE
+Tests explicitly prove:
+- scanner probe that never settles does not stop persistence readiness logging;
+- persistence probe that never settles does not stop scanner-worker readiness logging;
+- worker availability does not alter launch_readiness;
+- persistence state does not alter scanner-worker readiness;
+- incomplete launch controls do not suppress the worker observation or turn it into a blocker;
+- launch readiness/blockers are emitted before either detached probe.
+
+LAUNCH-CONTROL INVARIANCE
+The launch-control inventory remains exactly the existing 12 controls.
+
+Scanner-worker liveness does not enter:
+- evaluateLaunchControls()
+- getLaunchReadiness().controls
+- getLaunchReadiness().blockers
+- scanExecutionGate()
+- readyForProduction
+
+PUBLIC SURFACE
+/api/health remains the same deliberately uninformative public liveness response:
+{"status":"ok"}
+
+No /api/readiness, /api/scanner-health or /api/worker-health route was added.
+The public API surface remains seven routes.
+
+STRUCTURAL NETWORK BOUNDARY
+The readiness module receives its own one-file node:http exemption.
+Compensating tests assert that it:
+- uses only the fixed worker health destination;
+- performs GET only;
+- exposes no general URL/path/method/protocol API;
+- follows no redirects;
+- sends no command/identity/target;
+- reaches no scanner target-network module;
+- uses no global fetch.
+
+M12A-7 CORRECTION
+Owner review found a timing-source mismatch in the first implementation.
+
+The module documented probeDurationMs as monotonic but originally defaulted to Date.now(), which
+is a wall clock and can jump during NTP/manual clock correction.
+
+The corrective commit changed the default to the repository's existing convention:
+- performance.now()
+- duration rounded to whole milliseconds
+- duration clamped to non-negative values
+
+Regression tests now pin:
+- no Date.now() production timing in the readiness module;
+- performance.now() as the default;
+- injected test clock still honoured;
+- whole non-negative milliseconds;
+- a backwards-moving injected clock cannot produce a negative duration;
+- fractional durations are rounded.
+
+SCOPE PRESERVATION
+The corrective commit changed only:
+- src/server/assessment/worker-readiness.ts
+- tests/unit/server/worker-readiness.test.ts
+
+No Compose, Dockerfile, worker runtime, launch-control, public-route or instrumentation behavior
+changed in the correction.
+
+PRODUCTION SAFETY
+No production contact or deployment.
+No live Docker/network/firewall change.
+M12A-8 had not started at the time this evidence record was written.
+
+PP / ATL VALUE
+This step is useful evidence for:
+- systems thinking: separating configuration readiness from runtime availability;
+- organization: keeping three independent subsystems observable without coupling them;
+- testing: proving cross-failure combinations, not only happy paths;
+- reflection: noticing that a documented monotonic-duration guarantee was contradicted by the
+  implementation and correcting it to match the project's existing timing convention.

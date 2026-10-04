@@ -1,0 +1,140 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 30 September 2026
+
+ACADEMIC-INTEGRITY / TIMING NOTE
+This record was created on 30 September 2026 after M12A-8 had completed, been committed, pushed,
+and independently reviewed against the repository state. It is a technical evidence record, not a
+substitute for the student's own Process Journal reflection.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-8 — Complete non-Docker verification gate
+STATUS: COMPLETE
+
+COMMIT
+- 025208f9eb62675eb8fd99a65f812f6e32e56f35
+
+PURPOSE
+Run the complete locally runnable M12A acceptance gate after Steps 1–7 and verify that protocol,
+identity, worker runtime, web orchestration, cancellation, Compose structure and readiness behavior
+still operate together correctly before disposable Docker acceptance.
+
+REAL DEFECT DISCOVERED BY THIS GATE
+The consolidated production build exposed an M12A-7 integration defect.
+
+Next compiles src/instrumentation.ts for both the Node and Edge runtimes. The M12A-7 scanner
+readiness reporter was a top-level function that dynamically imported worker-readiness.ts itself.
+Turbopack traced that import while building the Edge branch and reached worker-readiness.ts's
+node:http import.
+
+Build warning:
+A Node.js module is loaded ('node:http') which is not supported in the Edge Runtime.
+
+The build still completed, which is why the earlier step did not fail outright, but the warning
+showed that the Edge instrumentation trace had crossed into a Node-only raw-network module.
+
+FIX
+Both persistence and scanner-readiness module import expressions now sit lexically inside the:
+NEXT_RUNTIME === "nodejs"
+guard.
+
+Each detached reporter receives a loader function and performs the load inside its own try block.
+
+This preserves:
+- task-owned import failure handling;
+- detached execution;
+- exactly-once logging;
+- three-way independence;
+- worker readiness remaining outside launch controls.
+
+A structural test now pins that both value-position readiness imports remain inside the Node
+runtime guard and do not reappear inside the top-level reporters.
+
+COMPLETE GATE RESULTS
+- git diff --check: clean
+- pnpm typecheck: zero errors
+- pnpm lint: zero errors, zero warnings
+- pnpm test:run:
+  - 141 test files
+  - 5,479 passed
+  - 128 skipped
+  - 0 failed
+- pnpm build:
+  - succeeds
+  - zero warnings
+  - exactly 7 public API routes
+- pnpm build:worker:
+  - succeeds
+  - 157 inputs
+  - 1,288,833-byte bundle
+  - existing bundle authority/security assertions pass
+
+SKIP CLASSIFICATION
+No M12A acceptance test was skipped.
+
+All 128 skipped tests belong to five real-PostgreSQL persistence integration files and require a
+disposable PostgreSQL environment / destructive-test opt-in. They are M11 persistence acceptance,
+not hidden M12A checks.
+
+M12A acceptance total:
+- 21 acceptance files
+- 1,782 tests passed
+- 0 skipped
+- 0 failed
+
+CONSOLIDATED AUTHORITY REVIEW
+Measured import-graph review recorded:
+- 122 web modules reach no scanner engine, scanner transport, scanner resolver, RDAP client,
+  TLS target probe or parse5;
+- 15 worker modules reach no src/server, app, component, pg, drizzle, next or react;
+- 19 launch modules reach no persistence, worker client or worker readiness;
+- src/worker/execute-scan.ts remains the only scanner target-network orchestrator;
+- launch control inventory remains exactly 12;
+- public API surface remains exactly 7 routes.
+
+COMPOSE INVARIANCE
+M12A-6 topology remains:
+- 4 services
+- 4 networks
+- scanner_egress fixed at 10.83.6.0/29
+- no active app_egress
+
+LOGGING / PRIVACY
+- WorkerLogRecord still has no hostname field.
+- Scanner readiness logs still contain only code-owned readiness fields.
+- Scanner readiness reads no arbitrary exception text into logs.
+
+TRANSITIONAL-SCAFFOLDING AUDIT
+Confirmed absent from production code:
+- productionCapabilities
+- AssessmentCapabilities
+- AssessmentContext.capabilities
+- duplicate web-side scanner network orchestrator
+- temporary M12A-4 generic worker failure behavior
+- worker env template
+- active app_egress
+- thirteenth launch control
+- public worker/readiness endpoint
+
+PRODUCTION / DOCKER SAFETY
+This was a non-Docker verification step:
+- no production contact
+- no SSH
+- no production container start
+- no Docker network mutation
+- no firewall change
+- no resource measurement
+- no production secret read
+- M12A-9 not started during this step
+
+PP / ATL VALUE
+This step is strong evidence for:
+- testing and quality assurance: a build-only integration defect was found after narrower tests had
+  passed;
+- critical thinking: a successful build was not treated as sufficient when it emitted a meaningful
+  runtime-boundary warning;
+- reflection: the defect was traced to module reachability, fixed at the architectural seam, and
+  protected with a structural regression test;
+- organization: the project used a dedicated stabilization gate before moving into disposable
+  environment acceptance.

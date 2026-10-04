@@ -1,0 +1,244 @@
+SCANCOMPASS — M11 STEP 2 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-25
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Repository / production-edge reconciliation
+
+EVIDENCE PROVENANCE
+This note was created on 2026-09-25 from:
+1. the Step 2 production read-only collection output pasted into ChatGPT;
+2. the Claude Code Step 2 completion report pasted into ChatGPT; and
+3. the committed GitHub record for commit
+   1f25c6b07c0ba2c4408a7302eb1b8ce84ec4f0d2.
+
+This is a factual evidence summary. It is not a reconstructed terminal screenshot
+and not a Personal Project reflection.
+
+PURPOSE
+Bring the repository's non-secret nginx configuration into agreement with the
+current production edge before any new M11 edge changes are designed.
+
+BASELINE / PRECONDITIONS
+Before the Step 2 commit:
+- branch: main
+- HEAD: 76cd1117b9ba6be58d8172fd775cc803e61346e4
+- formal PP baseline tag: pp-start-2026-09-24
+- tag target: 987f54cf7ccd76007611e1a1b0356d2e03013194
+- production application source remained unchanged
+- M11 functional/product implementation had not started
+
+PRODUCTION COLLECTION — READ ONLY
+The production host was used only for read-only collection.
+
+Approved non-secret files collected:
+- /etc/nginx/sites-available/site-security.conf
+- /etc/nginx/conf.d/10-site-security-limits.conf
+
+Safety constraints:
+- nginx -T was never run
+- /etc/nginx/conf.d/00-site-security-secret.conf was never directly
+  read, hashed, diffed, or printed
+- no environment file was read or written
+- no application request was made
+- no /api/scan request was made
+- no production configuration was modified
+- no reload/restart was performed
+- no PostgreSQL action occurred
+
+Observed production facts:
+- nginx version: nginx/1.24.0 (Ubuntu)
+- sites-enabled/site-security.conf is a symlink to
+  /etc/nginx/sites-available/site-security.conf
+- exactly one site was enabled
+- conf.d contained only:
+  00-site-security-secret.conf
+  10-site-security-limits.conf
+- both approved files passed the content-safety gate
+- nginx -t exit code: 0
+- syntax summary detected: yes
+- successful-test summary detected: yes
+- failed-test summary detected: no
+
+FINDINGS
+1. The live rate-limit file was byte-identical to the repository:
+   SHA-256:
+   5ab9fb21b2b5ab40256c551352b6c54c55a225bdf3a74b8a67907e0514853ef1
+   No content change was required.
+
+2. The live site-security.conf differed from the repository template because:
+   - the live hostname had been substituted for the template placeholder; and
+   - production already contained the M10D security.txt exact-match block.
+
+3. After normalising:
+   scancompass.com -> REPLACE_WITH_PUBLIC_HOSTNAME
+   and comparing active directives:
+   - live active directives: 92
+   - patched repository active directives: 92
+   - differences: 0
+
+4. Therefore, the only genuine functional delta was the already-live M10D block:
+
+   location = /.well-known/security.txt {
+       alias /var/www/well-known/security.txt;
+       types { }
+       default_type "text/plain; charset=utf-8";
+   }
+
+5. The security.txt body itself remains host-owned and was not copied into Git.
+
+REPOSITORY CHANGE
+The Step 2 commit changed exactly five paths:
+
+Modified:
+- deploy/nginx/sites-available/site-security.conf
+- docs/M11_PERSISTENCE_IMPLEMENTATION.md
+- docs/MILESTONES.md
+- docs/ROADMAP.md
+
+Added:
+- tests/unit/deploy/nginx-edge-reconciliation.test.ts
+
+Repository behavior changes:
+- the template gained the already-live exact-match security.txt location
+- template comments were made substitution-safe
+- no /r/, /api/reports/, or reports_per_ip M11 edge additions were added
+- no application source or dependency changed
+- the limits file remained unchanged
+
+Documentation status after Step 2:
+- Step 0 complete — measurement only
+- Step 1 complete — documentation/design reconciliation
+- Step 2 complete — repository/production-edge reconciliation
+- Steps 3–15 not started
+- M11 functional/product implementation still not started
+
+TESTS / VALIDATION
+Immediately before commit:
+- tests/unit/deploy/: PASS
+- 2 deploy test files
+- 47 deploy tests
+- pnpm typecheck: PASS
+- pnpm lint: PASS
+- pnpm test:run: PASS
+- 73 test files
+- 2,966 tests
+- pnpm build: PASS
+- documentation link check: 0 broken
+- required anchors resolved
+- active-directive fingerprint:
+  92 directives
+  SHA-256:
+  07846e7d612170165c02579aff211aedce42fbef4261e83ccd0a778c34a4cf50
+
+The new nginx reconciliation test file added 16 tests for:
+- exact-match security.txt location
+- alias path
+- types { }
+- default_type
+- no add_header in the block
+- no proxy_set_header in the block
+- no limit_req in the block
+- hidden-file deny preserved
+- ACME location preserved
+- trust-boundary headers preserved
+- scan rate limits preserved
+- limits-file hash pinned
+- hostname-placeholder discipline
+- scope guard preventing Step 14 M11 edge additions from appearing early
+
+COMMIT
+Full SHA:
+1f25c6b07c0ba2c4408a7302eb1b8ce84ec4f0d2
+
+Subject:
+chore: reconcile nginx template with production edge
+
+Push:
+- origin/main fast-forwarded from 76cd111 to 1f25c6b
+- no force push
+- no tag operation
+
+Post-push:
+- local main == origin/main
+- working tree clean
+- pp-start-2026-09-24 still points to 987f54c
+- one tag only; none added or moved
+
+GITHUB VERIFICATION
+The GitHub commit record independently confirms:
+- commit SHA:
+  1f25c6b07c0ba2c4408a7302eb1b8ce84ec4f0d2
+- subject:
+  chore: reconcile nginx template with production edge
+- exactly five changed paths
+- compare from 76cd111 to 1f25c6b is one commit ahead, zero behind
+
+PRODUCTION IMPACT
+None.
+No deployment is required.
+Production already contained the security.txt block; Step 2 brought the
+repository template into agreement with the running edge.
+
+FAILURES / CHANGES DURING REVIEW
+1. Initial collection-script wording incorrectly implied nginx -t did not read the
+   secret include. In reality nginx -t parses the active include graph internally.
+   The guarantee was rewritten precisely: no secret content is directly collected
+   or printed.
+
+2. The first nginx -t filter could have leaked an entire raw error line if that line
+   contained both a secret and the phrase "test failed".
+   It was redesigned so raw nginx -t text never reaches stdout; only locally-authored
+   yes/no/integer summaries are emitted.
+
+3. A content-safety gate was added before either live config file could be printed.
+   If either approved file failed the gate, neither full file would be emitted.
+
+4. hash_file initially allowed a failed sha256sum pipeline to appear as a blank
+   successful hash because awk supplied the pipeline exit status.
+   This was detected during end-to-end testing and corrected.
+
+5. The live installed template had misleading comments after hostname substitution,
+   including wording equivalent to "scancompass.com cannot resolve".
+   Repository comments were rewritten to describe "the placeholder" generically,
+   without changing active behavior.
+
+6. The first new test incorrectly treated the existing SCANCOMPASS_TLS shared-memory
+   zone label as a hostname occurrence.
+   The test was narrowed to scancompass.com and the zone label was deliberately
+   preserved.
+
+7. The initial security.txt MIME explanation overstated what would happen without
+   types { }.
+   It was corrected to state only that types { } clears inherited
+   extension-to-MIME mappings so the explicit default_type is authoritative.
+
+8. No production state changed during Step 2.
+
+EVIDENCE POINTS WORTH PRESERVING
+- production read-only collection transcript
+- both content-safety gates PASS
+- nginx -t exit code 0
+- 10-site-security-limits.conf live/repo matching hash
+- 92-vs-92 active-directive comparison with 0 differences
+- GitHub commit 1f25c6b07c0ba2c4408a7302eb1b8ce84ec4f0d2
+- five-file commit diff
+- new edge reconciliation tests
+- unchanged PP baseline tag
+
+PERSONAL PROJECT VALUE
+This step can support evidence for:
+- Organization: repository state was reconciled before new implementation.
+- Critical thinking: several subtle security and evidence-quality defects were
+  identified during review and corrected before commit.
+- Testing: the final edge state is protected by explicit tests, including negative
+  cases and mutation checks.
+- Academic integrity / process transparency: the formal PP baseline remained
+  unchanged, and post-baseline work is time-stamped and separated from prior work.
+- Security engineering: the work preserved secret boundaries while still producing
+  verifiable evidence.
+
+ACADEMIC-INTEGRITY NOTE
+This is a factual evidence summary. It is not a Personal Project reflection and
+should not be submitted as if it were the student's own reflective writing.
+Any reflection/report paragraph based on this evidence should be written by the
+student in their own words.

@@ -1,0 +1,97 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-4 — App-side worker client + orchestration cut
+STATUS: COMPLETE
+COMMIT
+- de9baade2534757fbee28b4e141b7678f4542822
+
+PURPOSE
+Move production scan execution out of the web assessment process and through the private scanner
+worker boundary while keeping scoring/report composition web-side.
+
+IMPLEMENTED
+- Created server-only app-side worker HTTP client.
+- Created shared pure worker endpoint constants.
+- Production endpoint fixed to scanner:8787, POST /scan, application/json.
+- Client accepts a worker command, not an arbitrary URL.
+- No redirects.
+- Worker response is bounded, parsed, strictly schema-validated and executionId-correlated.
+- One executionId now correlates admission log -> worker command -> worker log -> result ->
+  completion log.
+- productionCapabilities deleted from web orchestration.
+- AssessmentCapabilities deleted.
+- AssessmentContext.capabilities deleted.
+- AssessmentContext.newExecutionId deleted; execution ID ownership moved to admission.
+- Web-side runAssessment no longer constructs scanner network transports/resolvers/RDAP/TLS probes.
+- Scoring and report composition remain web-side and still execute exactly once.
+
+DERIVED WORKER-RESULT BOUND
+MAX_WORKER_RESULT_BYTES = 546,816.
+
+The bound was derived from source constraints rather than restoring the rejected 1 MiB guess:
+2 × (
+  42 × (512 + 16 × (256 + 64))
+  + 32 KiB
+  + 4 KiB
+)
+
+Measured hostile maximum during the bound test: 43,718 bytes.
+No unbounded result path was found.
+
+GOLDEN EQUIVALENCE
+A deterministic rich public report was generated from the pre-cut and post-cut implementations.
+Both were 77,003 bytes and produced the same SHA-256:
+06626efbe17820c9a56ff7c75b1a68e6554b1a6e62bbb2fd43c5601fdb90ded9
+Result: BYTE-FOR-BYTE IDENTICAL.
+
+REAL APP↔WORKER INTEGRATION
+17 real loopback-HTTP integration tests covered valid command/result flow, executionId round-trip,
+remaining budget, malformed/oversized/unavailable worker responses and typed refusals.
+
+WEB AUTHORITY REDUCTION
+Import-graph proof shows the production web assessment closure no longer reaches scanner network
+execution modules or parse5. Capability wiring shrank from two orchestrators to exactly one:
+src/worker/execute-scan.ts.
+
+GATES
+- git diff --check clean
+- typecheck clean
+- lint clean / zero warnings
+- full suite: 5,299 passed, 128 skipped
+- production build: exactly seven API routes
+- worker build: 157 inputs; M12A-3 bundle assertions still pass
+
+DEVIATIONS / LEARNING
+1. Local scan execution now also requires configured scanner identity; no fake placeholder is sent.
+2. During implementation, zero remaining budget after caller abort was initially misclassified as
+   DEADLINE_REACHED; existing tests exposed it and the logic was corrected to inspect abortReason.
+3. One reviewed model/schema conversion remains necessary because Zod output differs
+   representationally from the scanner model.
+4. App-side node:http is allowed only in one fixed worker-client module and compensated by
+   structural boundary tests.
+
+TEMPORARY CONDITION
+Final public worker failure/refusal mapping and the complete cross-process cancellation chain are
+NOT claimed complete here. They belong to M12A-5.
+
+PRODUCTION SAFETY
+- no SSH/production/database/container/Docker/firewall/host contact;
+- Compose untouched;
+- Docker still unavailable locally;
+- M12A-5 not started at this step's close.
+
+PP / ATL VALUE
+This is strong evidence of product development plus learning: architecture was measurably changed,
+output equivalence was proven rather than assumed, a defect was caught by existing tests, and
+authority was reduced in the web process and verified through an import graph.

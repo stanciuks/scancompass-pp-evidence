@@ -1,0 +1,325 @@
+SCANCOMPASS — M11 STEP 6 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-26
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Deterministic frozen report artifact
+
+EVIDENCE PROVENANCE
+Prepared from the Claude Code Step 6 implementation and follow-up reports plus
+independent GitHub verification of:
+- 4ef10879b453100e2677eb9c7796253d134e98d1
+- 1842f98fdd8d581777955da408f804c3e30b2bc0
+
+This is a factual evidence summary, not a Personal Project reflection.
+
+STEP STATUS
+Steps 0–6 complete.
+Steps 7–15 not started.
+
+PRIMARY STEP 6 COMMIT
+4ef10879b453100e2677eb9c7796253d134e98d1
+feat: add deterministic frozen report artifact
+
+FOLLOW-UP STEP 6 FIX
+1842f98fdd8d581777955da408f804c3e30b2bc0
+fix: enforce exhaustive report version dispatch
+
+INDEPENDENT GITHUB VERIFICATION
+The follow-up commit exists at the expected SHA, is exactly one commit after the
+main Step 6 commit, and contains exactly:
+- src/server/persistence/artifact/document-version.ts
+- src/server/persistence/artifact/verify.ts
+- tests/boundaries.test.ts
+
+PURPOSE
+Define the exact bytes of a future stored public report and a pure verification
+path that converts stored bytes back into a trusted PublicAssessmentReport or
+refuses them, before any database writer exists.
+
+ARCHITECTURE
+New pure source tree:
+src/server/persistence/artifact/
+- document-version.ts
+- report-schema.ts
+- issue.ts
+- verify.ts
+- index.ts
+
+The artifact layer:
+- imports the public assessment DTO type-only
+- uses Zod for runtime validation
+- uses node:crypto / Buffer for hashing and UTF-8 bytes
+- uses no PostgreSQL
+- uses no Drizzle
+- reads no environment
+- performs no filesystem or network I/O
+
+DOCUMENT VERSION
+Current version:
+public-report-v1
+
+Rules:
+- one source literal
+- no trimming
+- no case folding
+- no aliases
+- no prefix matching
+- no fallback to current
+
+After the follow-up fix, SUPPORTED_DOCUMENT_VERSIONS is the source of the closed
+ReportDocumentVersion union.
+
+The verifier now explicitly dispatches by document version:
+- public-report-v1 -> v1 verifier
+- unsupported string -> UNSUPPORTED_DOCUMENT_VERSION
+- future supported version with no loader -> compile-time failure
+
+SERIALIZATION CONTRACT
+Issuance:
+1. strict v1 runtime schema validates the source report
+2. JSON.stringify(report) exactly once
+3. Buffer.from(document, "utf8") exactly once
+4. byte size taken from those exact UTF-8 bytes
+5. enforce issuance-size limit
+6. SHA-256 over those exact bytes
+7. return issued artifact
+
+No:
+- key sorting
+- canonical-JSON library
+- replacer
+- pretty printing
+- parse/re-stringify
+- serialization of Zod validation.data
+
+The format is deliberately not canonical JSON. Reproducibility comes from the
+deterministic PublicAssessmentReport producer.
+
+ISSUED ARTIFACT
+- document: string
+- documentVersion: closed ReportDocumentVersion
+- byteSize: UTF-8 bytes
+- sha256: raw 32-byte Buffer
+
+STORED / UNTRUSTED INPUT
+- document: string
+- documentVersion: string
+- byteSize: number
+- sha256: Buffer of any length
+
+UTF-8 BYTE-SIZE EVIDENCE
+Measured deterministic rich report:
+- document.length: 63,844 UTF-16 code units
+- byteSize: 63,960 UTF-8 bytes
+- delta: +116 bytes
+- digest:
+  7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+This proves document.length would be the wrong stored byte size.
+
+DIGEST REPRESENTATION
+SHA-256 is a raw 32-byte Buffer, matching the committed PostgreSQL bytea column.
+
+STRICT RUNTIME SCHEMA
+The v1 schema is strict at every object layer. Unknown fields are rejected rather
+than stripped.
+
+No:
+- coerce
+- transform
+- default
+- catch
+- preprocess
+- passthrough
+
+Only public DTO fields that are already closed unions are represented as Zod
+enums. Generic DTO strings remain strings.
+
+COMPILE-TIME DTO / SCHEMA DRIFT GUARD
+A type-only normalizer removes only:
+- readonly representation differences
+- exactOptionalPropertyTypes / Zod optional representation differences
+
+It preserves:
+- required/optional differences
+- field names
+- field value types
+- union members
+
+The schema and PublicAssessmentReport are checked both directions plus strict
+identity after normalization.
+
+Six planted drift mutations were confirmed to fail TypeScript:
+- lost union member
+- missing required field
+- extra required field
+- changed field type
+- required -> optional
+- removed nullable
+
+ISSUANCE VALIDATION
+INVALID_REPORT is returned before report serialization for invalid source data.
+
+This closes the JSON round-trip gap for:
+- NaN
+- +Infinity
+- -Infinity
+- -0
+
+The existing public-report JSON-safety walker was corrected and extracted to a
+test helper so the walker itself is directly tested.
+
+512 KiB ISSUANCE CAP
+MAX_REPORT_ARTIFACT_BYTES = 512 * 1024
+
+The cap:
+- uses UTF-8 bytes
+- applies on issuance
+- does not apply during verification
+
+Boundary evidence:
+- exactly 512 KiB accepted
+- 512 KiB + 1 refused
+- multi-byte test proves character count cannot substitute for byte count
+
+VERIFIED LOAD ORDER
+1. supported document version
+2. digest exactly 32 bytes
+3. compute UTF-8 bytes
+4. recorded byte size matches
+5. SHA-256 matches
+6. JSON.parse
+7. strict version-specific schema
+8. return parsed PublicAssessmentReport
+
+Typed refusals:
+- UNSUPPORTED_DOCUMENT_VERSION
+- DIGEST_MALFORMED
+- BYTE_SIZE_MISMATCH
+- HASH_MISMATCH
+- INVALID_JSON
+- SCHEMA_INVALID
+
+The verifier returns the object produced by JSON.parse after validation rather
+than Zod's reconstructed output, preserving the stored document's key order.
+
+GOLDEN CROSS-CHECK
+The Step 3 report fixture was extracted into one shared helper.
+
+Both Step 3 and Step 6 now operate on the same deterministic
+PublicAssessmentReport fixture.
+
+Pinned hash:
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+Step 6 independently reproduced exactly the same digest.
+
+VERSION-DISPATCH FOLLOW-UP DEFECT
+The first Step 6 implementation checked whether a stored version appeared in
+SUPPORTED_DOCUMENT_VERSIONS but then always validated with the v1 schema.
+
+Because ReportDocumentVersion was independently declared as v1, a future v2
+could have been added to the supported tuple without widening the exhaustive
+type. Such a document could pass the supported-version guard and fall through to
+the v1 validator.
+
+FOLLOW-UP FIX
+- supported tuple now defines the version union
+- verifier now switches explicitly on the narrowed version
+- v1 verification lives in the v1 branch
+- exhaustive default calls assertNever
+
+Compile-time mutation:
+adding public-report-v2 to the supported tuple without adding a loader produced:
+
+TS2345:
+Argument of type '"public-report-v2"' is not assignable to parameter of type
+'never'.
+
+After restoration, typecheck passed again.
+
+BOUNDARY HARDENING
+The initial pure-re-export barrel exemption was too broad. A line-prefix rule
+could classify:
+
+export const x = dangerousCall();
+
+as a pure barrel.
+
+It was replaced with:
+- an explicit reviewed two-barrel allowlist
+- a TypeScript AST proof requiring every top-level statement in exempt barrels to
+  be an ExportDeclaration with a module specifier
+
+Executable persistence modules still require:
+- a real server-only-guard import
+- an active assertServerOnly(...) call
+
+Mutation tests:
+- genuine re-export: PASS
+- export const: FAIL
+- export function: FAIL
+- export class: FAIL
+- side-effect expression: FAIL
+- remove assertServerOnly from issue.ts: FAIL
+
+TEST RESULTS AFTER FOLLOW-UP
+- pnpm install --frozen-lockfile: PASS
+- drizzle-kit check: PASS
+- drizzle-kit generate: PASS
+- pnpm typecheck: PASS
+- pnpm lint: PASS
+- pnpm test:run:
+  * 84 files
+  * 3,426 passed
+  * 45 skipped
+  * 3,471 total
+- pnpm build: PASS
+- scoring/public-report focused:
+  * 342 passed
+- real-PostgreSQL acceptance:
+  * 2 status tests passing
+  * 45 integration tests skipped
+  * still PENDING
+
+MIGRATION ARTIFACT HASHES — UNCHANGED
+db/migrations/0000_m11_persistence.sql
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+db/migrations/meta/_journal.json
+24186ee4e92b0dc52ecd0fb7f230342f66ddd18300957d7619490dbdddaac896
+
+db/migrations/meta/0000_snapshot.json
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+POST-STEP STATUS
+- no production PostgreSQL provisioned
+- no migration executed
+- no scan/report writer
+- no persisted response field
+- no scanId behavior
+- no circuit breaker
+- no management capability
+- no share/download/email/retention
+- route set remains health + scan
+- free scan behavior unchanged
+- production untouched
+- real-PostgreSQL acceptance still pending
+- Step 7 not started
+
+LOCAL TOOLING NOTE
+The local macOS /usr/bin/git shim became blocked by an Xcode license prompt after
+an Xcode update.
+
+Claude did not accept that license on the user's behalf.
+
+Git operations used:
+DEVELOPER_DIR=/Library/Developer/CommandLineTools
+
+The local untracked .claude/ configuration remained excluded from both Step 6
+commits.
+
+ACADEMIC-INTEGRITY NOTE
+This is a factual evidence summary, not a Personal Project reflection. Any
+reflection/report prose based on it should be written by the student in their
+own words.

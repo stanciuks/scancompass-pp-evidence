@@ -1,0 +1,76 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-0.2 — Final design delta / owner decisions
+STATUS: COMPLETE
+IMPLEMENTATION TYPE: read-only
+
+SOURCE STATE AT COMPLETION
+- HEAD remained: 12616a0088dcf1fe1085cf19224db062b1a78215
+- M11 completion tag remained untouched.
+- Working tree remained only the pre-existing untracked .claude/ item.
+
+FINAL CORRECTIONS
+1. Host capacity
+   - Authoritative measured record: 2 vCPU, 7.755 GiB RAM, 0 swap.
+   - No pre-emptive VPS resize.
+   - Resource measurement would decide whether later changes were needed.
+
+2. Identity
+   - Invalid/placeholder identity is a hard blocker in production.
+   - Zero target traffic is allowed on identity refusal.
+   - The development placeholder remains a development affordance only.
+   - No placeholder identity may reach a third party in production.
+
+3. Restart semantics
+   - restart: unless-stopped was accepted.
+   - Restart restores worker availability only.
+   - There is no queue, job persistence, resumption or automatic re-submission of work.
+
+4. Egress contract
+   - Host policy must be derived from the same address-policy authority rather than a hand-written
+     list of a few familiar private/special ranges.
+   - IPv6 must follow the policy's allowlist framing.
+   - DNS behaviour must be measured before host firewall rules are written.
+   - E1–E23 acceptance cases were defined for later proof.
+
+FINAL OWNER DECISIONS
+- Current host: use it; measure before considering resize.
+- Worker hostname logging: NO.
+- Restart policy: unless-stopped; never retry an in-flight scan automatically.
+- Invalid identity: refuse scan; no fallback.
+- Replay: no protocol bearer secret; residual risk documented.
+- Initial resource envelope: conservative starting ceiling, not a measured worker requirement.
+- Egress: derive from the authoritative address-policy source; do not hand-maintain two definitions.
+
+FINAL M12A IMPLEMENTATION PLAN
+M12A-1  Protocol contracts
+M12A-2  Identity split + User-Agent threading
+M12A-3  Bundled worker runtime
+M12A-4  App-side worker client + orchestration cut
+M12A-5  Cancellation + failure semantics
+M12A-6  Compose/network/environment separation
+M12A-7  Readiness + structural boundaries
+M12A-8  Complete non-Docker gate
+M12A-9  Disposable acceptance + resource measurement
+M12A-10 Egress hardening
+M12A-11 Staged production deployment with scan gate closed
+M12A-12 Gate reopen, live acceptance, evidence, documentation, tag
+
+SAFETY / SCOPE
+No production firewall command was invented in this design step.
+No claim of "restricted egress" was permitted before later E1–E23 proof.
+
+WHY THIS MATTERS FOR THE PERSONAL PROJECT
+This file shows how a large software/security task was converted into testable success gates before
+implementation. It is strong evidence for planning, risk management and reflective decision-making.

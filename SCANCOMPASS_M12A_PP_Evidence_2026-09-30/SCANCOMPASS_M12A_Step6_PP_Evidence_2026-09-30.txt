@@ -1,0 +1,169 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 30 September 2026
+
+ACADEMIC-INTEGRITY / TIMING NOTE
+This record was created on 30 September 2026 after the implementation step had been completed,
+verified, committed, pushed, and reviewed. It is a technical evidence record, not a substitute
+for the student's own Process Journal reflection.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-6 — Compose / network / environment separation
+STATUS: COMPLETE
+IMPLEMENTATION COMMIT:
+- 4cf4c020ae4167e81085006effc1ed842064a223
+
+SOURCE-TRUTH / THREAT-MODEL CORRECTION:
+- c41edaa131d5c59be49ed26fb8433d8c6c55c2dd
+
+PURPOSE
+Represent the scanner worker as a separate production Compose service and divide network/environment
+authority between the web tier, scanner worker, database and optional notification provider.
+
+FINAL SERVICE TOPOLOGY
+1. app
+2. scanner
+3. db
+4. retention (profile-gated maintenance service)
+
+FINAL NETWORK TOPOLOGY
+1. db_internal
+   - internal: true
+   - members: app, db, retention
+
+2. scan_internal
+   - internal: true
+   - members: app, scanner
+   - private command channel
+
+3. scanner_egress
+   - ordinary bridge with gateway
+   - member: scanner only
+   - fixed IPv4 IPAM:
+     subnet 10.83.6.0/29
+     gateway 10.83.6.1
+
+4. notify_egress
+   - ordinary bridge with gateway
+   - member: app only
+   - exists for the application's pre-existing provider subsystem
+
+`app_egress` was removed.
+
+SCANNER SERVICE
+- builds Dockerfile target: scanner
+- image: site-security-scanner:local
+- no host-published port
+- joins only scan_internal + scanner_egress
+- no db_internal
+- no notify_egress
+- no env_file
+- no Docker secret
+- no volume
+- no denylist mount
+- no database/application/email credential
+- exactly one non-secret environment setting:
+  NODE_OPTIONS=--max-old-space-size=768
+- read_only: true
+- cap_drop: ALL
+- no-new-privileges
+- restart: unless-stopped
+- bounded json-file logs
+
+STARTING RESOURCE ENVELOPE
+- mem_limit: 1g
+- mem_reservation: 256m
+- cpus: 1.0
+- pids_limit: 256
+- NODE_OPTIONS: --max-old-space-size=768
+
+These are explicitly a conservative starting envelope, not a measured final requirement.
+M12A-9 owns measurement.
+
+DATABASE / RETENTION ISOLATION
+- db remains only on db_internal.
+- db still has no host-published port.
+- retention remains profile-only and only on db_internal.
+- retention still receives persistence.env only.
+- scanner shares no Compose network with db.
+
+DEFAULT ROUTING
+- app default route explicitly points through notify_egress.
+- scanner default route explicitly points through scanner_egress.
+- internal networks are not left to become accidental default routes.
+
+FIXED SCANNER EGRESS SUBNET
+scanner_egress uses 10.83.6.0/29.
+
+Reason:
+M12A-10 will need a stable subnet to identify scanner traffic at the host firewall boundary.
+A dynamically selected Docker subnet could change after network recreation and silently invalidate
+a host rule.
+
+This step did NOT claim that the chosen subnet cannot conflict with every route on the eventual
+host. That must be established by later disposable/production acceptance.
+
+STRUCTURAL TEST EVIDENCE
+A dedicated parsed-Compose test suite asserts:
+- exact services;
+- exact network membership;
+- scanner no env_file/secrets/volumes/host port;
+- scanner resource envelope/hardening;
+- app no longer joins scanner_egress;
+- app keeps notify_egress;
+- db and retention remain isolated;
+- exactly four networks;
+- scan_internal and db_internal are internal;
+- scanner_egress fixed IPAM;
+- app_egress absent;
+- worker env template absent.
+
+IMPORTANT THREAT-MODEL CORRECTION
+Owner review found two descriptions in the first M12A-6 commit that were stronger than Docker
+actually guarantees.
+
+Incorrect claim 1:
+"No ports mapping means the worker is unreachable from the Docker host."
+
+Corrected truth:
+- port 8787 is not published onto a host TCP port;
+- it is not exposed through Docker port publishing or Nginx;
+- but the Docker host can still route to container addresses on an ordinary bridge.
+Therefore the property is "no host-published port", not "the host cannot reach the worker."
+
+Incorrect claim 2:
+"No service holds both general egress and a database credential / the app lost general egress."
+
+Corrected truth:
+- notify_egress is an ordinary non-internal bridge;
+- therefore the app still has network-layer Internet connectivity and still carries its DB
+  credential;
+- the important change is that scanner target execution no longer runs in that credential-bearing
+  process and the app no longer shares scanner_egress.
+
+The corrected security statement is:
+
+No credential-bearing web process shares the scanner's dedicated target-egress network, and the
+hostile-byte worker holds no application, database or email credentials.
+
+The corrective commit changed documentation/tests only. Mechanical comparison showed all 154
+active non-comment Compose lines were identical before and after the correction.
+
+WHAT THIS STEP DOES NOT CLAIM
+- scanner host-level egress is NOT yet restricted;
+- scanner_egress is an identifiable bridge, not a destination firewall;
+- scan_internal is topology, not authentication;
+- app compromise is NOT network-confined to the email provider;
+- Docker-host/root compromise is outside this container-isolation boundary.
+
+M12A-10 owns host-level egress enforcement and E1–E23 proof.
+
+PRODUCTION SAFETY
+No production contact or deployment.
+Production remained on the previous topology at this point.
+
+PP / ATL VALUE
+Strong evidence for organization, critical thinking, reflection and information literacy:
+the architecture separated authorities explicitly, and two flattering but inaccurate security
+claims were corrected after owner review instead of being left in the documentation.

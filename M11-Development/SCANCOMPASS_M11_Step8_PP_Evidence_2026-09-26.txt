@@ -1,0 +1,406 @@
+SCANCOMPASS — M11 STEP 8 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-26
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Anonymous report management capability
+
+EVIDENCE PROVENANCE
+Prepared from:
+1. Claude Code's Step 8 design, implementation, test, review-correction, and merge handoffs.
+2. The GitHub PR #1 review history.
+3. Independent GitHub verification after merge.
+
+This is a factual evidence summary, not a Personal Project reflection.
+
+STEP STATUS
+M11 Steps 0–8 complete.
+M11 Steps 9–15 not started.
+
+FINAL MERGED PR
+PR #1 — M11 Step 8: management capability
+State: MERGED / CLOSED
+Base: main
+
+Original review branch:
+review/m11-step8-management-capability
+
+The review branch was deleted after merge.
+
+FINAL MAIN COMMIT
+SHA:
+2e7b27bffbb8e8d5acb017880acde74c9268f194
+
+Subject:
+feat: add anonymous report management capability
+
+Independent GitHub verification:
+- PR #1 is merged and closed.
+- PR #1 merge commit SHA is exactly:
+  2e7b27bffbb8e8d5acb017880acde74c9268f194
+- main points to the same SHA.
+- Compared with Step 7 main
+  7447cf90077b71f208b3b57aebba98d0e197af85:
+  ahead by exactly 1 commit, behind by 0.
+- Exactly 26 files changed.
+- The three review commits were squash-merged into one clean Step 8 main commit.
+- The old review branch no longer exists remotely.
+- The merged API surface is still exactly:
+  /api/health
+  /api/scan
+
+PERSONAL PROJECT BASELINE
+Tag:
+pp-start-2026-09-24
+
+Annotated tag object:
+071c33b3af5f2bb94c81f7fd7738a3dbab4ef40f
+
+Tag target remains:
+987f54cf7ccd76007611e1a1b0356d2e03013194
+
+The PP baseline tag was not moved.
+
+PURPOSE
+Give the caller who obtained a durable report an anonymous management capability
+without turning scanId into a credential, requiring an account, storing the raw
+capability, or putting the secret in a cookie, URL, cache entry, log, or database.
+
+LIVE PERSISTENCE — FOUR BUSINESS PHASES
+Step 8 extends Step 7 from three business INSERT phases to four:
+
+BEGIN
+1. INSERT scans
+2. bulk INSERT scan_findings
+3. INSERT scan_reports
+4. INSERT report_management_tokens
+COMMIT
+
+The management-capability row is inside the SAME transaction as the durable report.
+
+If management-token insertion fails before COMMIT:
+- the entire transaction rolls back;
+- the complete assessment/report is still returned;
+- persisted:false;
+- no scanId;
+- no managementToken.
+
+No capability-count query is used on the LIVE path because the new scan UUID is
+fresh inside the transaction and cannot already have management-token rows.
+
+Both COMPLETED and PARTIAL mint the initial capability.
+PARTIAL remains PARTIAL.
+
+TOKEN ENTROPY AND WIRE FORMAT
+Token source:
+randomBytes(32)
+
+Entropy:
+256 bits
+
+Wire encoding:
+unpadded base64url
+
+Exact wire length:
+43 ASCII characters
+
+Allowed alphabet:
+[A-Za-z0-9_-]
+
+DIGEST CONTRACT
+Stored digest:
+SHA-256 over the RAW 32 random bytes
+
+Stored as:
+32-byte PostgreSQL bytea
+
+The raw token is never stored in PostgreSQL.
+
+SECRET HANDLING
+The raw token is returned only in the successful /api/scan response that minted it.
+
+A server-only SecretValue wrapper was added. The raw value is held outside the
+object's own properties in a module-private WeakMap.
+
+Ordinary disclosure paths are redacted:
+- String(secret)
+- template interpolation
+- JSON.stringify
+- util.inspect
+- structured pino logging
+- object spread
+
+They yield:
+[redacted]
+
+The one explicit disclosure function is:
+reveal(secret)
+
+A boundary test proves the only production caller is the /api/scan transport boundary.
+
+SCAN ID
+scanId remains a correlation identifier and authorises nothing.
+
+PUBLIC RESPONSE SEMANTICS
+LIVE acknowledged COMMIT:
+persisted:true
+scanId present
+managementToken present
+
+LIVE definite non-persistence:
+persisted:false
+no scanId
+no managementToken
+
+LIVE COMMIT outcome unknown:
+persisted:null
+no scanId
+no managementToken
+
+On COMMIT ambiguity, PostgreSQL may have committed the capability row, but the raw
+token is discarded. Such a row is inert because nobody received the secret.
+
+RECENT_CACHE MANAGEMENT CAPABILITY
+A RECENT_CACHE hit with persisted:true and a scanId may mint a DISTINCT management
+capability for the current caller.
+
+Reason:
+Visitor B can receive visitor A's cached report. Reusing A's management capability
+would let B later manage/revoke objects created by A.
+
+A cache hit remains free of:
+- outbound assessment;
+- global scanner capacity;
+- the per-target outbound scan lock.
+
+It may perform bounded database work solely to mint the caller's management
+capability.
+
+CACHE-HIT CAP
+Maximum management-token rows per durable scan:
+100
+
+The bound is exact.
+
+Cache-hit transaction:
+
+BEGIN
+SELECT scan row FOR UPDATE
+SELECT count(*) management tokens for scan
+if count >= 100:
+  complete transaction without writing
+else:
+  INSERT report_management_tokens
+COMMIT
+
+The row lock is taken before count, so two callers starting at 99 cannot both create
+rows 100 and 101.
+
+This row cap is not itself a request-rate limit.
+
+The existing edge controls continue to limit /api/scan:
+- per-IP: 3 requests/minute, burst 2
+- global: 24 requests/minute, burst 6
+
+CACHE CONTENT
+The result cache never stores:
+- raw management token
+- token digest
+- token-row id
+
+cacheableDurability() strips a LIVE caller's capability before caching.
+
+CACHE-HIT FAILURE SEMANTICS
+A cache-hit mint is additive to an already-durable report.
+
+If minting fails because of cap reached, database failure, breaker open, scan
+missing/expired, timeout, COMMIT outcome unknown, or a local generation fault:
+- persisted:true remains true;
+- existing scanId remains;
+- managementToken is omitted;
+- no 5xx is produced.
+
+TTL
+The management capability expires exactly when its owning scan expires.
+
+LIVE:
+expiresAt = scans.expiresAt
+
+RECENT_CACHE:
+expiresAt = expires_at read from the locked scans row
+
+It is not recomputed as mint time + 30 days.
+
+CIRCUIT-BREAKER REVIEW DEFECT
+Independent review found a real defect in the first Step 8 candidate.
+
+A local CSPRNG/UUID/clock failure could occur after the breaker claimed its single
+HALF_OPEN probe slot. Because only recordSuccess()/recordFailure() release that
+slot, the process could become stuck in HALF_OPEN and skip every future persistence
+attempt.
+
+Correction:
+All potentially-throwing local capability material is prepared BEFORE the breaker
+is claimed.
+
+A local preparation failure now returns INTERNAL_ERROR with:
+- no connection;
+- no breaker success/failure verdict;
+- no HALF_OPEN probe claimed.
+
+Tests prove the next eligible caller can still become the probe and recover the
+breaker to CLOSED.
+
+WRITE-BUDGET REVIEW DEFECT
+Independent review found a second real defect.
+
+The shared transaction checkpoint originally tested only whether the scheduled
+deadline callback had fired. The monotonic budget could already be exhausted while
+the timer callback was still waiting, allowing another statement to start after the
+intended deadline.
+
+Correction:
+checkpoint() now refuses when either:
+- the timer has fired; OR
+- remaining() <= 0.
+
+A deterministic test arms the timer but deliberately never fires it, advances the
+monotonic clock past the budget, and proves the next statement does not start.
+
+The Step 7 invariant remains:
+timeout before COMMIT => definite non-persistence.
+
+SHARED TRANSACTION MACHINE
+Step 7's bounded transaction / COMMIT ambiguity logic was extracted into:
+src/server/persistence/write/transaction.ts
+
+It is intentionally shared by:
+- whole-assessment persistence
+- cache-hit capability minting
+
+This avoids two copies of the most subtle state machine in the persistence layer.
+
+The extraction was explicitly accepted during independent review.
+
+COMMIT ON CAP
+A cache-hit attempt that reaches the 100-token cap after only SELECTs completes its
+transaction with COMMIT rather than a special ROLLBACK.
+
+This was independently reviewed and accepted.
+
+CANONICAL INPUT CONTRACT — STEP 9
+Step 9 must accept an untrusted management token only if:
+
+1. exactly 43 characters
+2. matches ^[A-Za-z0-9_-]{43}$
+3. base64url-decodes to exactly 32 bytes
+4. re-encoding those bytes to unpadded base64url reproduces the exact supplied string
+5. SHA-256 is computed over the decoded raw bytes
+
+Step 8 deliberately does NOT implement an unused verifyManagementToken() resolver.
+
+STEP 9 DELIBERATE NON-SCOPE
+Merged Step 8 still has:
+- no /api/reports/* route
+- no capability verifier
+- no management-token revocation action
+- no share route
+- no sessionStorage
+- no localStorage
+
+Independent GitHub verification shows the merged API surface is still exactly:
+health
+scan
+
+REVIEW PROCESS
+PR #1 was implemented on a review branch and independently reviewed before merge.
+
+Initial candidate:
+bf59ddd250362f5605beaa41fbabb117c702b901
+
+First review found:
+1. HALF_OPEN breaker wedge from local failures
+2. write checkpoint did not consult the monotonic budget directly
+
+Correction commit:
+cab0a9d50361e4f567e203be8c4084ccf9500800
+
+Re-review found:
+1. pending real-PostgreSQL breaker recovery test asserted an impossible HALF_OPEN
+   precondition;
+2. atomicity test still described only three business phases;
+3. PR description needed current post-review test totals.
+
+Final correction:
+db2d7ddf7a40d0c524ba2861a33b9584b5fa3dcc
+
+All three review commits were squash-merged as:
+2e7b27bffbb8e8d5acb017880acde74c9268f194
+
+TEST RESULTS
+Final reviewed Step 8 full-suite result:
+91 test files
+3,654 passed
+69 skipped
+
+Focused affected suites after first-review corrections:
+943 passed
+
+Final narrow correction:
+- typecheck clean
+- lint clean
+- guarded integration file in no-DB mode:
+  status test passed
+  24 real-PostgreSQL cases skipped
+
+REAL POSTGRESQL ACCEPTANCE
+PENDING.
+
+Writer suite:
+24 real-PostgreSQL cases
+0 executed
+all skipped
+
+Total integration skips in the reviewed full suite:
+69
+
+The real suite remains a hard gate before Step 15.
+
+REAL PERSISTENCE BENCHMARK
+PENDING.
+
+No p50/p95 number was fabricated from fake/in-memory connections.
+
+Decision rule remains:
+if real p95 > 60% of PERSISTENCE_WRITE_BUDGET_MS:
+- deliberately increase the budget with the measurement attached; or
+- move to write-behind.
+
+Hard gate before Step 15.
+
+PUBLIC REPORT GOLDEN
+Unchanged:
+
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+MIGRATION ARTIFACTS
+No Step 8 schema change.
+No new migration.
+The final Step 8 commit contains 0 db/ files.
+
+PRODUCTION IMPACT
+None reported during the Step 8 implementation/review/merge workflow:
+- no production access
+- no PostgreSQL provisioning
+- no live DB contact
+- no migration run
+- no production row write
+
+Independent GitHub verification confirms the repository/PR state and changed paths.
+Operational absence claims come from the contemporaneous Claude Code execution record,
+because GitHub history cannot itself prove that no off-repository operational action
+occurred.
+
+PERSONAL PROJECT NOTE
+This file is factual development evidence, not reflective prose. Any required Personal
+Project reflection should be written by the student in their own words and according to
+supervisor/school instructions.

@@ -1,0 +1,129 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 1 October 2026
+
+Milestone: M12A — Scanner worker isolation
+Substep: M12A-12A — Boot-order interlock design and proof
+Status: CLOSED
+
+Final reviewed repository HEAD:
+99db3669b1465883ecb0776b9c133bd533cdc6a8
+
+Parent chain:
+37c57c3a1c732bedeb499a5a2e3e17aeca9a85c7  M12A-11 production evidence
+3b210e97c2ddaa7bab0e2d7dd4e4045810133ccf  interlock implementation
+dbc4a4b66e968587aa663c2f49eb2f11c4533a99  repository-gate evidence
+99db3669b1465883ecb0776b9c133bd533cdc6a8  evidence wording reconciliation
+
+Problem discovered in M12A-11
+A controlled production reboot showed:
+- nginx public edge accepting at 15:24:21.274 UTC
+- scanner-egress policy active at 15:24:25.104
+- application able to serve at 15:24:25.644
+
+The firewall happened to become active 540 ms before the app was ready, but this was not an
+architectural guarantee. The public edge was accepting approximately 3.83 seconds before the host
+egress policy existed, and the firewall apply path can wait up to 90 seconds for the Docker bridge.
+Therefore scanning could not safely be reopened until startup ordering was explicitly enforced.
+
+Selected interlock
+A systemd drop-in for nginx:
+
+[Unit]
+Requires=scancompass-scanner-egress.service
+After=scancompass-scanner-egress.service
+
+Repository artifact:
+deploy/systemd/nginx.service.d/scancompass-egress.conf
+
+Intended production install path:
+/etc/systemd/system/nginx.service.d/scancompass-egress.conf
+
+Why this design
+- After= guarantees nginx is ordered after the egress-policy unit.
+- Requires= makes a failed policy activation prevent nginx from starting.
+- A systemd drop-in survives vendor nginx package upgrades.
+- No PartOf= or ExecStop= was added, avoiding the lifecycle failure discovered during M12A-10.
+- The application does not need to parse nftables state or gain another launch control.
+
+Disposable Linux proof
+The dependency semantics were tested under systemd 255:
+- success: policy finished before nginx activated
+- failure: policy failed and nginx never activated
+- boot success: Docker -> policy -> nginx
+- boot failure: policy failed and nginx remained inactive
+- stopping policy stopped nginx
+- restarting policy restarted nginx after the policy reapplied
+- recovery after clearing the fault succeeded
+- systemd-analyze verify reported no dependency cycle
+
+Repository structural proof
+14 focused tests pin:
+- exact Requires= dependency
+- exact After= dependency
+- no Wants= substitution
+- no PartOf=, ExecStop=, BindsTo= or Restart=
+- no reverse nginx reference in the egress unit
+- Docker ordering retained
+- committed ordering graph acyclic
+- drop-in contains only [Unit] dependency directives, not nginx routing/TLS configuration
+
+Repository gate
+Focused interlock suite:
+14 passed, 0 failed, 0 skipped
+
+Full suite:
+143 files passed
+5,550 tests passed
+128 pre-existing skips
+0 failed
+
+TypeScript:
+0 diagnostics
+
+Lint:
+0 warnings
+0 errors
+
+Application build:
+success
+0 warnings/errors
+exactly 7 public API routes
+
+Worker build:
+157 inputs
+1,289,566 bytes
+SHA-256:
+0d862432d0c56041174f221046508ff03bcf986013764aa7b43d8bb819540e1d
+
+Deploy structural suite:
+10 files passed
+329 tests passed
+
+Evidence-integrity correction
+The disposable VM exercised the same three systemd directives as the final committed drop-in.
+The whole file later gained explanatory # comments describing the measured restart behavior, so its
+whole-file hash changed even though the systemd-readable directive block did not.
+
+Directive block SHA-256:
+16cd9e252f5a332a2412fdc24215406dd803fc2b49d99449f82fa65d27b85329
+
+The documentation was corrected so it no longer claims whole-file byte identity where only the
+systemd-readable directive block was identical.
+
+Production state during M12A-12A
+Production was not touched.
+SCAN_PRODUCTION_ENABLED remained 0.
+No live scan was performed.
+The interlock had not yet been installed on production.
+M12A completion tag was not created.
+
+Next gate
+M12A-12B must install this exact interlock on production, prove merged systemd semantics, prove the
+real failure path fail-closed, reboot and prove Docker -> policy -> nginx ordering on the real host,
+then rerun E1–E25 while scanning remains disabled.
+
+PP / ATL value
+This substep demonstrates systems thinking and risk management: a timing result that happened to be
+safe once was not treated as a guarantee. The deployment was redesigned so safety follows from the
+service dependency graph rather than process timing luck, then both success and failure paths were
+tested before production installation.

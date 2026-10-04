@@ -1,0 +1,73 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-2 — Identity split + explicit User-Agent threading
+STATUS: COMPLETE
+IMPLEMENTATION COMMIT
+- fda06dce358a0c80f520fb50d108a5f8fe953a5b
+COMMENT/SOURCE-TRUTH CLEANUP
+- c8fa6a9aa881d65cb5f6bbb52b6e2f5e097c1285
+
+PURPOSE
+Remove environment-owned identity resolution from the future worker-reachable scanner closure
+while preserving exactly one authoritative identity policy.
+
+IMPLEMENTED
+- Created src/scanner/net/identity-value.ts.
+- Moved pure identity rules/composition there.
+- Kept src/scanner/net/identity.ts as the web-tier environment/development-resolution module.
+- Kept production launch judgement in src/server/launch/scanner-identity.ts.
+- Removed identity/environment resolution from transport-policy.
+- Made User-Agent an explicit required input to HTTP transport/fetch/RDAP paths.
+- Web-side production wiring resolves the User-Agent once per scan and threads it explicitly.
+
+CORE INVARIANT
+web-side production identity READY
+=> shared validators accept the configured values
+=> composeUserAgent succeeds
+=> the resulting User-Agent satisfies production structural checks.
+
+BOUNDARY PROOF
+Structural tests asserted:
+- shared identity-value module reads no process.env;
+- scan closure reaches no server module;
+- scan closure does not reach the web-only identity module;
+- development placeholder is declared in one place only;
+- transport no longer resolves scanner identity itself.
+
+BEHAVIOUR PRESERVATION
+The pre-split and post-split ScannerIdentity object was compared across nine environments and was
+strictly identical: same User-Agent, placeholder status and problem arrays.
+
+TEST / GATE EVIDENCE
+- identity-split: 59 passed
+- boundaries: 1,003 passed
+- net tests: 1,002 passed
+- typecheck clean
+- lint clean / zero warnings
+- full suite: 5,088 passed, 128 skipped
+- build succeeded with seven API routes
+
+COMMENT CLEANUP
+A follow-up commit corrected stale comments that still described the pre-M12A-2 architecture.
+Executable output was proven identical after comment stripping.
+Targeted source-reading suites: 1,255 passed.
+
+PRODUCTION SAFETY
+No production/SSH/database/container/Docker/network/firewall contact.
+M12A-3 was not started until review closed.
+
+PP / ATL VALUE
+- Transfer: moving one policy safely across a new process boundary.
+- Critical thinking: preserving an invariant rather than merely moving code.
+- Communication/documentation: correcting comments so source documentation matches current truth.

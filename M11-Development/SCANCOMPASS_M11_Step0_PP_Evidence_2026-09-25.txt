@@ -1,0 +1,135 @@
+SCANCOMPASS — M11 STEP 0 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-25
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Production VPS resource preflight / database-topology decision
+
+EVIDENCE PROVENANCE
+This note was reconstructed on 2026-09-25 from the terminal output that Augustas pasted into the ChatGPT conversation immediately after running the checks. The original Terminal window was later closed, so this is not an original terminal export or screenshot. The measurements below reproduce the values that were pasted into the chat. No result has been invented or backdated.
+
+PURPOSE
+Determine, before provisioning any database, whether the existing production VPS had enough measured capacity to host PostgreSQL safely alongside the existing SCANCOMPASS application.
+
+PRE-AGREED DECISION RULE
+Self-hosted PostgreSQL would be considered acceptable only if:
+- adjusted RAM headroom >= 1024 MB; and
+- available disk space >= 20480 MB (20 GB).
+If required measurements were missing, the result had to be INDETERMINATE rather than guessed.
+
+FIRST RUN
+The first read-only preflight was run as the normal scanadmin user.
+
+Measured:
+- Ubuntu 24.04.4 LTS
+- Kernel: 6.8.0-139-generic
+- Architecture: x86_64
+- Virtualisation: KVM
+- MemTotal: 7940 MB
+- MemAvailable: 7281 MB
+- SwapTotal: 0 MB
+- Logical CPUs: 2
+- Load average: 0.00 / 0.00 / 0.00
+- TCP 5432: free
+- Listener on TCP 3000: present
+
+Docker could not be accessed without sudo, so the script correctly returned:
+- MEASUREMENT_COMPLETE: no
+- DECISION_VALID: no
+- VERDICT: INDETERMINATE
+
+This was intentional: missing Docker/app-container measurements were not treated as zero or guessed.
+
+SUDO ACCESS CHECK
+The non-interactive sudo check initially returned:
+- "sudo: a password is required"
+- SUDO_DOCKER_UNAVAILABLE
+
+After authenticating interactively with:
+  sudo -v
+
+a non-interactive Docker check returned:
+- Docker server version: 29.7.2
+- SUDO_DOCKER_OK
+
+SECOND / COMPLETE READ-ONLY RUN
+The approved Docker continuation was then run with cached sudo authentication.
+
+Host / memory:
+- MemAvailable: 7283 MB
+- SwapTotal: 0 MB
+- Logical CPUs: 2
+- Load average: 0.00 / 0.00 / 0.00
+
+Docker:
+- Docker server version: 29.7.2
+- Docker root directory: /var/lib/docker
+
+Docker-root filesystem:
+- Total: 98122 MB
+- Available: 91443 MB
+- Used: 7%
+- Inodes available: 12,765,715
+- Inodes used: 2%
+
+Production app container:
+- Container: site-security-app-1
+- Compose project: site-security
+- Image: site-security-app:local
+- State: running / healthy
+- Memory limit: 1024 MB
+- Memory reservation: 256 MB
+- Current memory use: 97 MB
+- NanoCpus: 1000000000
+- PidsLimit: 256
+- ReadonlyRootfs: true
+- RestartPolicy: unless-stopped
+
+Docker storage:
+- Images: 883.9 MB total
+- Containers: 28.67 kB
+- Local volumes: 0
+- Build cache: 4.981 GB
+- Reclaimable build cache: 4.097 GB
+
+Network:
+- TCP 5432: free
+
+FINAL CALCULATION
+- MemAvailable: 7283 MB
+- App memory limit: 1024 MB
+- App current use: 97 MB
+- App unused allowance: 927 MB
+- Adjusted RAM headroom: 7283 - 927 = 6356 MB
+- Available disk: 91443 MB
+
+Threshold checks:
+- RAM >= 1024 MB: PASS
+- Disk >= 20480 MB: PASS
+
+Final output:
+- MEASUREMENT_COMPLETE: yes
+- DECISION_VALID: yes
+- VERDICT: SELF_HOSTED_POSTGRES_ACCEPTABLE
+
+DECISION
+Use self-hosted PostgreSQL on the existing SCANCOMPASS VPS for M11, subject to the approved M11 design:
+- PostgreSQL must not expose port 5432 publicly.
+- It should use the internal Docker network and persistent storage.
+- Memory limits/settings should be conservative and explicit because the host has 0 MB swap.
+- Database provisioning is a later implementation step; this preflight itself made no production changes.
+
+FAILURE / CHANGE DURING THE PROCESS
+1. The first run was INDETERMINATE because the normal scanadmin session did not have Docker access.
+2. The process did not guess from incomplete data.
+3. After sudo authentication, the missing Docker/app measurements were collected using the approved read-only continuation.
+4. The completed measurements supported the self-hosted PostgreSQL decision.
+
+PERSONAL PROJECT EVIDENCE VALUE
+This activity demonstrates:
+- Organization: using a pre-defined decision rule before seeing the result.
+- Critical thinking: refusing to make an infrastructure decision from incomplete evidence.
+- Technical decision-making: measuring real production resources before choosing database topology.
+- Iteration: the first attempt was incomplete, the reason was identified, and a safe second measurement completed the decision.
+
+ACADEMIC-INTEGRITY NOTE
+This file is a factual evidence summary reconstructed from the chat transcript. It is not a Personal Project reflection and should not be presented as contemporaneous handwritten student reflection. Any reflection or report paragraph based on this evidence should be written by the student in their own words.

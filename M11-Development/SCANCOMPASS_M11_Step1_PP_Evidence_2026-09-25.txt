@@ -1,0 +1,114 @@
+SCANCOMPASS — M11 STEP 1 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-25
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Documentation and design reconciliation
+
+EVIDENCE PROVENANCE
+This note was created on 2026-09-25 from:
+1. the Claude Code Step 1 completion report pasted into ChatGPT; and
+2. the committed GitHub record for commit 76cd1117b9ba6be58d8172fd775cc803e61346e4.
+It is a factual evidence summary, not a reconstructed terminal screenshot and not a student reflection.
+
+PURPOSE
+Make the repository documentation match the real deployed state of SCANCOMPASS and record the approved M11 persistence design before functional implementation begins.
+
+BASELINE / PRECONDITIONS
+Before Step 1:
+- branch: main
+- HEAD: 987f54cf7ccd76007611e1a1b0356d2e03013194
+- formal PP baseline tag: pp-start-2026-09-24
+- tag target: 987f54cf7ccd76007611e1a1b0356d2e03013194
+- working tree: clean
+- M11 product functionality: not implemented
+
+MAIN DECISIONS
+1. Stale documentation was corrected instead of left as fiction.
+2. Historical descriptions were preserved and labelled as historical rather than rewritten as if later features already existed.
+3. M11 was documented as DESIGN APPROVED / FUNCTIONAL IMPLEMENTATION NOT STARTED.
+4. Self-hosted PostgreSQL was recorded as the chosen database topology from Step 0 measurements.
+5. The M11 data model was documented before implementation.
+6. The domains table was deliberately deferred to M12, where ownership-verification requirements will define its real invariants.
+7. Persistence remains additive and must never gate the free anonymous scanner.
+8. Share and management capabilities remain separate from scan/execution identifiers.
+9. The share token remains in a URL fragment and never appears in an HTTP request URI.
+10. The download design was corrected so it uses a same-origin POST body with Content-Disposition: attachment instead of a URL-carried fallback ticket.
+11. Scanner-worker isolation is now the FIRST work item of M12, before account/session/domain-authorization data exists in production.
+12. PDF generation remains M12 and must use a non-browser renderer.
+
+FILES INCLUDED IN THE STEP 1 COMMIT
+Modified:
+- docs/ARCHITECTURE.md
+- docs/MILESTONES.md
+- docs/ROADMAP.md
+- docs/SECURITY_AND_ABUSE_MODEL.md
+
+Added:
+- docs/DATA_MODEL.md
+- docs/M11_PERSISTENCE_IMPLEMENTATION.md
+
+Total commit:
+- 6 files
+- 1,559 insertions
+- 79 deletions
+
+TESTS / VALIDATION
+Before commit:
+- pnpm typecheck: PASS
+- pnpm lint: PASS
+- pnpm test:run: PASS
+- 72 test files
+- 2,950 tests
+- internal documentation link check: 0 broken links
+- new cross-reference anchors: resolved
+- unclosed-backtick scan: clean
+- only the six expected docs changed
+- nothing outside docs/ changed
+- pp-start-2026-09-24 remained unchanged
+
+COMMIT
+Full SHA:
+76cd1117b9ba6be58d8172fd775cc803e61346e4
+
+Subject:
+docs: reconcile documentation and record M11 design
+
+Push:
+- origin/main fast-forwarded from 987f54c to 76cd111
+- local main == origin/main
+- working tree clean
+- no force push
+- no new tag created
+- pp-start-2026-09-24 still points to 987f54c
+
+PRODUCTION IMPACT
+None.
+The production application source remains byte-identical to commit 867b860 for the application/source paths checked.
+This Step 1 commit changed documentation only and did not authorize or require deployment.
+
+FAILURES / CHANGES DURING REVIEW
+1. A contradictory download-ticket-in-URL fallback was found during owner review.
+   - Problem: even a short-lived single-use URL ticket would still be a capability in an HTTP request URI.
+   - Change: replaced with a same-origin form POST carrying the token in the request body and using Content-Disposition: attachment.
+2. A markdown backtick defect was found in the standing rule protecting 00-site-security-secret.conf.
+   - Change: corrected; a second fragile inline-code span was also reflowed.
+3. A duplicated contradictory Redis row was introduced during editing and then caught and removed before commit.
+4. No source-code or production-state change occurred.
+
+EVIDENCE POINTS WORTH PRESERVING
+- GitHub commit 76cd1117b9ba6be58d8172fd775cc803e61346e4
+- Commit diff showing documentation-only changes
+- Passing validation results
+- Evidence that pp-start-2026-09-24 remained unchanged
+- The owner-review correction from URL ticket fallback to POST-body download
+- The new DATA_MODEL.md and M11_PERSISTENCE_IMPLEMENTATION.md files
+
+PERSONAL PROJECT VALUE
+This step can support evidence for:
+- Organization: documentation and milestone state were reconciled before implementation.
+- Critical thinking: contradictions were identified during review and corrected before committing.
+- Academic integrity / process transparency: the formal PP baseline tag was preserved unchanged, and later work is clearly distinguished from earlier project history.
+- Technical decision-making: security and privacy invariants were documented before implementation.
+
+ACADEMIC-INTEGRITY NOTE
+This is a factual evidence summary. It is not a Personal Project reflection and should not be submitted as if it were the student's own reflective writing. Any reflection/report paragraph based on this evidence should be written by the student in their own words.

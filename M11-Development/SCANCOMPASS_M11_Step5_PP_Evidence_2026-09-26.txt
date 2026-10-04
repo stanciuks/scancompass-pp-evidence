@@ -1,0 +1,378 @@
+SCANCOMPASS — M11 STEP 5 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-26
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Persistence readiness subsystem
+
+EVIDENCE PROVENANCE
+This note was prepared from:
+1. the Claude Code Step 5 completion report pasted into ChatGPT; and
+2. an independent GitHub verification of commit
+   cc68dc4cfff61cc51f3bdc1f53fc9aa20737627a.
+
+This is a factual evidence summary. It is not a Personal Project reflection.
+
+PURPOSE
+Add a persistence-readiness subsystem that can answer whether future durable
+report features are available while remaining structurally independent from the
+free scanner's launch gate.
+
+COMMIT
+Full SHA:
+cc68dc4cfff61cc51f3bdc1f53fc9aa20737627a
+
+Subject:
+feat: add persistence readiness subsystem
+
+Push:
+- fast-forward from fbe369b15a474dc1653c5740d986507b307cce7c
+- no force push
+- no tag operation
+
+INDEPENDENT GITHUB VERIFICATION
+- commit exists at the expected SHA
+- exactly one commit ahead of Step 4
+- exactly 17 files changed
+- 9 modified
+- 8 added
+- working-tree report from Claude: clean
+- PP baseline tag remained unchanged
+
+READINESS ARCHITECTURE
+Four new persistence modules:
+
+- schema-contract.ts
+  Code-owned structural contract for the database shape this application image
+  requires.
+
+- readiness-status.ts
+  Pure, total classification logic. No pg import.
+
+- probe.ts
+  One bounded, read-only, short-lived pg.Client probe.
+
+- readiness.ts
+  Wires config -> probe -> classification and exposes safe startup log fields.
+
+The existing src/instrumentation.ts is the sole composition point between:
+- launch readiness
+- persistence readiness
+
+The two readiness systems do not import each other.
+
+STATUS SEMANTICS
+Step 5 produces:
+
+NOT_CONFIGURED / DATABASE_URL_ABSENT
+
+UNAVAILABLE with reasons including:
+- CONFIG_INVALID
+- CONNECT_FAILED
+- CONNECT_TIMEOUT
+- SCHEMA_ABSENT
+- REQUIRED_OBJECT_MISSING
+- SCHEMA_INCOMPATIBLE
+- PRIVILEGE_MISSING
+- TLS_REQUIRED_NOT_OBSERVED
+- TLS_OBSERVATION_UNAVAILABLE
+- PROBE_ERROR
+
+READY / OK
+
+DEGRADED remains part of the approved status vocabulary but Step 5 deliberately
+does not emit it. It is reserved for Step 7 runtime / circuit-breaker state.
+
+ZERO-LEDGER-ACCESS DECISION
+The application role keeps zero privileges on:
+scancompass.schema_migrations
+
+Step 5 therefore does NOT claim to know the database's exact applied migration
+version.
+
+Instead it checks structural compatibility against:
+EXPECTED_SCHEMA_CONTRACT = "m11-0000"
+
+Meaning:
+this application image requires the m11-0000 structural contract.
+
+It is not:
+- an observed migration version
+- proof that 0000 is the latest applied migration
+- read from the migration ledger
+
+STRUCTURAL COMPATIBILITY
+The readiness contract covers:
+- dedicated scancompass schema
+- six application-data tables
+- schema_migrations relation existence only
+- scan_findings_id_seq
+- required columns
+- exact PostgreSQL types required by this image
+
+The compatibility rule is one-directional:
+everything this image requires must exist and be compatible.
+
+Extra objects are not rejected merely for existing.
+
+Step 5 explicitly does not claim every future additive migration is automatically
+backward-compatible with an older writer. Actual future write compatibility
+remains a migration-design and Step 7 writer-test obligation.
+
+PRIVILEGE READINESS
+The probe checks exactly 18 positive required privileges:
+
+Schema:
+- scancompass: USAGE
+
+scans:
+- SELECT
+- INSERT
+- UPDATE
+- DELETE
+
+scan_findings:
+- INSERT
+
+scan_findings_id_seq:
+- USAGE
+
+scan_reports:
+- SELECT
+- INSERT
+
+report_management_tokens:
+- SELECT
+- INSERT
+- UPDATE
+
+report_shares:
+- SELECT
+- INSERT
+- UPDATE
+
+report_deliveries:
+- SELECT
+- INSERT
+- UPDATE
+
+schema_migrations:
+- deliberately not checked
+- deliberately no application grant
+
+Excess privilege is not made a runtime readiness failure; least-privilege
+verification remains the Step 4 real-Postgres role acceptance responsibility.
+
+TLS OBSERVATION
+Live-session encryption is observed separately from configured sslmode using:
+
+SELECT ssl
+FROM pg_catalog.pg_stat_ssl
+WHERE pid = pg_backend_pid();
+
+Configured mode and observed encryption are not conflated.
+
+For require / verify-ca / verify-full:
+- observed TLS false -> UNAVAILABLE / TLS_REQUIRED_NOT_OBSERVED
+- TLS unmeasurable -> UNAVAILABLE / TLS_OBSERVATION_UNAVAILABLE
+
+For disable / prefer / unspecified:
+- TLS observation remains diagnostic and does not by itself make readiness fail.
+
+BOUNDED PROBE
+Short-lived pg.Client, never a process-lifetime pool.
+
+Code-owned bounds:
+- connectionTimeoutMillis: 2000 ms
+- query_timeout: 2000 ms
+- whole-probe backstop: 4500 ms
+
+Other properties:
+- no retry
+- no polling
+- no recurring health task
+- three SELECT-only probe stages
+- no DML
+- no DDL
+- no transaction
+- active client closure on total-budget expiry
+- client.end() cleanup in all paths
+
+DETACHED STARTUP
+Persistence readiness is started after the existing launch-readiness logs and is
+NOT awaited by instrumentation.register().
+
+Therefore PostgreSQL cannot delay:
+- Next startup
+- free scan availability
+- launch-readiness logging
+
+The detached task handles all rejections.
+
+Exactly one persistence_readiness result is logged per startup in normal,
+expected-failure, unexpected-rejection and unexpected-synchronous-throw cases.
+
+The fallback payload is code-owned and contains no raw Error.message, stack,
+hostname, database, username, password or connection URL.
+
+LAUNCH / GATE INDEPENDENCE
+The launch source files were not modified.
+
+The existing exact ordered launch-control inventory is now pinned at 12 controls:
+
+1. application concurrency control
+2. target cooldown / result cache
+3. duplicate target suppression
+4. operational denylist
+5. trusted reverse-proxy configuration
+6. trusted client-identity enforcement
+7. strict application script CSP
+8. outbound scanner identity
+9. public base URL
+10. abuse / opt-out contact
+11. edge per-IP rate limiting
+12. hosting-provider permission
+
+evaluateLaunchControls(), scanExecutionGate() and getLaunchReadiness() were
+asserted deep-identical across persistence-environment variants.
+
+No database connection occurs in those invariance tests.
+
+HTTP SURFACE
+No readiness endpoint was added.
+
+Existing route surface remains:
+- /api/scan
+- /api/health
+
+/api/health remains the deliberately uninformative liveness response:
+{ status: "ok" }
+
+TEST RESULTS
+- pnpm install --frozen-lockfile: PASS
+- drizzle-kit check: PASS
+- drizzle-kit generate: PASS; no schema change
+- pnpm typecheck: PASS
+- pnpm lint: PASS
+- pnpm test:run:
+  * 82 files
+  * 3,308 passed
+  * 45 skipped
+  * 3,353 total
+- pnpm build: PASS
+- scoring/public-report golden suite: 341 tests PASS
+- docs links/anchors: 0 broken
+- touched-doc odd-backtick scan: 0
+
+REAL POSTGRESQL READINESS ACCEPTANCE
+Pending.
+
+The readiness integration file contains 15 skipped real-PostgreSQL cases,
+including:
+- live READY against correct schema
+- own-backend pg_stat_ssl observation
+- schema absent
+- required table missing
+- required column/type incompatible
+- additive extra objects tolerated
+- revoked required privileges
+- ledger relation missing
+- bounded refused connection
+- TLS-required contract
+- no lingering readiness backend
+- probe performs no writes
+
+These are not claimed as proven by the unit suite.
+
+Before Step 15 production provisioning, real-PostgreSQL acceptance remains a hard
+gate.
+
+MIGRATION ARTIFACT HASHES — UNCHANGED
+db/migrations/0000_m11_persistence.sql
+SHA-256:
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+db/migrations/meta/_journal.json
+SHA-256:
+24186ee4e92b0dc52ecd0fb7f230342f66ddd18300957d7619490dbdddaac896
+
+db/migrations/meta/0000_snapshot.json
+SHA-256:
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+REPORT GOLDEN — UNCHANGED
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+FILES IN COMMIT
+Modified:
+- docs/ARCHITECTURE.md
+- docs/DATA_MODEL.md
+- docs/M11_PERSISTENCE_IMPLEMENTATION.md
+- docs/MILESTONES.md
+- docs/ROADMAP.md
+- src/instrumentation.ts
+- src/server/persistence/index.ts
+- tests/boundaries.test.ts
+- tests/unit/server/persistence-schema.test.ts
+
+Added:
+- src/server/persistence/probe.ts
+- src/server/persistence/readiness-status.ts
+- src/server/persistence/readiness.ts
+- src/server/persistence/schema-contract.ts
+- tests/integration/persistence-readiness.test.ts
+- tests/unit/server/instrumentation.test.ts
+- tests/unit/server/launch-persistence-independence.test.ts
+- tests/unit/server/persistence-readiness.test.ts
+
+FAILURES / CHANGES DURING STEP 5
+1. Step 4 left docs/ARCHITECTURE.md stale and still describing the pre-persistence
+   repository. Step 5 corrected it.
+
+2. The design originally said readiness verifies "schema version", but the app
+   role intentionally cannot read schema_migrations. Step 5 switched to honest
+   structural compatibility and an application-owned contract id.
+
+3. NOT_CONFIGURED was narrowed to genuine absence of DATABASE_URL. A present but
+   invalid config is UNAVAILABLE / CONFIG_INVALID.
+
+4. DEGRADED is deliberately not produced in Step 5 and is reserved for Step 7.
+
+5. The startup persistence probe was made detached rather than awaited, so DB
+   failure cannot delay the free scanner.
+
+6. The planning report initially described 11 launch controls. Inspection showed
+   the unchanged pre-Step-5 inventory has 12; all 12 are now explicitly pinned.
+
+7. The first unexpected-failure fallback log omitted configuredSslMode, used a
+   non-code-owned "unknown" contract id, and risked a double log if the normal
+   logger threw. The fallback was corrected and mutation-tested.
+
+8. Structural-compatibility wording was tightened so the project does not claim
+   arbitrary future additive migrations are automatically compatible.
+
+9. A doc comment in readiness.ts used a migration-role environment-variable name
+   that violated an existing boundary rule; the wording was corrected.
+
+10. probe.ts intentionally connects only inside the explicit readiness function,
+    which tripped a broad import-time-network structural rule. A narrow documented
+    exemption was used and paired with stronger tests that unconfigured readiness
+    opens zero connections.
+
+11. No production state changed during Step 5.
+
+POST-STEP STATUS
+- Steps 0–5 complete
+- Steps 6–15 not started
+- no production DB
+- no migration executed against any DB
+- no persistence writer
+- no circuit breaker
+- no user-visible persistence feature
+- free scanner unchanged
+- production untouched
+- PP baseline tag unchanged
+
+ACADEMIC-INTEGRITY NOTE
+This is a factual evidence summary, not a Personal Project reflection. Any
+reflection/report prose based on it should be written by the student in their own
+words.

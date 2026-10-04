@@ -1,0 +1,416 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 3 October 2026
+
+MILESTONE
+M12B-5 — Account login, session creation/revocation, and verification-gated signup core
+
+FINAL STATUS
+CLOSED
+
+IMPLEMENTATION COMMIT
+f34fe4369e54176da4c22018ddd6a227266589a6
+
+REVIEW CORRECTION COMMIT
+4cdb0fd40d5d53dce792e0bbed7696cb0373e38f
+
+IMPLEMENTATION PARENT
+69b1d5a24f63c4c669a20ab9f21b55348c45cc5a
+
+ROUTE INVENTORY
+M12B-5 intentionally increased public API route files from 7 to 12.
+
+Final reviewed route files:
+- /api/account/signup
+- /api/account/verify
+- /api/health
+- /api/reports/download
+- /api/reports/email
+- /api/reports/resolve
+- /api/reports/share/revoke
+- /api/reports/share
+- /api/scan
+- /api/session/logout-all
+- /api/session/logout
+- /api/session
+
+No /api/login, /api/auth, /api/signin, /api/register or password-reset alias was added.
+
+OWNER-SETTLED SIGNUP VALUES
+Actual decision date: 3 October 2026
+
+SIGNUP_CHALLENGE_TTL_MS = 1 hour / 3,600,000 ms
+MAX_LIVE_SIGNUP_CHALLENGES_PER_EMAIL = 3
+MAX_SIGNUP_CHALLENGE_ATTEMPTS = 5
+
+Wrong canonical-token attempts:
+- attempts 1–4 increment attempt_count and leave the row live
+- attempt 5 deletes the challenge
+
+The implementation commit message incorrectly recorded the decision date as 2026-10-05.
+Review correction 4cdb0fd40d5d53dce792e0bbed7696cb0373e38f establishes 2026-10-03 as the actual date.
+Current source and documentation use the corrected date.
+
+AUTHENTICATION TRAFFIC LIMITS
+AUTH_RATE_WINDOW_MS = 15 minutes
+AUTH_MAX_REQUESTS_PER_TRUSTED_IP = 60 per window
+AUTH_GLOBAL_MAX_REQUESTS = 300 per window
+
+These are process-local operational traffic bounds.
+
+The traffic limiter is keyed by trusted client IP plus a global counter, never by submitted email.
+Identifier-specific controls remain separate:
+- login: durable per-account PostgreSQL lockout
+- signup: live challenge cap by canonical email
+
+LOGIN LOCKOUT
+Existing M12B-3 policy remains:
+- 10 failures
+- 15-minute observation window
+- 15-minute lock
+
+The durable lockout is bound to the account, so changing client IP does not bypass it.
+
+ACCOUNT IDENTIFIER CONTRACT
+New module:
+src/server/account/email.ts
+
+Canonical form:
+local part exactly as entered + @ + lowercased domain
+
+Example:
+User.Name+tag@EXAMPLE.COM -> User.Name+tag@example.com
+
+User@example.com and user@example.com remain distinct account identities.
+
+No local-part lowercasing, dot stripping, +tag stripping, Gmail-specific rules or alias inference.
+Surrounding whitespace is rejected rather than trimmed.
+
+LOGIN ENUMERATION / FAILURE CONTRACT
+Public refusal:
+"Those details did not match an account."
+
+Internally distinct account-specific failures collapse to that one public result:
+- unknown identifier
+- wrong password
+- disabled/deleted account
+- locked account
+- missing PASSWORD credential
+- unsupported stored verifier
+
+Unknown, disabled and locked identities execute the dummy current-profile Argon2 path rather than
+returning immediately. KDF BUSY is also mapped uniformly for known and unknown identifiers.
+
+CREDENTIAL-FRESHNESS RACE
+Password verification happens outside the short final database transaction.
+
+Before session creation the transaction re-checks:
+- account still ACTIVE
+- account still verified
+- account still unlocked
+- credential still corresponds to the verifier that was proven
+
+The committed PostgreSQL acceptance includes deterministic credential replacement inside the
+verification/finalisation window and proves that zero sessions are created from the old credential.
+
+OPPORTUNISTIC REHASH
+M12B-5 added rehashVerifiedPassword().
+
+After a stored password has already matched:
+- raw input bound / Unicode well-formedness still apply
+- NFC still applies
+- fresh 16-byte nonce
+- current Argon2id profile
+- same KDF limiter
+- no new-password minimum/blocklist reapplication
+
+This allows a legacy password that would be rejected if chosen today to authenticate and be upgraded.
+
+SESSION CREATION
+Successful login creates:
+- new session UUID
+- new opaque random token
+- SHA-256 token digest only in PostgreSQL
+- created_at
+- last_used_at = created_at
+- expires_at = created_at + 7 days
+
+No plaintext session token, IP, User-Agent or device label is stored.
+
+SESSION FIXATION / ROTATION
+A successful login deletes only the valid session presented by that browser and inserts a new one.
+Other independent sessions for the account remain valid.
+
+LOGOUT
+POST /api/session/logout:
+- exact trusted Origin
+- no cookie -> idempotent success
+- valid session -> delete exactly that row, then clear cookie
+- stale/rejected cookie -> clear cookie, same success
+- DB failure while revocation is needed -> 503 and cookie retained so revocation can be retried
+
+LOGOUT-ALL
+POST /api/session/logout-all:
+- exact trusted Origin
+- valid ACCOUNT actor required
+- deletes every session for that account, including current
+- clears cookie after commit
+- anonymous -> 401
+- stale cookie -> 401 plus clear
+- DB failure -> 503
+
+GET /API/SESSION
+Returns only:
+{ authenticated: true | false }
+
+No account id, email, session id, expiry, lockout state, tier or permissions.
+
+No cookie:
+authenticated=false without requiring DB availability.
+
+Presented cookie with DB failure:
+503, not a false signed-out state.
+
+SIGNUP FEATURE GATE
+Environment variable:
+ACCOUNT_SIGNUP_ENABLED
+
+After review correction, only the raw exact value "1" opens it.
+
+Closed examples:
+unset, empty, 0, false, true, " 1 ", "1 ", " 1", tab/newline variants, 01, yes, junk.
+
+parseStrictFlag() is still used for classification, but final opening compares the raw untrimmed value.
+
+The signup flag is not a scan launch control. Invalid signup-gate values fail closed and are not
+currently surfaced by launch readiness.
+
+ACCOUNT EMAIL STATUS
+M12B-5 intentionally implements no production account-email delivery.
+
+If ACCOUNT_SIGNUP_ENABLED were mistakenly set to 1 before M12B-5a:
+- signup returns uniform 503
+- response occurs before submitted email/account lookup
+- zero challenge rows are created
+
+SIGNUP CHALLENGE TOKEN
+Challenge id:
+canonical lowercase UUID
+
+Secret:
+32 random bytes, 43-character unpadded base64url
+
+Stored:
+SHA-256 digest of raw token bytes
+
+Authorization lookup is by challenge UUID, followed by hashing of the supplied token and
+timingSafeEqual comparison against token_hash.
+
+Review correction clarified:
+the stored digest is not itself a bearer credential; disclosure of the digest does not reveal the
+32-byte token and still leaves a 256-bit preimage problem.
+
+KEYED SIGNUP SERIALIZATION
+New process-local per-canonical-email critical section:
+src/server/account/email-lock.ts
+
+Same email is serialized; different emails may proceed concurrently.
+Entries are removed when the holder/waiter chain drains.
+
+This makes the three-live-challenge cap exact for the supported single-instance deployment.
+
+SIGNUP REQUEST
+POST /api/account/signup
+
+Order:
+1. signup gate
+2. delivery availability
+3. exact Origin
+4. trusted client identity
+5. IP/global auth traffic limit
+6. bounded strict body
+7. account email canonicalization
+8. challenge issuance
+9. delivery attempt if created
+10. neutral response
+
+Request contains email only; no password is accepted yet.
+
+Challenge issuance:
+- deletes expired rows for that canonical email
+- creates nothing if an account already owns the identity
+- counts live rows
+- stops at cap 3
+- otherwise mints a fresh challenge
+- never rotates/deletes still-live links merely to make room
+- never resends an old secret
+
+SIGNUP REQUEST ENUMERATION RESISTANCE
+With a delivery dependency available, these address-dependent outcomes are byte-identical publicly:
+- new challenge delivered
+- existing account
+- challenge cap reached
+- delivery failed after challenge creation
+
+The route returns one 202 body and no Set-Cookie.
+Delivery-failure cleanup deletes the just-created row when cleanup succeeds.
+Provider timing remains a documented residual.
+
+SIGNUP COMPLETION
+POST /api/account/verify is a class-2 capability-authorized mutation.
+
+No session is required.
+
+Phase 1:
+- parse challenge id/token
+- read row by id
+- enforce expiry
+- constant-time digest comparison
+- canonical wrong token counts an attempt
+
+Only after challenge proof:
+Phase 2:
+- new-password policy
+- Argon2id outside the DB transaction
+
+Phase 3:
+under per-email serialization and a short PostgreSQL transaction:
+- lock/re-read challenge
+- re-check expiry/token
+- ensure identity still free
+- insert ACTIVE verified account
+- insert one PASSWORD credential
+- delete all pending signup challenges for canonical email
+- commit
+
+Registration creates zero sessions and sets zero session cookies.
+
+CONCURRENT COMPLETION
+Multiple valid outstanding links may race.
+
+Required result, covered by committed acceptance:
+- exactly one account
+- exactly one PASSWORD credential
+- zero remaining signup challenges for the canonical email
+- losing completion receives neutral refusal
+
+FRAGMENT CARRIER
+Page:
+/account/verify
+
+Future emailed link shape:
+https://scancompass.com/account/verify#<challengeId>.<token>
+
+Initial server-visible GET contains no fragment.
+
+Client handling:
+- read location.hash after hydration
+- split challengeId/token
+- cheap local shape checks
+- history.replaceState(..., "/account/verify") before any POST
+- hold capability only in in-memory refs
+- POST challengeId/token/password in JSON body
+- clear capability on terminal success/failure
+- retain only for retryable 429/503
+
+No localStorage, sessionStorage, query carrier, custom capability header, DOM data attribute,
+server prop, module-global token or console logging.
+
+MINIMAL UI
+/account provides:
+- login
+- signed-in status
+- sign out
+- sign out everywhere
+
+No dashboard, profile, billing, domain UI, scan history or session list.
+
+M12B-5 intentionally does not show an unusable signup form before account email exists.
+The review correction fixed a stale comment that had claimed such a form existed.
+
+SHARED DATABASE POOL
+Account routes reuse the existing process-lifetime application PostgreSQL pool.
+No second independent account pg.Pool or wider DB connection limit was added.
+
+ANONYMOUS SCAN INDEPENDENCE
+/api/scan remains outside the account/session authentication graph.
+Scanner/worker protocols remain account/session-free.
+
+POSTGRESQL 18.6 ACCEPTANCE
+Recorded implementation evidence:
+9 integration files / 245 passed / 0 skipped.
+
+The M12B-5 account/session/signup integration file contains 45 cases.
+
+Recorded acceptance includes:
+- canonical account lookup
+- local-part preservation/domain lowercasing
+- durable wrong-password lockout
+- successful-login lockout clear
+- digest-only session storage
+- seven-day session expiry at creation
+- session rotation
+- independent-session preservation
+- credential-freshness race
+- legacy/current-profile rehash
+- logout/logout-all
+- one-hour signup challenge expiry
+- exact 3-row live challenge cap
+- simultaneous 20-request same-email burst leaving exactly 3
+- wrong-token attempts 1–4 and fifth-attempt deletion
+- concurrent attempt counting
+- successful signup completion
+- zero-session registration
+- concurrent completion
+- replay refusal
+- post-suite schema constraint validation
+
+The M12B-5 review correction did not change persistence/session/login/signup transaction logic, so
+PostgreSQL acceptance was not rerun for that correction.
+
+FINAL RECORDED CORRECTION VALIDATION
+Correction commit evidence records:
+- git diff --check clean
+- typecheck 0
+- lint 0
+- targeted 5 files / 1410 cases
+- full suite 170 files / 6283 passed / 236 skipped
+- build clean
+- 12 API route files
+
+These command results are recorded in the reviewed commit evidence and were not independently rerun by ChatGPT.
+
+SCOPE PRESERVED
+No ACCOUNT_EMAIL_ENABLED implementation.
+No account-email provider.
+No password reset.
+No existing-account verification flow.
+No account_email_challenges runtime.
+No account deletion route.
+No domain authorization.
+No EXTENDED scanning.
+No payments/entitlements.
+No PDF.
+No CI.
+No production migration/deploy.
+
+No migration, schema contract or grants changed.
+
+PRODUCTION
+Untouched.
+Migration 0002 remains unapplied.
+Public signup remains closed.
+
+M12A TAG IMMUTABILITY
+m12a-complete-2026-10-01 remains:
+
+annotated tag object:
+ad3c7bb767443e2d699636cbe94e1a4195705252
+
+target:
+65ba34fde9aa5948106e4afb0540921cebb99400
+
+FINAL REVIEW VERDICT
+M12B-5 CLOSED.
+
+NEXT
+M12B-5a — account-email transport, existing-account email challenges, and password-reset flow.

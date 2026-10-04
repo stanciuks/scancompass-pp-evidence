@@ -1,0 +1,966 @@
+SCANCOMPASS — M11 STEP 13 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-27
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Legal/privacy copy and operator documentation reconciliation
+
+This is factual development evidence, not Personal Project reflection prose.
+
+STATUS
+M11 Steps 0–13 complete.
+M11 Steps 14–15 remain.
+
+EVIDENCE PROVENANCE
+Prepared from:
+1. Claude Code's Step 13 design review, implementation, correction, independent-review and merge reports.
+2. The GitHub PR #5 review history.
+3. The final post-merge repository state reported after Step 13 landed on main.
+
+This note records the reviewed implementation and merge evidence. It does not claim any
+production/provider/database action that did not occur.
+
+FINAL MERGED PR
+PR:
+#5 — M11 step 13 — legal/privacy copy and operator documentation
+
+State:
+MERGED / CLOSED
+
+Merge method:
+Squash merge
+
+Approved PR head:
+396d73b4efc1a6356492a11461b0717b903aca3a
+
+Base main before merge:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+Final Step 13 / main SHA:
+272624f614b92a29046cb83120fdb430507b154a
+
+Parent SHA:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+Squash subject:
+docs: reconcile M11 privacy and operator guidance
+
+Merged at:
+2026-09-27T16:53:13Z
+
+The squash commit has exactly one parent, so Step 12 -> Step 13 is exactly one commit on main.
+
+REVIEW WORKFLOW
+Step 13 was developed on:
+
+review/m11-step13-legal-runbook
+
+The branch carried three review commits.
+
+The final independent review result was:
+
+REVIEW APPROVED — no further changes requested
+
+GitHub formal APPROVE could not be recorded because the authenticated reviewer identity was the
+same account that authored the PR.
+
+GitHub returned the expected self-approval refusal.
+
+The independent review was therefore recorded as a review COMMENT stating:
+
+Independent review complete — REVIEW APPROVED. No further changes requested.
+
+No formal GitHub APPROVE is claimed.
+
+STEP 13 PURPOSE
+Step 13 reconciled the public legal/privacy representation and operator documentation with the
+actual M11 source implemented in Steps 4–12.
+
+The main reason for the step was a real privacy-copy defect:
+
+Before Step 13 the public scanning-policy page said, in substance:
+
+- an assessment is not written to a database;
+- there is no permanent link to a report;
+- nothing survives a restart.
+
+Those statements were still true of the current deployment only because no DATABASE_URL had been
+configured yet.
+
+They were already false of the source after Steps 7–12, because the repository contained:
+
+- a durable persistence write path;
+- durable report rows;
+- share links;
+- report delivery rows;
+- retention/purge code.
+
+If Step 15 had provisioned PostgreSQL without correcting the public wording first, the published
+privacy representation would have silently become false.
+
+Step 13 therefore corrected the wording before provisioning.
+
+STATIC / CONDITIONAL PUBLIC COPY
+A config-aware legal page was considered and rejected.
+
+The final design uses static conditional wording such as:
+
+- where durable persistence is configured; and
+- where a persistence write succeeds.
+
+No persistence configuration is imported into the legal page.
+
+No runtime predicate chooses between two privacy promises.
+
+No readPersistenceConfig() import reaches src/app/legal/**.
+
+The legal page therefore stays accurate whether persistence is:
+
+- absent;
+- configured later;
+- temporarily unavailable.
+
+The accuracy is in the wording rather than in a runtime branch.
+
+LEGAL SURFACE
+No new /legal/privacy route was added.
+
+The existing:
+
+/legal/scanning-policy
+
+remains the canonical public data-handling/privacy surface.
+
+Reason:
+the scanner User-Agent already points to this page, while a new standalone privacy route would
+have had no existing inbound link surface.
+
+The page gained a new:
+
+Data handling and privacy
+
+section.
+
+PUBLIC DATA-HANDLING COPY
+The final public copy was checked against the actual source/schema/evidence policy before merge.
+
+It explains:
+
+- durable reports exist only when persistence is configured and a write succeeds;
+- what a durable record contains;
+- what a durable record does not contain;
+- the 30-day anonymous retention policy;
+- share-created expiry extension;
+- the 90-day absolute ceiling measured from the original assessment;
+- deletion through a bounded retention process rather than instant deletion at the expiry timestamp;
+- share links as bearer capabilities;
+- management capability and share capability as separate secrets;
+- scan identifiers as non-credentials;
+- revocation limitations;
+- optional email delivery;
+- recipient-address transmission to the configured email provider;
+- recipient HMAC persistence rather than plaintext address persistence;
+- successful report views/downloads not being intentionally recorded as viewer analytics;
+- ordinary operational logging being separate from viewer analytics;
+- opt-out/denylist behavior;
+- operator-driven purge of already stored assessments.
+
+The public provider wording remains generic:
+
+the configured email delivery provider
+
+Postmark is named only in operator/technical documentation because the current adapter and
+configuration depend on it.
+
+STORED / NOT-STORED CLAIMS
+The disclosure list was not copied from planning text without verification.
+
+The final copy was checked against:
+
+- persistence schema;
+- Step 7 mapping;
+- frozen report artifact;
+- closed evidence allowlist.
+
+Important narrowed claims include:
+
+COOKIES
+Three COOKIES.* checks assess cookie security attributes.
+
+The public copy therefore does not claim cookies are never looked at.
+
+It states that cookie names/values are not retained in the durable record while attributes are
+assessed.
+
+REGISTRANT CONTACTS
+Registration/contact evidence is narrowed to the source contract:
+
+- presence/count can be retained;
+- contact details are not recorded.
+
+PAGE CONTENT
+A bounded amount of response content/markup may be read during scanning.
+
+The durable evidence policy does not retain page markup as a general durable record.
+
+CREDENTIALS
+The public copy does not claim support for account credentials.
+
+The product has no account/payment flow and does not intentionally store credentials in durable
+report data.
+
+FROZEN ARTIFACT VS DOWNLOAD
+An important Step 13 correction separated two contracts that an earlier draft had conflated.
+
+STEP 6:
+The frozen PublicAssessmentReport artifact is stored as:
+
+- exact serialized report bytes;
+- byte size;
+- SHA-256 digest over exactly those bytes.
+
+STEP 10:
+A download is NOT those same stored bytes.
+
+The share resolver verifies the frozen artifact, then Step 10 renders a NEW standalone HTML file
+from that verified frozen report using react-dom/static prerender.
+
+Therefore:
+
+- report data/semantics are frozen;
+- the stored artifact bytes are exact and hash-verified;
+- the downloadable HTML file is a new rendering from the frozen report.
+
+The public copy and tests were corrected so they no longer say or imply that the download is
+byte-identical to the stored artifact.
+
+RETENTION WORDING
+Step 13 deliberately does NOT say:
+
+30 days, then deleted.
+
+The final public wording reflects the real retention policy:
+
+Default anonymous retention:
+30 days
+
+Share default lifetime:
+30 days
+
+Absolute anonymous maximum:
+90 days from the original scan creation time
+
+The ceiling is non-rolling.
+
+Repeated share creation cannot move a report past the 90-day ceiling.
+
+Expired records are removed by the bounded retention process rather than being promised to vanish
+at the exact instant expires_at is reached.
+
+SHARE / REVOCATION WORDING
+The public copy states:
+
+- a share URL is a bearer capability;
+- anyone with a valid live share URL can resolve the report;
+- share and management capabilities are separate secrets;
+- they are not intentionally stored in readable plaintext form;
+- the server stores one-way digests;
+- scanId is not an authorization credential;
+- revocation stops future successful resolution;
+- revocation cannot retract a report that was already viewed/downloaded or already in flight.
+
+It does not call the management capability the only route to deletion because operator purge also
+exists.
+
+EMAIL PRIVACY WORDING
+The final public copy states that email delivery:
+
+- ships disabled;
+- is available only when an operator explicitly enables it with valid configuration;
+- transmits the recipient address to the configured external email-delivery provider;
+- necessarily gives that provider the recipient address;
+- may involve provider-side processing/retention under that provider's own terms/service practices;
+- does not give SCANCOMPASS control over provider-side retention;
+- does not intentionally store the recipient address in plaintext;
+- stores a keyed one-way digest used to recognise the same normalized address under the same key
+  generation and enforce per-report delivery duplication/limits.
+
+It does NOT claim:
+
+- GDPR compliance;
+- a certification;
+- memory zeroization;
+- immediate provider deletion;
+- a provider retention period that has not been verified;
+- recipient data is never retained anywhere;
+- encryption-at-rest guarantees not implemented by the application.
+
+THIRD-PARTY WORDING CORRECTION
+An early Step 13 draft said email was:
+
+the only part of this product that contacts a third party
+
+That was false.
+
+The scanner itself deliberately performs outbound:
+
+- DNS;
+- HTTP;
+- TLS;
+- registration/RDAP/WHOIS-related
+
+work against assessed targets and supporting infrastructure.
+
+The final wording is narrower:
+
+email is the report feature that transmits a recipient address to an external email-delivery
+provider.
+
+The correction was pinned by tests, including a whitespace-normalized check so line wrapping cannot
+hide the old false claim.
+
+EMAIL ENABLEMENT RUNBOOK
+docs/OPERATIONS_RUNBOOK.md gained the Step 12 email enablement/disablement procedure.
+
+It documents:
+
+- email ships disabled;
+- EMAIL_DELIVERY_ENABLED=0 is the kill switch;
+- required settings must be valid before enabling;
+- EMAIL_PROVIDER_ORIGIN is optional;
+- the current adapter is Postmark;
+- provider/domain/sender setup is owner/operator work;
+- the recipient HMAC key must be standard base64 decoding to exactly 32 bytes;
+- the feature flag is set last;
+- PUBLIC_BASE_URL must already be valid;
+- restart procedure;
+- real operator-observable signals;
+- Step 15 live-acceptance gates.
+
+NO INVENTED EMAIL READINESS SURFACE
+Inspection found:
+
+emailReadiness()
+
+has exactly one runtime consumer:
+
+src/app/page.tsx
+
+There is:
+
+- no email-readiness CLI;
+- no email-readiness health field;
+- no email-readiness boot log.
+
+The runbook therefore does not tell an operator to run a nonexistent readiness command.
+
+The actual observable signals documented are:
+
+1. the existing launch/persistence readiness startup logs remain healthy;
+2. the email action appears in the report UI only when configuration resolves READY.
+
+DISABLED and UNAVAILABLE are not independently exposed as a dedicated operator status.
+
+That observability gap remains Step 15 work rather than being papered over with a fictional
+command.
+
+EMAIL PROVIDER ACCEPTANCE — DEFERRED TO STEP 15
+Step 13 documents but does not perform:
+
+- provider sending-identity verification;
+- domain verification;
+- DKIM;
+- SPF/alignment where applicable;
+- custom Return-Path checks if selected;
+- preservation of the existing DMARC policy;
+- provider-level open tracking verified OFF;
+- provider link-tracking settings inspection;
+- a real received seed email;
+- received-header inspection;
+- verification that the share URL was not rewritten through a tracking domain.
+
+No provider/DNS contact occurred in Step 13.
+
+EMAIL HMAC KEY
+The recipient HMAC key is required for READY email configuration.
+
+Accepted representation:
+standard base64 decoding to exactly 32 bytes
+
+Generation command documented:
+
+openssl rand -base64 32
+
+The command was empirically verified against the real parser:
+
+- output length: 44 characters with normal padding;
+- decoded bytes: exactly 32;
+- round-trip form: accepted.
+
+The actual key value was not recorded in the evidence.
+
+HMAC KEY LOSS / ROTATION
+A first Step 13 draft incorrectly said losing/rotating EMAIL_RECIPIENT_HMAC_KEY did not break
+delivery.
+
+This was corrected.
+
+Final documented behavior:
+
+- missing/invalid HMAC key => email UNAVAILABLE;
+- a valid replacement is required before READY can return;
+- routine rotation is unsupported during M11 while rows written under the old key can remain;
+- the single key generation is identified as v1;
+- anonymous rows have a maximum 90-day lifetime;
+- an emergency replacement inside that period changes the recipient digest identity;
+- the same address for a still-live scan may therefore fail to collide with its old digest and may
+  receive a second email;
+- hmac_key_id distinguishes generations but does not restore cross-key duplicate suppression.
+
+Operator guidance:
+back up the key and do not rotate it routinely during M11.
+
+ENVIRONMENT INVENTORY
+The first Step 13 design review incorrectly audited only *_ENV constants under src/**.
+
+That missed:
+
+DATABASE_MIGRATION_URL
+
+because it is read by:
+
+scripts/migrate.ts
+
+The final repository-wide audit classified the real configuration surface.
+
+Production/runtime variables include:
+
+- PUBLIC_BASE_URL
+- SCANNER_PRODUCT_NAME
+- SCANNER_ABUSE_CONTACT
+- TRUSTED_PROXY_TOKEN
+- EDGE_RATE_LIMIT_CONFIRMED
+- HOSTING_PROVIDER_PERMISSION_CONFIRMED
+- SCAN_PRODUCTION_ENABLED
+- SCAN_DENYLIST_FILE
+- DATABASE_URL
+- DATABASE_POOL_MAX
+- PERSISTENCE_STATEMENT_TIMEOUT_MS
+- PERSISTENCE_WRITE_BUDGET_MS
+- EMAIL_DELIVERY_ENABLED
+- EMAIL_PROVIDER
+- EMAIL_PROVIDER_ORIGIN
+- EMAIL_PROVIDER_API_KEY
+- EMAIL_FROM_ADDRESS
+- EMAIL_RECIPIENT_HMAC_KEY
+
+Migration/operator-only:
+
+- DATABASE_MIGRATION_URL
+
+Test-only and deliberately excluded from production examples:
+
+- PERSISTENCE_IT_DATABASE_URL
+- PERSISTENCE_IT_ADMIN_DATABASE_URL
+- PERSISTENCE_IT_ALLOW_DESTRUCTIVE
+
+DATABASE_MIGRATION_URL
+DATABASE_MIGRATION_URL is:
+
+- read by scripts/migrate.ts;
+- not read anywhere under src/**;
+- migration-role / operator-only configuration.
+
+It is documented but deliberately NOT assigned in .env.production.example.
+
+Reason:
+putting DDL credentials in the running application's env file would unnecessarily widen the impact
+of an application compromise.
+
+PERSISTENCE POLICY CONSTANTS
+Step 13 found that docs/M11_PERSISTENCE_IMPLEMENTATION.md incorrectly listed five policy values as
+environment variables although the code never reads them from the environment.
+
+The incorrect design-list variables included forms corresponding to:
+
+- anonymous retention;
+- share default TTL;
+- share maximum TTL;
+- management-token cap;
+- share cap.
+
+The final implementation instead uses code-owned constants including:
+
+- ANONYMOUS_FREE_RETENTION_DAYS = 30
+- ANONYMOUS_ABSOLUTE_MAX_DAYS = 90
+- DEFAULT_SHARE_TTL_DAYS = 30
+- MAX_MANAGEMENT_TOKENS_PER_SCAN = 100
+- MAX_SHARES_PER_SCAN = 5
+- MAX_DELIVERIES_PER_SCAN = 3
+- RETENTION_BATCH_SIZE = 200
+- MAX_RETENTION_BATCHES_PER_RUN = 10
+
+The M11 implementation document now clearly distinguishes:
+
+- actual environment variables;
+- migration/operator-only configuration;
+- test-only variables;
+- code-owned policy constants.
+
+ENV EXAMPLE SAFETY
+.env.production.example was reconciled with actual code.
+
+It preserves:
+
+EMAIL_DELIVERY_ENABLED=0
+
+SCAN_PRODUCTION_ENABLED=0
+
+Secrets ship empty.
+
+EMAIL_PROVIDER_ORIGIN is documented as optional:
+
+- empty => adapter canonical origin;
+- a different configured value => PROVIDER_ORIGIN_MISMATCH.
+
+Existing safety wording remains:
+
+- example contains no real values;
+- validate nginx with nginx -t;
+- never use nginx -T for this purpose.
+
+The email heading was corrected from the loose wording:
+
+leave at 0 unless configured
+
+to:
+
+leave at 0 until every required setting is valid
+
+because enabling the flag with invalid required configuration yields UNAVAILABLE, not DISABLED.
+
+BACKUP SCOPE
+The previous operations runbook said:
+
+There is no database and no user data
+
+as a standing backup instruction.
+
+That is true before persistence is provisioned but would become dangerous after Step 15.
+
+Step 13 made backup guidance conditional:
+
+Before persistence:
+- no application database exists to back up.
+
+After persistence is provisioned:
+- PostgreSQL becomes part of production backup scope;
+- durable scans/reports/capabilities/shares/delivery records live there;
+- Step 15 owns real backup/restore acceptance;
+- Step 15 must perform a restore rehearsal.
+
+The runbook also keeps host-owned secret/config paths in backup scope.
+
+RETENTION / PURGE RUNBOOK
+Step 11's retention/purge operator procedure already existed and was largely correct.
+
+Step 13 did not duplicate it unnecessarily.
+
+The established order remains:
+
+1. add denylist rule;
+2. restart application;
+3. verify target refusal;
+4. purge the exact active rule;
+5. retry INCOMPLETE runs;
+6. stop only when COMPLETED.
+
+The source CLI still exists without:
+
+- scheduler;
+- timer;
+- production packaging.
+
+Production scheduling remains Step 15.
+
+CURRENT-STATE DOCUMENTATION
+Several stale current-state statements were corrected.
+
+Examples:
+
+ARCHITECTURE.md
+Old:
+there is no email path
+
+Corrected:
+the Step 12 optional email path exists in source and ships disabled.
+
+Guarded PostgreSQL count:
+Old:
+102 tests / four suites
+
+Correct:
+128 tests / five suites
+
+Breakdown:
+
+- writer: 35
+- migrations: 30
+- email: 26
+- retention: 22
+- readiness: 15
+
+Executed:
+0
+
+DATA MODEL
+The header said a write path existed for five of six application-data tables.
+
+Step 12 added the report_deliveries writer, so all six data tables now have a writer in source.
+
+Still:
+no database is provisioned.
+
+PROVISIONING TRIGGER
+Truthful statements such as:
+
+the deployed application uses no database
+
+were not rewritten into false future-tense statements.
+
+Instead current operational documentation gained a provisioning trigger:
+
+when Step 15 configures DATABASE_URL/provisions PostgreSQL, the deployment-state statements and
+backup scope must be updated in the same change.
+
+The public privacy copy does not need rewriting then because it is already conditional.
+
+HEALTH ROUTE DOCUMENTATION DEFECT
+Step 13 found that:
+
+src/app/api/health/route.ts
+
+referred operators to:
+
+the readiness script over SSH
+
+No such readiness script exists.
+
+The final Step 13 change corrected COMMENT/DOCBLOCK TEXT ONLY.
+
+The actual existing surfaces are:
+
+- structured launch_readiness startup event;
+- persistence_readiness startup event where configured;
+- docker compose process/status inspection.
+
+GET /api/health remains deliberately uninformative.
+
+No endpoint behavior changed.
+
+LAUNCH READINESS DOCUMENTATION DEFECT
+A second copy of the same nonexistent-readiness-script claim remained in:
+
+src/server/launch/readiness.ts
+
+The final review authorized this as the 15th Step 13 file.
+
+The comment now records the actual consumers:
+
+- tests;
+- src/instrumentation.ts;
+- structured launch_readiness startup logging;
+- deployment/operator documentation.
+
+Nothing serves getLaunchReadiness() publicly.
+
+No runtime/type code changed.
+
+PRODUCTION COMPOSE COMMENT DEFECT
+deploy/docker-compose.production.yml previously justified read_only: true by saying:
+
+- the app stores no reports;
+- the app has no database.
+
+That would become misleading after Step 15.
+
+Step 13 changed COMMENT TEXT ONLY.
+
+The final statement is scoped to the application root filesystem:
+
+- durable report data is not stored on the application root filesystem;
+- writable paths are tmpfs;
+- once persistence exists, durable report data lives in PostgreSQL rather than the application root filesystem;
+- read_only: true therefore remains a valid hardening control.
+
+Compose executable configuration remained byte-identical once comments/blank lines were stripped.
+
+BOUNDARY PIN MOVE
+Before Step 13, a mandatory boundary test proved Step 13+ had not started by forbidding privacy-
+related tokens.
+
+Step 13 legitimately adds privacy copy, so that pin had to move forward.
+
+A global token blacklist was deliberately rejected because Step 14/15 terms already appear
+legitimately in:
+
+- planning docs;
+- tests;
+- future-step documentation.
+
+The replacement checks implementation surfaces structurally.
+
+STEP 14 ABSENCE PIN
+Verifies no active:
+
+reports_per_ip
+
+directive exists in committed nginx deploy configuration.
+
+The pin was mutation-tested both ways:
+
+- active directive => failure;
+- commented documentation mention => allowed.
+
+STEP 15 ABSENCE PINS
+Verify:
+
+- production Compose has only the app service;
+- no PostgreSQL service is committed;
+- no retention scheduler/systemd timer/crontab is committed;
+- EMAIL_DELIVERY_ENABLED still ships 0;
+- SCAN_PRODUCTION_ENABLED still ships 0;
+- email secrets ship empty.
+
+These prove later-step implementation has not begun while allowing docs to discuss it.
+
+FILES IN FINAL STEP 13 COMMIT
+Exactly 15 files.
+
+1. .env.production.example
+2. deploy/docker-compose.production.yml
+3. docs/ARCHITECTURE.md
+4. docs/DATA_MODEL.md
+5. docs/M11_PERSISTENCE_IMPLEMENTATION.md
+6. docs/MILESTONES.md
+7. docs/OPERATIONS_RUNBOOK.md
+8. docs/PRODUCTION_LAUNCH_CONTROLS.md
+9. docs/ROADMAP.md
+10. src/app/api/health/route.ts
+11. src/app/legal/scanning-policy/page.tsx
+12. src/content/en/legal.ts
+13. src/server/launch/readiness.ts
+14. tests/boundaries.test.ts
+15. tests/unit/content/legal-privacy-copy.test.ts
+
+Diff:
++993 / -64
+
+COMMENT-ONLY OPERATIONAL CHANGES
+The following final Step 13 changes were mechanically verified as documentation/comment-only:
+
+- src/app/api/health/route.ts
+- src/server/launch/readiness.ts
+- deploy/docker-compose.production.yml
+
+No executable health/readiness behavior changed.
+
+Production Compose executable configuration is byte-identical to pre-Step-13 main after comments
+and blank lines are removed.
+
+TEST BASELINE CORRECTION
+The original Step 13 design review accidentally reused a stale pre-Step-12 test count:
+
+84 files / 3,426 passed / 45 skipped
+
+This was rejected.
+
+The real Step 12 baseline was re-measured before Step 13 implementation:
+
+119 files
+4,630 passed
+128 skipped
+boundaries 960
+
+FINAL POST-MERGE TEST EVIDENCE
+pnpm install --frozen-lockfile:
+PASS
+Already up to date.
+Lockfile unchanged.
+
+Typecheck:
+PASS
+
+Lint:
+PASS
+
+Full suite:
+120 files
+4,653 passed
+128 skipped
+4,781 total
+
+Boundary suite:
+962 passed
+
+Next build:
+PASS
+
+Route inventory:
+7 routes
+unchanged
+
+drizzle-kit check:
+Everything's fine
+
+drizzle-kit generate:
+No schema changes, nothing to migrate
+
+Guarded real-PostgreSQL:
+5 files
+128 skipped
+0 executed
+
+Docs links/anchors:
+0 broken
+
+Golden focused verification:
+64 passed
+
+Public report golden:
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+Status:
+unchanged
+
+MIGRATION / SCHEMA
+No Step 13 schema file changed.
+
+No migration artifact changed.
+
+No migration was generated.
+
+No migration was executed.
+
+Step 13 is documentation/legal/operator reconciliation, not persistence implementation.
+
+FINAL INVARIANTS
+Verified on merged main:
+
+- no schema change;
+- no migration artifact change;
+- route inventory remains 7;
+- PublicAssessmentReport unchanged;
+- report golden unchanged;
+- EMAIL_DELIVERY_ENABLED ships 0;
+- SCAN_PRODUCTION_ENABLED ships 0;
+- no active reports_per_ip directive;
+- no PostgreSQL service in production Compose;
+- no scheduler/timer/crontab unit;
+- health route executable behavior unchanged;
+- launch readiness executable behavior unchanged;
+- Compose executable configuration unchanged;
+- Step 14 not started;
+- Step 15 not started.
+
+BRANCH / WORKTREE STATUS
+After merge:
+
+local main:
+272624f614b92a29046cb83120fdb430507b154a
+
+origin/main:
+272624f614b92a29046cb83120fdb430507b154a
+
+Equal:
+yes
+
+Step 13 review branch:
+review/m11-step13-legal-runbook
+
+Status:
+deleted locally and remotely after successful squash merge and post-merge verification.
+
+Step 12 review branch:
+review/m11-step12-email-delivery
+
+Status:
+retained and untouched
+
+Local and remote Step 12 branch SHA:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+git status --short:
+?? .claude/
+
+0 staged changes.
+0 tracked modifications.
+
+PERSONAL PROJECT BASELINE
+Tag:
+pp-start-2026-09-24
+
+The tag is annotated.
+
+Tag target commit:
+987f54cf7ccd76007611e1a1b0356d2e03013194
+
+The PP baseline tag was not moved.
+
+PRODUCTION IMPACT
+None.
+
+According to the contemporaneous Step 13 implementation/review/merge record:
+
+- no production access;
+- no PostgreSQL contact;
+- no PostgreSQL provisioning;
+- no migration execution;
+- no provider/Postmark contact;
+- no email sent;
+- no DNS action;
+- no SPF work;
+- no DKIM work;
+- no DMARC work;
+- no nginx runtime change;
+- no nginx reload;
+- no scheduler installation;
+- no deployment;
+- Step 14 not started;
+- Step 15 not started.
+
+CURRENT M11 STATUS
+Complete:
+Steps 0–13
+
+Remaining:
+Step 14 — report-edge additions including reports_per_ip
+Step 15 — production PostgreSQL provisioning/deployment, migration execution, restore rehearsal,
+          real-PostgreSQL acceptance, persistence benchmark and live email/provider validation
+
+M11 completion count:
+14 of 16 steps complete.
+
+PERSONAL PROJECT VALUE
+This step can support evidence for:
+
+- Critical thinking: a public privacy statement that would have become false after provisioning was
+  identified and corrected before deployment.
+- Organization: legal copy, environment inventory, operator procedures and later-step gates were
+  reconciled in one reviewed documentation step.
+- Testing: public-copy claims, environment-example safety and Step 14/15 absence were protected by
+  executable tests rather than prose alone.
+- Security engineering: provider boundaries, capability semantics, HMAC-key handling, least-
+  privilege migration credentials and disabled-by-default email behavior were documented precisely.
+- Iteration: several inaccurate statements in the first Step 13 drafts were independently reviewed
+  and corrected before merge.
+- Process transparency: stale counts, missing environment variables, nonexistent operator tooling
+  and misleading deployment comments were corrected rather than left as evidence.
+- Academic integrity / development history: historical Step 0–12 entries remained unchanged, the PP
+  baseline tag remained fixed, and later work is recorded separately.
+
+PERSONAL PROJECT NOTE
+This file records factual development evidence only.
+
+Any Personal Project reflection, ATL reflection, success-criteria judgment or personal evaluation
+should be written by the student in their own words and according to supervisor/school
+instructions.

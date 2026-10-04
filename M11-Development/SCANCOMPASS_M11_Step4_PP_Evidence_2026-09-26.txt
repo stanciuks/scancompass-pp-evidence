@@ -1,0 +1,235 @@
+SCANCOMPASS — M11 STEP 4 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-26
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Persistence foundation
+
+PROVENANCE
+Prepared from the Claude Code Step 4 completion report and independently verified
+against GitHub commit fbe369b15a474dc1653c5740d986507b307cce7c.
+
+PURPOSE
+Add the PostgreSQL persistence foundation to source without adding any
+assessment/report write path or changing free-scanner behaviour.
+
+COMMIT
+SHA: fbe369b15a474dc1653c5740d986507b307cce7c
+Subject: feat: add PostgreSQL persistence foundation
+Push: fast-forward from 667b0a2; no force push; no tag change.
+
+INDEPENDENT GITHUB CHECK
+- commit exists at the expected SHA
+- exactly one commit ahead of Step 3
+- 33 changed files
+- pnpm-workspace.yaml preserves `unrs-resolver: true`
+- pnpm-workspace.yaml adds `esbuild: false`
+
+FOUNDATION ADDED
+- src/server/persistence/config.ts
+- src/server/persistence/pool.ts
+- src/server/persistence/database.ts
+- src/server/persistence/schema.ts
+- src/server/persistence/index.ts
+- src/server/persistence/migrations/discover.ts
+- src/server/persistence/migrations/ledger.ts
+- src/server/persistence/migrations/run.ts
+- scripts/migrate.ts
+- drizzle.config.ts
+- committed Drizzle migration and metadata
+- two PostgreSQL operator SQL templates
+- unit/static tests
+- pending real-PostgreSQL integration suite
+
+DEPENDENCIES
+Runtime:
+- pg 8.23.0
+- drizzle-orm 0.45.3
+
+Development:
+- drizzle-kit 0.31.11
+- @types/pg 8.23.1
+
+No pg-native, dotenv, testcontainers, second ORM or second migration system.
+
+POSTGRESQL SCHEMA / ROLE DECISION
+Dedicated schema: `scancompass`.
+
+- migration role owns the schema and persistent objects
+- app role gets USAGE on `scancompass`
+- app role gets no CREATE on `scancompass`
+- app role owns no persistent SCANCOMPASS object
+- both roles use search_path `pg_catalog, scancompass`
+- public schema is not used for SCANCOMPASS objects
+
+SEVEN TABLES
+1. scans
+2. scan_findings
+3. scan_reports
+4. report_management_tokens
+5. report_shares
+6. report_deliveries
+7. schema_migrations
+
+Schema totals recorded during Step 4:
+- 98 columns
+- 7 primary keys
+- 8 foreign keys
+- 2 CHECK constraints
+- four non-PK uniqueness guarantees
+- 11 explicit index statements
+- no domains table
+- no scan_events table
+- no copy_params
+- no viewer analytics
+- no plaintext recipient address/domain
+
+BIGSERIAL PRIVILEGE FINDING
+`scan_findings.id` remains BIGSERIAL.
+The review found that table INSERT is not enough when the default calls nextval().
+The app role therefore receives exactly:
+GRANT USAGE ON SEQUENCE scancompass.scan_findings_id_seq
+
+LEAST-PRIVILEGE APPLICATION ROLE
+- scans: SELECT / INSERT / UPDATE / DELETE
+- scan_findings: INSERT only
+- scan_reports: SELECT / INSERT only
+- report_management_tokens: SELECT / INSERT / UPDATE
+- report_shares: SELECT / INSERT / UPDATE
+- report_deliveries: SELECT / INSERT / UPDATE
+- schema_migrations: no app privileges
+- scan_findings_id_seq: USAGE only
+
+COPY WORDING CORRECTION
+The earlier design phrase "no COPY" was removed because PostgreSQL does not have a
+separate client COPY privilege beyond underlying SELECT/INSERT rights.
+The security control is instead:
+- not superuser
+- no pg_read_server_files
+- no pg_write_server_files
+- no pg_execute_server_program
+
+MIGRATION DESIGN
+Initial migration:
+db/migrations/0000_m11_persistence.sql
+
+Drizzle Kit 0.31.11 naturally numbers the first indexed migration 0000. The repo
+follows the tool rather than renaming the SQL or editing its journal.
+
+Runner characteristics:
+- explicit operator invocation only
+- never migration-on-boot
+- exact migration bytes SHA-256 checked
+- transaction-scoped advisory lock
+- dedicated schema must already exist
+- first run requires an otherwise-empty application schema
+- initial migration creates all seven tables, including schema_migrations
+- ledger row written in the same transaction
+- checksum mismatch refuses
+- unexpected pre-existing objects refuse
+- malformed/missing ledger state refuses
+- unknown applied migration versions refuse
+- no automatic repair of migration history
+
+DESTRUCTIVE INTEGRATION SAFETY
+The original hostname-substring guard was replaced with positive scratch-target
+identification:
+- PERSISTENCE_IT_DATABASE_URL required
+- PERSISTENCE_IT_ADMIN_DATABASE_URL required
+- both identify the same database
+- database name must match `scancompass_it_<suffix>`
+- PERSISTENCE_IT_ALLOW_DESTRUCTIVE=1 required
+- target must not collide with DATABASE_URL or DATABASE_MIGRATION_URL
+- present-but-unparseable protected URLs cause refusal
+- refusal details do not expose credentials
+
+BOUNDARY HARDENING DISCOVERIES
+1. ESLint flat-config overlap had caused one no-restricted-imports rule to replace
+   another for scanner files. The config was corrected.
+2. `assertServerOnly` in ledger.ts had accidentally been placed inside a docblock.
+3. The old boundary test only searched raw text, so a commented-out guard could
+   satisfy it. The test now strips comments, requires a real import, and requires
+   an active guard call; three mutation cases were tested.
+
+UNKNOWN APPLIED MIGRATION FIX
+The first runner version ignored ledger rows for migrations missing from the local
+checkout. Step 4 added UNKNOWN_APPLIED_MIGRATION so an old migration runner refuses
+to manage a newer migration history.
+
+MIGRATION ARTIFACT HASHES
+0000_m11_persistence.sql:
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+meta/_journal.json:
+24186ee4e92b0dc52ecd0fb7f230342f66ddd18300957d7619490dbdddaac896
+
+meta/0000_snapshot.json:
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+BROWSER REPORT GOLDEN
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+Unchanged.
+
+TEST RESULTS
+- pnpm install --frozen-lockfile: PASS
+- drizzle-kit check: PASS
+- drizzle-kit generate: PASS; no new migration
+- pnpm typecheck: PASS
+- pnpm lint: PASS
+- pnpm test:run: 78 files, 3132 passed, 30 skipped
+- pnpm build: PASS
+- scoring/public-report golden suite: 341 tests PASS
+- docs links/anchors: 0 broken
+- touched-doc odd-backtick scan: 0
+
+REAL POSTGRESQL ACCEPTANCE
+PENDING by design.
+
+The integration suite contains 30 skipped real-PostgreSQL cases covering:
+- migration application/idempotence
+- rollback
+- advisory-lock serialization
+- checksum refusal
+- unknown-applied-version refusal
+- real catalog shape
+- sequence naming / USAGE
+- migration-role ownership
+- app-role least privilege
+- inability to create/alter/drop persistent SCANCOMPASS objects
+- no schema_migrations access
+- server-file/program role denial
+- pinned search_path
+
+These are not claimed as proven until run against a disposable real PostgreSQL
+instance using the same major version selected for production. This is a hard gate
+before Step 15 production provisioning.
+
+PRE-EXISTING OPERATIONAL DOC FIX
+`.env.production.example` contained an unsafe `nginx -T | grep ...` instruction.
+It was replaced with instructions to inspect only individually named non-secret
+nginx files and use `nginx -t` for syntax. No database variables were added there.
+
+PRODUCTION / PRODUCT STATUS AFTER STEP 4
+- production untouched
+- no PostgreSQL provisioned
+- no migration run against any database
+- no scan/report persistence writer
+- no persistenceReadiness()
+- no user-visible M11 persistence feature
+- free scanning behaviour unchanged
+- nginx config unchanged
+- Docker Compose unchanged
+- Step 5 not started
+
+PERSONAL PROJECT VALUE
+This step provides evidence of:
+- critical thinking: database privilege, migration-history, and safety-boundary
+  issues were identified before deployment
+- organization: schema, migration, pool, roles, and tests were separated
+- security design: least privilege was specified at schema/table/sequence level
+- testing: executable unit/static evidence is kept separate from pending real-DB
+  acceptance
+- transparent development history: PP baseline tag stayed unchanged
+
+ACADEMIC-INTEGRITY NOTE
+This is a factual evidence summary, not a Personal Project reflection. Any report
+or reflection prose should be written by the student in their own words.

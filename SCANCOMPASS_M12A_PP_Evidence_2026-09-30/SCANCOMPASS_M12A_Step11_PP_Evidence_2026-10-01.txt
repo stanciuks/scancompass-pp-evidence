@@ -1,0 +1,248 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 1 October 2026
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-11 — Staged production deployment with scan gate CLOSED
+STATUS: COMPLETE, with one explicit M12A-12 blocker
+
+EVIDENCE COMMIT
+37c57c3a1c732bedeb499a5a2e3e17aeca9a85c7
+
+PARENT
+c5dc83859ad70e8b571135f8154899912d63b980
+
+EVIDENCE FILE
+docs/M12A_PRODUCTION_STAGED_DEPLOYMENT.md
+
+PURPOSE
+Deploy the reviewed worker/topology/egress architecture to the real production host while keeping
+public scan execution disabled, prove the same isolation and egress properties on the live host,
+reboot, and re-prove them before any scan is allowed again.
+
+SCAN GATE CLOSED FIRST
+Before any M12A runtime artefact was deployed:
+- SCAN_PRODUCTION_ENABLED changed from 1 to 0
+- the existing pre-M12 app was recreated
+- public POST /api/scan returned HTTP 503 SCAN_DISABLED
+- launch_readiness reported productionScanningEnabled=false
+- no assessment event was emitted
+
+The gate remained 0 throughout deployment, firewall testing, reboot and evidence capture.
+
+ACTUAL PRE-M12 PRODUCTION BASELINE
+Actual runtime found:
+f0dc975303b8d81ca7cf04e8ea93a6e87d4f1e1e
+
+Tree:
+264320d27ea92b5e211db6d9b488a3c42bfbadfe
+
+This was a known post-M11 hotfix, a descendant of the M11 baseline and an ancestor of the reviewed
+M12A commit. The checkout was clean and the move to c5dc838 was a normal fast-forward.
+
+NO DATABASE MIGRATION
+Verified:
+- db/ tree identical across deployment range
+- no migration file changed
+- EXPECTED_SCHEMA_CONTRACT remained m11-0000
+- live migration ledger remained 2 rows
+- schema remained 7 tables
+- pre-existing scan data remained intact
+- database container was not recreated
+- pgdata volume was untouched
+- pnpm db:migrate was not run
+
+PRODUCTION HOST
+Measured:
+- Ubuntu 24.04.4
+- kernel 6.8.0-142-generic
+- x86_64
+- 2 vCPU
+- 7.8 GiB RAM
+- 0 swap
+- Docker 29.7.2 / server 29.5.x
+- Compose 5.5.0
+- iptables-nft / native nftables backend
+
+SUBNET COLLISION CHECK
+10.83.6.0/29 did not overlap host routes, Docker networks, VPN/tunnel routes or visible provider routes.
+
+REVIEWED RUNTIME DEPLOYED
+Production runtime:
+c5dc83859ad70e8b571135f8154899912d63b980
+
+Worker bundle:
+SHA-256:
+0d862432d0c56041174f221046508ff03bcf986013764aa7b43d8bb819540e1d
+
+Size:
+1,289,566 bytes
+
+The worker bundle in the production scanner image matched the locally tested bundle exactly.
+
+FINAL LIVE TOPOLOGY
+app:
+- db_internal
+- notify_egress
+- scan_internal
+- 127.0.0.1:3000 only
+
+scanner:
+- scan_internal
+- scanner_egress
+- 8787 not host-published
+
+db:
+- db_internal only
+- 5432 not host-published
+
+retention:
+- profile-gated, not persistently running
+
+SCANNER ENVIRONMENT — NAMES ONLY
+Observed:
+- NODE_OPTIONS
+- PATH
+- NODE_VERSION
+- YARN_VERSION
+- NODE_ENV
+- NEXT_TELEMETRY_DISABLED
+
+Application/database/email/launch-control variables were absent. No values were recorded.
+
+SCANNER HARDENING
+Verified:
+- uid/gid 1000
+- all Linux capability sets zero
+- NoNewPrivs = 1
+- read-only root filesystem
+- no mounts
+- no Docker secrets
+- non-privileged
+- cap_drop ALL
+- 1 GiB memory limit
+- 256 MiB reservation
+- 1 CPU
+- 256 pids
+- restart unless-stopped
+
+Scanner could not resolve/reach the database.
+
+PRODUCTION DNS BOUNDARY
+Measured again rather than inherited from disposable testing.
+
+UDP DNS:
+- successful
+- zero scanner-subnet forwarded packets
+
+Real RFC 1035 DNS-over-TCP:
+- transaction ID echoed
+- QR bit set
+- RCODE 0
+- 2 A records
+- zero scanner-subnet forwarded packets
+
+HTTPS positive control moved the host counters.
+
+Conclusion:
+no DNS firewall exception required in production.
+
+PRODUCTION HOST EGRESS POLICY
+The reviewed nftables artefacts were installed root-owned and the systemd service enabled.
+
+Live policy verified:
+- hook priority filter - 10, ahead of Docker
+- source scope 10.83.6.0/29
+- globally reachable IANA exceptions carved
+- no outbound conntrack bypass
+- public TCP destination ports limited to 80/443
+- Docker's own tables left intact
+
+E1–E25 PRE-REBOOT
+All production acceptance cases passed, including:
+- UDP DNS
+- real TCP DNS
+- public HTTP/HTTPS
+- RDAP
+- scan_internal command path
+- all prefix-expressible deny classes
+- transition/embedded IPv6 behavior
+- forbidden public ports
+- DB isolation
+- IPv6 disabled proof
+- pre-established forbidden-flow enforcement
+- reachable IANA exception preservation
+
+ORDINARY PRODUCTION HEALTH WITH SCANNING CLOSED
+Verified:
+- homepage 200
+- /api/health 200
+- /api/scan 503 SCAN_DISABLED
+- persistence readiness READY
+- scanner worker readiness READY
+- Nginx active
+- rate-limit zones present
+- TLS valid
+- retention timer active
+- backup timer active
+- optional email remained disabled
+- no secret was rotated
+
+CONTROLLED REBOOT
+After reboot:
+- Docker active
+- Nginx active
+- firewall unit enabled/active
+- firewall table present without manual repair
+- app/scanner/db healthy
+- pgdata present
+- timers active
+- scan gate still 0
+- /api/scan still 503 SCAN_DISABLED
+- scanner/db ports remained unpublished
+- app remained loopback-only
+
+E1–E25 POST-REBOOT
+The complete matrix was independently re-run after reboot.
+All cases passed again.
+
+IMPORTANT M12A-12 BLOCKER FOUND
+Boot timing showed:
+- Nginx accepting: 15:24:21.274 UTC
+- app/scanner containers started: 15:24:23.707
+- Docker service started: 15:24:24.909
+- firewall policy active: 15:24:25.104
+- app application process starting: 15:24:25.644
+
+On this boot the firewall became active 540 ms before the app could serve, but this order is not
+architecturally guaranteed.
+
+Nginx was already accepting approximately 3.83 seconds before the host egress policy existed, and
+the firewall apply script may wait up to 90 seconds for the scanner bridge in some boot scenarios.
+
+Therefore scanning MUST NOT be reopened until M12A-12 introduces and proves an explicit startup
+ordering/interlock that guarantees public scan execution cannot become available before the host
+egress policy.
+
+This blocker was recorded rather than patched ad hoc during deployment.
+
+ROLLBACK
+Recorded rollback point:
+- previous runtime f0dc975...
+- previous app image locally tagged
+- database container/volume untouched
+- previous root-owned app.env backup retained temporarily
+
+FINAL STATE
+Production runs the M12A worker/topology/firewall runtime at c5dc838...
+Public scanning remains CLOSED:
+SCAN_PRODUCTION_ENABLED=0
+
+M12A-12 was not started.
+
+PP / ATL VALUE
+Strong evidence for organization, critical thinking, testing, risk management, reflection and
+systems thinking: production assumptions were re-measured, scanning was disabled before deployment,
+all network controls were re-proven on the live host, and an apparently successful reboot still
+revealed a startup-order weakness that was carried forward as a blocker instead of being ignored.

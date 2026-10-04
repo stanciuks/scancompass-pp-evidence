@@ -1,0 +1,100 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 30 September 2026
+
+ACADEMIC-INTEGRITY / TIMING NOTE
+This record was created on 30 September 2026 after the implementation step had been completed,
+verified, committed, pushed, and reviewed. It is a technical evidence record, not a substitute
+for the student's own Process Journal reflection.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-5 — Cancellation + final worker failure/refusal semantics
+STATUS: COMPLETE
+COMMIT:
+- ad3d212e783cc601cb27ba35303ab52de79e4cc6
+
+PURPOSE
+Complete the real cancellation chain across the new app↔scanner-worker process boundary and
+replace the temporary M12A-4 generic worker-failure handling with the final approved public
+semantics.
+
+IMPLEMENTED CANCELLATION CHAIN
+browser/request abort
+→ app destroys its real Node ClientRequest
+→ app↔worker TCP connection closes
+→ worker observes ServerResponse close
+→ if response.writableFinished === false, worker treats it as caller cancellation
+→ worker caller AbortController aborts
+→ ScanDeadline records CALLER_ABORTED
+→ scanner capabilities receive the deadline signal
+→ target-side sockets are destroyed
+
+IMPORTANT DESIGN DETAILS
+- Uses response.writableFinished rather than writableEnded.
+- No Promise.race cancellation shortcut.
+- No queue, retry, job store, resumption or automatic replay.
+- A restarted worker only restores availability.
+- Request-body truncation before command admission remains distinct from cancellation of an
+  already-admitted scan.
+- The app-side worker request has an absolute outer response deadline derived from the command's
+  remaining budget plus a small grace period.
+- agent:false remains deliberate so destroying a request tears down the actual connection.
+- Abort listeners and timers are cleaned up on terminal paths.
+
+FINAL PUBLIC WORKER FAILURE / REFUSAL SEMANTICS
+- Worker unavailable → SCAN_DISABLED, HTTP 503.
+- Worker IDENTITY_REJECTED → the same public SCAN_DISABLED, HTTP 503.
+- Missing configured identity before dispatch → SCAN_DISABLED, HTTP 503.
+- Worker BUSY → SCAN_BUSY, HTTP 503, Retry-After: 10.
+- Worker COMMAND_INVALID → INTERNAL_FAILURE, HTTP 500.
+- Malformed/mismatched/oversized worker responses → INTERNAL_FAILURE, HTTP 500.
+
+PUBLIC INDISTINGUISHABILITY
+Launch gate closed, worker unavailable, missing configured identity and worker identity rejection
+are intentionally byte-indistinguishable to a public caller. Operator logs retain stable internal
+reason codes without exposing configured identity values or arbitrary exception strings.
+
+REAL-SOCKET TEST EVIDENCE
+A dedicated cancellation suite uses:
+- real http.Server;
+- real http.ClientRequest;
+- real loopback TCP for the app↔worker hop;
+- the existing scanner connection-factory seam for target-wire bytes, so production address policy
+  is not weakened for testing.
+
+The tests prove:
+- premature worker response close has writableFinished === false;
+- worker deadline reports CALLER_ABORTED;
+- target socket is destroyed;
+- no target byte is written after cancellation;
+- worker permit/in-flight count returns to zero;
+- no retry, queue or resumed scan appears;
+- clean completion does not trigger cancellation.
+
+HONEST LIMITATION
+Node's dns/promises Resolver does not accept an AbortSignal in the current implementation, so a DNS
+query already issued may continue until its own timeout. This was documented rather than hidden.
+The proven security property is that target connection/socket work is torn down and no additional
+target bytes are emitted after cancellation.
+
+ADDITIONAL DEFECT FOUND AND FIXED
+Destroying a ClientRequest can deliver ECONNRESET on a later event-loop turn. Removing the request
+error listener too early could therefore turn a successful cancellation into an uncaught exception.
+The listener lifetime was corrected and regression-tested.
+
+BOUNDARY PRESERVATION
+- Web tier still does not run scanner target-network code.
+- Worker target logging remains hostname-free.
+- Existing worker protocol/result validation remains intact.
+- Public API route count remains unchanged.
+- Compose/network topology was NOT changed in this step.
+
+PRODUCTION SAFETY
+No production contact or deployment.
+No live Docker/network/firewall change.
+
+PP / ATL VALUE
+Useful evidence for critical thinking, testing, reflection and responsible security design:
+the cancellation boundary was tested through a real process/network hop; an uncaught-error edge
+case was found and fixed; and a real DNS limitation was documented instead of overstating coverage.

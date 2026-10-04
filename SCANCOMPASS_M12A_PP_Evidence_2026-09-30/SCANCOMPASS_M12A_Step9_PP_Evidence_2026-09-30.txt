@@ -1,0 +1,195 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 30 September 2026
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+STEP: M12A-9 — Disposable Docker acceptance + resource measurement
+STATUS: COMPLETE
+
+KEY COMMITS
+- Partial container acceptance / Dockerfile fix:
+  1a3aab3083e33ed32f058f16077da9b83d9f21a9
+- Initial comparable measurement:
+  076ff8857e9604acb1a9053195c7f4ab0c69eae6
+- Latency investigation + cancellation-test correction:
+  74de7a63d29db021fcfb67f578befcf3e92e0511
+- Documentation-only closure:
+  72be4f7d298f548a5b439ed14c5870bc0822bb7d
+
+PURPOSE
+Empirically run the scanner-worker architecture in disposable Docker, verify runtime
+separation/hardening, measure resource use at concurrency 2, compare pre- and
+post-extraction latency, and preserve failed/intermediate evidence rather than rewriting it.
+
+DISPOSABLE ENVIRONMENT
+- Docker Engine 29.5.2
+- Docker Compose 5.5.1
+- Ubuntu 24.04.4 Docker VM
+- linux/aarch64
+- 4 vCPU
+- 5.77 GiB RAM
+- 0 swap
+- cgroup v2
+- Colima/Lima VM on macOS arm64
+
+Production was explicitly different: linux/amd64, 2 vCPU, 7.755 GiB RAM, 0 swap.
+
+RUNTIME TOPOLOGY VERIFIED
+- db_internal: app + db
+- scan_internal: app + scanner
+- scanner_egress: scanner only
+- notify_egress: app only
+- scanner_egress subnet: 10.83.6.0/29
+- scanner_egress gateway: 10.83.6.1
+
+SCANNER HARDENING VERIFIED
+- uid 1000 / non-root
+- effective/permitted/bounding capabilities all zero
+- NoNewPrivs = 1
+- read-only root filesystem
+- restart policy unless-stopped
+- no host-published port 8787
+- no mounts
+- no Docker secrets
+- no privileged mode
+
+SCANNER ENVIRONMENT — NAMES ONLY
+Observed:
+HOME
+HOSTNAME
+NEXT_TELEMETRY_DISABLED
+NODE_ENV
+NODE_OPTIONS
+NODE_VERSION
+PATH
+YARN_VERSION
+
+Application/database/email configuration names were absent. No environment values were recorded.
+
+REAL PROCESS-BOUNDARY ACCEPTANCE
+- app reached scanner:8787/healthz over scan_internal
+- scanner readiness reported READY
+- scanner could not resolve db:5432
+- app remained healthy while scanner was stopped
+- scanner restart restored later availability
+- worker logs remained hostname-free
+
+PACKAGING DEFECT FOUND
+The worker image initially built a bundle 37 bytes different from the locally tested bundle.
+Cause: worker-build did not copy tsconfig.json, so esbuild used different class-field semantics.
+The Dockerfile was corrected and a structural regression test added. Afterwards the Docker-shipped
+bundle was byte-identical to the locally tested worker bundle.
+
+FIRST MEASUREMENT ATTEMPT
+Synthetic .invalid scanner identity values correctly kept the launch gate closed.
+The project did not weaken validation or invent operator attestations.
+
+The continuation used owner-confirmed public identity values:
+- SCANCOMPASS
+- https://scancompass.com
+- contact@scancompass.com
+
+No production environment file was read.
+
+BENCHMARK METHOD
+Historical baseline commit:
+12616a0088dcf1fe1085cf19224db062b1a78215
+
+Current architecture measured:
+app-side runAssessment -> real worker HTTP client -> scanner container -> FreeScanResult
+-> web-side scoring/report composition.
+
+Baseline architecture measured:
+equivalent historical runAssessment -> in-process scanner.
+
+INITIAL RESULT
+72 samples per version:
+- baseline p50: 4408 ms
+- current p50: 5000 ms
+- baseline p95: 8331 ms
+- current p95: 7785 ms
+
+The apparent p50 regression was +592 ms (+13.4%), so M12A-9 was deliberately kept open.
+
+LATENCY INVESTIGATION
+Protocol-only:
+- in-process p50/p95: 0.12 / 0.15 ms
+- through worker protocol p50/p95: 0.86 / 1.01 ms
+- added boundary p50/p95: 0.74 / 0.85 ms
+
+Real-container decomposition:
+- worker scan p50/p95: 3965 / 4789 ms
+- worker round-trip p50/p95: 3968 / 4793 ms
+- protocol overhead p50/p95: 4 / 5 ms
+- total assessment minus worker scan p50/p95: 5 / 6 ms
+
+INTERLEAVED RE-MEASUREMENT
+Experiment A:
+- baseline p50/p95: 3694 / 4474 ms
+- current p50/p95: 3875 / 4780 ms
+- paired block median difference: +4 ms
+
+Experiment B:
+- baseline p50/p95: 3913 / 4602 ms
+- current p50/p95: 3969 / 4794 ms
+- paired block median difference: +63 ms
+
+Current was faster in 3 of 4 per-target experiment cells.
+
+FINAL PERFORMANCE INTERPRETATION
+The literal raw pooled percentile inequality was not numerically satisfied, and the evidence keeps
+that fact. Direct decomposition showed only ~4–6 ms attributable to the process/protocol boundary,
+while larger raw end-to-end differences varied with remote-host timing. The closure therefore used
+the authoritative requirement — no persistent performance regression attributable to the extraction
+— rather than forcing a noisy Internet benchmark to resolve a few-millisecond effect.
+
+DEADLINE / RESOURCE RESULTS
+Interleaved runs:
+- 96 assessments
+- all COMPLETED
+- DEADLINE_REACHED: 0 baseline, 0 current
+- CALLER_ABORTED: 0
+
+Scanner:
+- peak memory: 46.7 MiB
+- peak CPU: 7.08%
+- real worker heapUsed high-water: 18.0 MiB
+- OOMKilled=false
+- RestartCount=0
+
+RESOURCE DECISION
+Retained unchanged:
+- mem_limit: 1g
+- mem_reservation: 256m
+- cpus: 1.0
+- pids_limit: 256
+- NODE_OPTIONS: --max-old-space-size=768
+
+CANCELLATION TEST RACE
+An intermittent M12A-5 test race was found: bytes were snapshotted before controller.abort(),
+while multiple target requests were still concurrently propagating cancellation.
+
+Production cancellation code was unchanged.
+
+The test now checks the actual property: once the worker deadline signal is already aborted,
+no further target write occurs. Existing assertions for CALLER_GONE, CALLER_ABORTED, socket
+destruction, no new connection, permit release, no retry/resumption and clean completion remain.
+
+Focused stability: 10/10 consecutive runs passed, with repeated full gates also passing.
+
+LIMITATION
+A dedicated slow-but-honest path was not separately created because the scanner accepts a hostname
+and fixed paths. Arbitrary path authority was not added just to satisfy a benchmark.
+
+PRODUCTION SAFETY
+No SSH, SCP, production Docker, production DB, production Nginx/systemd/firewall change, or
+production environment-file read occurred.
+
+At M12A-9 close, host-level scanner destination restriction was still NOT implemented.
+That is M12A-10.
+
+PP / ATL VALUE
+Strong evidence for critical thinking, testing, reflection, information literacy, organization,
+and problem solving: misleading performance evidence was investigated rather than accepted,
+failed/intermediate results were preserved, a packaging mismatch was found, and a flaky proof was
+made race-free without weakening production behavior.

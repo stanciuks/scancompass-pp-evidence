@@ -1,0 +1,218 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 2 October 2026
+
+MILESTONE
+M12B-2 — Session token primitives, cookie transport and Actor type
+
+FINAL STATUS
+CLOSED
+
+FINAL REVIEWED COMMIT
+3fe4c4c7e458bcbe7843208ba7bfc83707352efe
+
+PARENT
+00d8cbde89da9b59f557dba0c503df382c0868da
+
+SCOPE
+Pure session primitives only.
+
+No session database lookup/write/delete, login, logout, signup, account verification, password reset,
+password hashing, Argon2, lockout runtime, authenticated request composition, API route, UI, email
+runtime, production migration, domain authorization, payment, PDF, CI, dashboard, or scanner/worker
+change was introduced.
+
+MODULES ADDED
+
+1. src/server/session/token.ts
+- mints session bearer tokens
+- parses untrusted session-token strings
+- performs no database or HTTP work
+
+2. src/server/session/actor.ts
+- defines Actor as identity only
+- exports the shared ANONYMOUS_ACTOR
+
+3. src/server/transport/session-cookie.ts
+- serializes the session cookie
+- clears the session cookie
+- is the only new production module allowed to reveal a session token
+
+SESSION TOKEN CONTRACT
+- 32 random bytes from Node CSPRNG
+- unpadded base64url
+- 43-character canonical wire form
+- SHA-256 over the RAW 32 token bytes
+- 32-byte digest
+- digest is the value intended for sessions.token_hash
+- plaintext token is wrapped immediately in SecretValue
+- secret label: session-token
+
+The token format is not independently redefined. It reuses constants and canonical parsing from:
+src/server/security/canonical-token.ts
+
+parseSessionToken() delegates to parseCapabilityToken(), preserving:
+- exact length
+- base64url alphabet
+- decoded length
+- canonical round trip
+- one neutral undefined result for all malformed values
+
+ACTOR CONTRACT
+Actor has exactly two shapes:
+
+ANONYMOUS
+{ kind: "ANONYMOUS" }
+
+ACCOUNT
+{ kind: "ACCOUNT", accountId: string }
+
+Actor intentionally contains no:
+- role
+- permission
+- tier
+- subscription/entitlement
+- domain
+- email/profile
+- scanId
+- reportId
+- management/share capability
+
+An account session therefore provides identity, not authorization.
+
+SESSION COOKIE
+Name:
+__Host-scancompass_session
+
+Live cookie attributes:
+- Path=/
+- Secure
+- HttpOnly
+- SameSite=Lax
+
+Live cookie deliberately has:
+- no Domain
+- no Max-Age
+- no Expires
+
+This makes it a non-persistent browser session cookie. Server-side session lifetime remains a later
+decision.
+
+Clear-cookie attributes:
+- same cookie name
+- Path=/
+- Secure
+- HttpOnly
+- SameSite=Lax
+- Max-Age=0
+- no Domain
+
+The deletion Max-Age is the explicit exception to the live-cookie non-persistence rule.
+
+HEADER BEHAVIOR
+The helper uses Headers.append() rather than Headers.set(), so unrelated Set-Cookie headers are not
+silently overwritten.
+
+SECRET MISUSE GUARD
+setSessionCookie() requires SecretValue.kind == "session-token".
+
+A wrong secret kind:
+- is rejected before reveal()
+- writes no Set-Cookie header
+- throws only an internal programming error
+- does not put the raw secret in the error message or stack
+
+SECRET REVEAL BOUNDARY
+The repository's exact reveal() allowlist gained one reviewed production site:
+
+src/server/transport/session-cookie.ts
+
+No module under:
+src/server/session/**
+
+may call reveal().
+
+PURE SESSION BOUNDARY
+At M12B-2, src/server/session/** is constrained to pure primitives and may not depend on:
+- PostgreSQL
+- pg
+- drizzle
+- persistence
+- Request / Response / Headers
+- cookies() / headers()
+- Next.js
+- React
+- process.env
+- logger/network I/O
+- mutable module-level state
+
+NO DATABASE SESSION OPERATIONS
+M12B-2 performs zero:
+- INSERT sessions
+- SELECT sessions
+- UPDATE sessions
+- DELETE sessions
+
+The sessions table exists from M12B-1 but has no runtime consumer yet.
+
+D3 SESSION-LIFETIME DECISION
+Still OPEN.
+
+M12B-2 deliberately defines no:
+- SESSION_ABSOLUTE_TTL
+- SESSION_IDLE_TTL
+- SESSION_ACTIVITY_REFRESH
+- SESSION_MAX_AGE
+- SESSION_TTL
+
+The live cookie needs no TTL because it is non-persistent.
+
+PUBLIC SURFACE
+No account/session route was added.
+Public API route count remains 7.
+
+MIGRATION / SCHEMA
+No migration, persistence schema, schema contract or PostgreSQL grant file changed in M12B-2.
+
+TEST EVIDENCE RECORDED IN COMMITTED PROJECT HISTORY
+- git diff --check clean
+- typecheck: 0
+- lint: 0
+- targeted: 8 files / 1273 cases
+- full suite: 148 files / 5680 passed / 152 skipped
+- build clean
+- API routes: 7
+
+These command results are recorded in the committed project evidence and were not independently
+re-executed by ChatGPT during GitHub review.
+
+REVIEW FINDINGS
+The implementation was inspected directly in GitHub.
+
+Verified:
+- session token generator uses the reviewed canonical token dimensions
+- digest is SHA-256 over raw decoded bytes
+- parser delegates to the shared canonical parser
+- Actor is identity-only
+- live cookie has the required __Host- shape
+- clear cookie matches the host/path identity and expires via Max-Age=0
+- wrong SecretValue kinds are rejected before reveal
+- exact reveal allowlist includes session-cookie.ts
+- session/** is structurally isolated from HTTP/database/framework concerns
+- no routes or account runtime were introduced
+- no migration/schema/grant artifacts changed
+- M12A completion tag remains unchanged
+
+M12A IMMUTABILITY
+m12a-complete-2026-10-01 remains unchanged.
+
+PRODUCTION
+Untouched.
+
+FINAL REVIEW VERDICT
+M12B-2 CLOSED.
+
+NEXT STEP
+M12B-3 — password credential verification, Argon2id measurement/selection, password policy and durable
+per-account lockout.
+
+M12B-3 must not start domain authorization or production deployment.

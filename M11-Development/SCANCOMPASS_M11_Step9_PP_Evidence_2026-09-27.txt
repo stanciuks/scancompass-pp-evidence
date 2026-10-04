@@ -1,0 +1,666 @@
+SCANCOMPASS — M11 STEP 9 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-27
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Fragment-based report sharing and first management-capability consumer
+
+EVIDENCE PROVENANCE
+Prepared from:
+1. Claude Code's Step 9 implementation, correction, test and merge handoffs.
+2. GitHub PR #2 review history.
+3. Independent GitHub verification after merge.
+
+This is factual development evidence, not Personal Project reflection prose.
+
+STEP STATUS
+M11 Steps 0–9 complete.
+M11 Steps 10–15 remain.
+
+FINAL MERGED PR
+PR:
+#2 — M11 Step 9: fragment shares
+
+State:
+MERGED / CLOSED
+
+Original review branch:
+review/m11-step9-fragment-shares
+
+Independent GitHub verification after merge:
+- PR #2 is merged and closed.
+- The review branch no longer exists remotely.
+- The final PR head before squash was:
+  2974a8461c56eb535df31a660bde7d5bfd4a9a84
+- Base main before merge was:
+  2e7b27bffbb8e8d5acb017880acde74c9268f194
+- The squash merge commit is:
+  d0fe0a1c89cb49c0209e164d2c951c8ae2f08cfd
+- main points to that exact squash commit.
+- The squash commit has exactly one parent:
+  2e7b27bffbb8e8d5acb017880acde74c9268f194
+- Therefore Step 9 is exactly one main commit after Step 8.
+- Exactly 48 files changed between the Step 8 main commit and the Step 9 main commit.
+
+FINAL MAIN COMMIT
+SHA:
+d0fe0a1c89cb49c0209e164d2c951c8ae2f08cfd
+
+Subject:
+feat: add fragment report sharing
+
+PERSONAL PROJECT BASELINE
+Tag:
+pp-start-2026-09-24
+
+Annotated tag object:
+071c33b3af5f2bb94c81f7fd7738a3dbab4ef40f
+
+Tag target remains:
+987f54cf7ccd76007611e1a1b0356d2e03013194
+
+The PP baseline tag was not moved.
+
+STEP 9 PURPOSE
+Step 9 implements the first real use of the anonymous management capability created in
+Step 8 and adds bearer-capability report sharing without accounts.
+
+The design goals were:
+- scanId remains a non-secret correlation identifier and authorises nothing;
+- management capability verifies management operations;
+- share capability is a separate secret;
+- raw bearer tokens are not stored in PostgreSQL;
+- share tokens are never placed in path/query/cookie/log;
+- public report display comes only from the frozen persisted artifact;
+- share resolution performs zero database writes;
+- no viewer analytics are introduced.
+
+STEP 9 SOURCE SURFACE
+New/changed product surface includes:
+- management-capability verification
+- share-capability minting
+- POST /api/reports/share
+- POST /api/reports/share/revoke
+- POST /api/reports/resolve
+- GET /r/ generic fragment shell
+- fragment capture and immediate URL cleanup
+- frozen-report share rendering
+- best-effort browser management-capability mirror
+- report API security headers
+- Step 9 test and documentation coverage
+
+Independent GitHub verification shows src/app/api/reports on merged main contains only:
+- resolve
+- share
+
+There is no reports/download endpoint yet.
+There is no reports/email endpoint yet.
+
+STEP 10 was not started.
+
+MANAGEMENT-CAPABILITY VERIFICATION
+Canonical incoming capability contract:
+
+1. exactly 43 characters
+2. alphabet:
+   [A-Za-z0-9_-]
+3. strict base64url decode
+4. exactly 32 decoded bytes
+5. re-encode to unpadded base64url
+6. re-encoded value must equal supplied value exactly
+7. SHA-256 is computed over the decoded RAW 32 bytes
+
+The verifier:
+- looks up by unique management_token_hash;
+- checks stored digest length before comparison;
+- uses crypto.timingSafeEqual;
+- checks revoked_at;
+- checks capability expires_at;
+- checks owning scan expires_at;
+- does not accept scanId from the caller.
+
+Public authorization failures remain neutral.
+A caller is not told whether the token was malformed, unknown, revoked, expired or attached
+to an expired report.
+
+failed_attempts POLICY
+report_management_tokens.failed_attempts remains inactive.
+
+Reason recorded in the implementation:
+- an unknown guessed token matches no row, so no per-row counter can count guessing;
+- a matched row means the caller already knows the 256-bit capability;
+- lockout would mainly create self-denial-of-service risk.
+
+No Step 9 module increments the field.
+
+SHARE TOKEN
+Share token source:
+randomBytes(32)
+
+Entropy:
+256 bits
+
+Wire format:
+unpadded base64url
+
+Exact length:
+43 characters
+
+Stored form:
+SHA-256 over the raw 32 random bytes
+
+The raw share token is disclosed once in the successful share-create response.
+It is not stored in PostgreSQL.
+
+SHARE RETENTION
+Binding Step 9 retention policy:
+
+DEFAULT_SHARE_TTL_DAYS = 30
+ANONYMOUS_ABSOLUTE_MAX_DAYS = 90
+
+The 90-day maximum is measured from the ORIGINAL scan creation time.
+
+It is not a rolling 90-day extension from share creation.
+
+Rules:
+
+absoluteMax =
+scan.createdAt + 90 days
+
+candidateShareExpiry =
+now + 30 days
+
+shareExpiresAt =
+min(candidateShareExpiry, absoluteMax)
+
+newScanExpiresAt =
+max(existingScanExpiry, shareExpiresAt)
+
+newScanExpiresAt can never exceed absoluteMax.
+
+Consequences:
+- a normal new share can live up to 30 days;
+- a share created near day 90 is shortened honestly;
+- repeated share creation cannot keep an anonymous scan indefinitely;
+- no ttlDays request field exists in Step 9.
+
+CREATING MANAGEMENT-CAPABILITY EXPIRY
+When a share extends beyond the creating management capability's current expiry, Step 9
+extends only that creating capability.
+
+The current capability row is re-read under the scan-row lock before extension.
+
+This prevents:
+- using a stale verifier copy;
+- shortening a concurrent extension;
+- making the share outlive the capability that must be able to revoke it.
+
+Other management capabilities for the same scan are not extended.
+
+SHARE CAP
+MAX_SHARES_PER_SCAN = 5 TOTAL rows.
+
+The count includes:
+- active rows
+- expired rows
+- revoked rows
+
+Revocation does not free a slot.
+
+Reason:
+the cap is an at-rest growth bound. If revoked rows stopped counting while remaining stored,
+a caller could create/revoke indefinitely and the five-row cap would not actually bound the
+table.
+
+SHARE CREATE
+POST /api/reports/share
+
+Request body:
+{ managementToken }
+
+High-level flow:
+management capability
+-> canonical parse
+-> management verification
+-> generate share token and row id
+-> begin bounded transaction
+-> lock scans row
+-> re-read creating management capability
+-> count all report_shares rows
+-> enforce five-total-row cap
+-> calculate bounded retention
+-> insert report_shares
+-> extend scan expiry if required
+-> extend creating management capability if required
+-> COMMIT
+-> return raw share token exactly once
+
+COMMIT ambiguity:
+If COMMIT is sent but not acknowledged:
+- return service unavailable;
+- do not return the raw share token;
+- a possibly committed row is inert because nobody received the secret.
+
+SHARE REVOKE
+POST /api/reports/share/revoke
+
+Request body:
+{
+  managementToken,
+  shareId
+}
+
+Database security boundary:
+UPDATE report_shares
+WHERE
+  id = supplied share id
+  AND created_by_management_id = verified management row id
+  AND revoked_at IS NULL
+
+After a valid management capability:
+- one changed row -> 200 {ok:true}
+- zero changed rows -> the same 200 {ok:true}
+
+Zero rows may mean:
+- unknown share id
+- already revoked
+- created by another management capability
+
+Those states remain indistinguishable to the caller.
+
+Revocation is soft:
+revoked_at = now
+
+Revocation is idempotent.
+The design explicitly records that one autocommit UPDATE can still have an ambiguous
+acknowledgement outcome; retry safety comes from idempotency, not from claiming that one
+statement is unambiguous.
+
+SHARE-ID CONTRACT
+The browser mirror and revoke route now consume one client-safe share-id validation contract.
+
+This was introduced after review found that a generic 8-4-4-4-12 hex regex was broader
+than the route's UUID acceptance.
+
+The final shared contract:
+- accepts the UUID class the system can actually mint;
+- rejects invalid version/variant shapes;
+- is used by both browser mirror validation and route validation.
+
+Regression tests include UUID-shaped hex strings that are not valid under the route contract.
+
+SHARE RESOLUTION
+POST /api/reports/resolve
+
+Request:
+{ token }
+
+Flow:
+canonical parse
+-> raw-byte SHA-256
+-> bounded database read
+-> report_shares JOIN scans JOIN scan_reports
+-> stored digest length check
+-> timingSafeEqual
+-> share revoked/expiry check
+-> scan expiry check
+-> release DB connection
+-> verifyReportArtifact()
+-> return verified frozen report
+
+The resolver:
+- does not query scan_findings for presentation;
+- does not recompute score/findings;
+- performs zero writes;
+- records no view count;
+- records no last-viewed timestamp;
+- produces no ordinary successful-view analytics log.
+
+Artifact-integrity failures remain a neutral public refusal while an operator-safe integrity
+event may be emitted.
+
+DURABLE ASSESSMENT STATE
+Review found that the first candidate dropped scans.state and rendered every shared report
+as COMPLETED.
+
+Final implementation carries the persisted assessment state through:
+
+database row
+-> internal resolution result
+-> API response
+-> SharedReportView
+-> AssessmentReport
+
+A persisted PARTIAL assessment remains PARTIAL.
+
+FRAGMENT SHARE URL
+Public share URL form:
+
+/r/#<share-token>
+
+The fragment is not transmitted in the HTTP request.
+
+Browser sequence:
+1. hydrate generic /r shell
+2. read location.hash
+3. cheap client shape check
+4. capture token in non-rendered memory
+5. immediately call history.replaceState(..., "/r/")
+6. POST token in body to /api/reports/resolve
+7. render only the verified returned report
+
+The order is intentional:
+replaceState occurs before fetch.
+
+This removes the token from the visible address bar before waiting on network resolution.
+
+The share token is retained only in a non-rendered in-memory ref for the lifetime of the
+share page so Step 10 can later reuse the same bearer capability for native form POST
+download.
+
+The share token is not persisted to:
+- sessionStorage
+- localStorage
+- cookies
+
+A terminal authorization refusal clears the in-memory share token.
+
+A temporary 503 keeps the token in memory and the interface now provides a Retry control
+that reuses the same token without restoring the fragment.
+
+GENERIC SHARE SHELL
+The /r server response is:
+- token-independent
+- report-independent
+
+It is deliberately not described as byte-identical because each document carries a
+per-request CSP nonce.
+
+The shell contains no token, no report data and no scan identity.
+
+BROWSER MANAGEMENT-CAPABILITY OWNERSHIP
+Review found a major bug in the first candidate:
+- raw management capabilities were stored in React state;
+- the complete secret-bearing list was also kept in React state;
+- sessionStorage was effectively the source of truth;
+- blocked storage could cause the capability/share creator association to disappear.
+
+Final design:
+- raw management capability list lives in a non-rendered useRef;
+- React state contains only non-secret display metadata;
+- a newly minted token arrives via a one-time callback backed by a ref;
+- sessionStorage is best-effort mirror only;
+- store mutation functions operate over the caller-supplied in-memory list;
+- blocked storage does not break create/revoke behavior.
+
+Multiple management capabilities per scan are supported.
+
+Reason:
+a live scan and a later cache hit can mint distinct management capabilities, while
+revocation is scoped to whichever capability created a share.
+
+Rules:
+- newest capability creates new shares;
+- older capability is retained while it owns locally-known shares;
+- revoke uses the capability that created that share;
+- obsolete capability with no known shares may be pruned.
+
+The sessionStorage mirror stores management capabilities and share identifiers/expiries but
+never share bearer tokens.
+
+REQUEST BODY BOUND
+Step 9 initially read report request bodies before checking declared size.
+
+Final implementation matches the established /api/scan posture:
+- declared Content-Length above the report ceiling is refused before request.text();
+- actual UTF-8 byte length is checked after reading because Content-Length can be absent or
+  incorrect.
+
+Public report endpoint request schemas remain strict.
+
+RESPONSE / REFERRER HEADERS
+Final Step 9 header ownership was reconciled so the effective policy is explicit.
+
+Relevant surfaces:
+- ordinary document -> strict-origin-when-cross-origin
+- /r -> no-referrer
+- /api/scan -> strict-origin-when-cross-origin
+- /api/health -> strict-origin-when-cross-origin
+- /api/reports/* -> no-referrer
+
+/r and report APIs also use:
+- Cache-Control: no-store
+- X-Robots-Tag: noindex, nofollow
+
+The implementation explicitly records:
+URL fragments are not included in Referer by browser behavior.
+Referrer-Policy: no-referrer is the privacy posture for the share surface; it is not the
+mechanism that keeps the fragment token secret.
+
+CIRCUIT BREAKER / LOCAL-FAILURE CORRECTIONS
+Several review rounds found lifecycle defects around HALF_OPEN recovery.
+
+The important invariant:
+a local clock/CSPRNG/UUID/timer defect is not evidence of PostgreSQL ill health and must not
+strand the single HALF_OPEN probe.
+
+Final implementation added a neutral breaker action:
+releaseProbe()
+
+This returns the HALF_OPEN probe slot without recording success or database failure.
+
+The shared connection lifecycle now handles:
+- local failure while arming the deadline;
+- injected timer setup failure;
+- monotonic-clock failure before/mid operation;
+- local failure after BEGIN/statements but before COMMIT;
+- post-body bounded-read deadline check;
+- final pre-COMMIT budget/local-failure gate.
+
+Final pre-COMMIT handling:
+runBoundedTransaction() uses the shared checkpoint immediately before COMMIT.
+
+If a local clock fails there:
+- COMMIT is not sent;
+- the open transaction is destroyed and rolled back;
+- result is local/internal, not database failure;
+- HALF_OPEN probe is returned without a DB-health verdict.
+
+If the budget is genuinely exhausted there:
+- it remains a timeout;
+- COMMIT is still not sent.
+
+This distinction was regression-tested.
+
+REVIEW HISTORY
+Initial Step 9 candidate:
+76ca32deea51c35a329cbb4e7d29d866cbbe11d9
+subject:
+feat: add fragment report sharing
+
+Independent review found nine issues, including four blocking ones:
+1. management secrets in React state and broken memory-only fallback
+2. HALF_OPEN breaker slot could be stranded by local failures
+3. runBoundedRead accepted work after monotonic deadline
+4. local CSPRNG/UUID defects were misclassified as INVALID_REQUEST
+5. report request body lacked pre-read Content-Length refusal
+6. durable PARTIAL state was dropped on share resolution
+7. /api/health lost its existing Referrer-Policy
+8. inaccurate share-lifetime / byte-identical wording
+9. temporary resolve failure had no usable retry action
+
+First correction candidate:
+795b87c1a4c881053b511bde39d619482f597a2b
+
+Re-review found two remaining blockers:
+1. a second monotonic-clock read after breaker claim could still wedge HALF_OPEN
+2. malformed mirrored share metadata could still delete a valid management capability
+
+Second correction candidate:
+1e2aba1d534d0f2f7cba03ab61ba3f553c84b1f4
+
+Final re-review found:
+1. final pre-COMMIT remaining() read bypassed the shared LOCAL-failure path
+2. browser share-id regex was still broader than the route validator
+3. PR focused-test summary needed factual cleanup
+
+Final approved review-branch head:
+2974a8461c56eb535df31a660bde7d5bfd4a9a84
+
+Independent final review:
+REVIEW APPROVED — no further changes requested.
+
+GitHub formal APPROVE could not be recorded because the connector authenticated as the
+same GitHub account that authored the PR. GitHub returned:
+Review Can not approve your own pull request.
+
+The approval was therefore recorded as an independent COMMENT review before merge.
+
+The four review commits were squash-merged and do not remain as four separate Step 9 commits
+on main.
+
+FINAL TEST EVIDENCE
+Recorded final Step 9 gates:
+
+Focused:
+15 files
+1,246 passed
+
+Current listed focused suite counts included:
+- boundaries: 837
+- report-capabilities: 84
+- capability-store: 33
+- report-routes: 24
+- canonical-token: 26
+- shared-report-view: 18
+- share-controls: 13
+- share-id: 7
+- persistence-write: 55
+- persistence-durability: 35
+- management-capability: 30
+- management-mint: 26
+- scan-route-capability: 8
+- persistence-circuit-breaker: 7
+- existing scan-route suite unchanged
+
+Full:
+98 test files
+3,915 passed
+80 skipped
+
+Other final gates recorded clean:
+- typecheck
+- lint
+- build
+- drizzle-kit check
+
+drizzle-kit generate:
+No schema changes, nothing to migrate.
+
+REAL POSTGRESQL ACCEPTANCE
+PENDING.
+
+Writer integration suite:
+35 tests
+0 executed
+all skipped
+
+The guarded real-PostgreSQL tests remain intentionally unexecuted without a positively
+identified disposable scratch database.
+
+Real-server assumptions still pending include:
+- share insert and both foreign keys
+- unique share digest
+- cascade behavior
+- management digest lookup/lifecycle join
+- application-role grants
+- scoped revoke behavior
+- exact five-total-row cap under real concurrent PostgreSQL transactions
+- revoked rows counting toward the cap
+- scan and creator-capability retention extension
+- absolute 90-day maximum
+- three-way share-resolution join and artifact verification
+
+REAL PERSISTENCE BENCHMARK
+PENDING.
+
+No p50/p95 number was fabricated from fake/in-memory connections.
+
+PUBLIC REPORT GOLDEN
+Unchanged:
+
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+MIGRATION ARTIFACTS
+No Step 9 schema change.
+No new migration.
+
+Recorded migration artifact hashes remain:
+
+SQL:
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+Snapshot:
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+Journal:
+24186ee4e92b0dc52ecd0fb7f230342f66ddd18300957d7619490dbdddaac896
+
+Independent GitHub verification confirms the final Step 9 squash commit contains:
+- 48 changed files
+- 0 db/ files
+- 0 deploy/ files
+- no download implementation
+- no email implementation
+
+PRODUCTION IMPACT
+None reported during the Step 9 implementation/review/merge workflow.
+
+No:
+- production access
+- PostgreSQL provisioning
+- live database contact
+- migration execution
+- production row write
+- Step 10 download
+- email path
+- retention purge
+
+Independent GitHub verification confirms repository/PR scope and merged history.
+Claims about absence of off-repository production/database actions come from the
+contemporaneous Claude Code execution record because GitHub cannot prove that no
+off-repository operational action occurred.
+
+LOCAL WORKTREE / BRANCH STATUS
+Claude Code reported after merge:
+- local main == origin/main ==
+  d0fe0a1c89cb49c0209e164d2c951c8ae2f08cfd
+- review branch deleted locally and remotely
+- git status --short:
+  ?? .claude/
+- 0 staged changes
+- 0 tracked modifications
+
+GitHub independently confirms:
+- remote main =
+  d0fe0a1c89cb49c0209e164d2c951c8ae2f08cfd
+- the remote review branch is absent
+
+GitHub cannot independently inspect the local Mac worktree, so the local-state statements
+above remain Claude Code execution evidence.
+
+HARD GATES BEFORE STEP 15
+The following remain mandatory before Step 15 production acceptance:
+
+1. real-PostgreSQL acceptance
+2. real p50/p95 persistence benchmark
+3. Step 14 report edge rate limit before any Step 9 endpoint is deployed:
+   reports_per_ip
+   10 requests/minute
+   burst 5
+   nodelay
+
+PERSONAL PROJECT NOTE
+This file records factual development evidence only.
+Any Personal Project reflection, analysis of learning, ATL reflection, success-criteria
+judgment or personal evaluation should be written by the student in their own words and in
+accordance with supervisor/school instructions.

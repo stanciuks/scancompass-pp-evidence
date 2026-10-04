@@ -1,0 +1,253 @@
+SCANCOMPASS — M12B STEP 6 PERSONAL PROJECT EVIDENCE
+Full disposable-PostgreSQL acceptance and restore-resurrection protection
+Review date: 4 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M12B-6 APPROVED IN SOURCE AND FOR THE RECORDED DISPOSABLE ACCEPTANCE.
+The fifth correction closes the remaining reviewed restart-child integration
+finding. No further blocking source correction is requested in this review.
+This is not production deployment approval and does not open public signup.
+
+1. REVIEWED VERSION AND HISTORY
+
+Repository: stanciuks/site-security
+Branch reviewed: main
+Approved commit: 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca
+Parent: 0ebaaf1a77b5a2fe0df567f5f9ad2351594ac412
+Subject: fix(m12b): await restart-child handoff before cleanup
+Commit timestamp: 2026-10-04 06:26:56 UTC
+
+M12B-6 source history:
+  b67136a612d2494eaa30c17d61daf2c58a00fd8f — original acceptance implementation
+  5cdd721f0cb6368fd172281578f651729de5eaac — runner and proof correction
+  c163547e7e07000ca13ad90b612f6e369cc71fcb — orchestration correction
+  d739cac5b83fe6f15bcea4389d1553cd35031451 — cancellation/shutdown correction
+  0ebaaf1a77b5a2fe0df567f5f9ad2351594ac412 — registration handoff correction
+  66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca — caller coordination correction
+
+Earlier execution results remain historical. This record does not relabel their
+passing tests as having covered findings discovered in subsequent reviews. [S1,S4]
+
+2. PURPOSE OF THE STEP
+
+M12B-6 validates the implemented account, session, signup and recovery subsystem
+against disposable PostgreSQL, without deploying it. Its central restore test
+covers three ephemeral bearer-state classes: sessions, existing-account email
+challenges, and pending-signup challenges. Restoring an older database snapshot
+can revive previously consumed or revoked rows; the acceptance therefore needs
+both a positive resurrection control and an independent sanitized restore. [S4]
+
+The recorded acceptance includes real account/session storage, durable lockout,
+a genuinely separate restart process, route-level feature-gate tests, a documented
+tombstone transaction under the application role, least-privilege probes, exact
+constraint membership, and a real logical pg_dump/pg_restore rehearsal. It does
+not constitute live HTTP, production email, or production backup acceptance. [S4]
+
+3. THE FINAL BLOCKING FINDING AND CORRECTION
+
+Before this correction, runRestartChild() installed child close/error handlers
+that could settle its outer promise while handOffDetachedChild() was still
+awaiting process-group termination. The caller then removed the handoff and
+acknowledgement files. A later refusal or UNKNOWN settlement could be discarded
+by the caller's already-settled flag. The helper and focused test wrapper awaited
+the right result, but the actual integration caller did not. [S1,S2,S3,S4]
+
+The correction introduces one shared coordinator, superviseDetachedRun(), and one
+result arbiter, arbitrateDetachedRun(). Both the integration suite and focused
+regressions use that implementation. Child events are recorded separately from
+the ownership decision; the handoff is awaited before the final outcome is formed.
+Refused ownership remains a failure even when the child exits with code zero.
+UNKNOWN termination remains explicitly unresolved. File release is performed in
+the shared wrapper after the required awaits. [S1,S2,S3]
+
+The distinction matters because the group leader can close while another process
+in the same group remains alive. The corrected refusal path waits for the group
+settlement result rather than treating the first child event as sufficient. [S2,S3]
+
+4. FIFTH-CORRECTION FILE SCOPE
+
+Six files changed relative to the sole parent:
+  docs/MILESTONES.md
+  docs/evidence/M12B6_ACCEPTANCE_2026-10-03.md
+  scripts/acceptance/m12b6-acceptance.mjs
+  tests/integration/persistence-account-acceptance.test.ts
+  tests/unit/deploy/fixtures/m12b6-stubborn-group.mjs
+  tests/unit/deploy/m12b6-registration.test.ts
+
+The comparison contains no src/**, migration, snapshot, schema, grant, dependency,
+package-manager or deployment-configuration changes. The approved application
+runtime is not changed by this correction. [S1,S5]
+
+5. INDEPENDENT REVIEW EXECUTION — 8 PASSED, 0 FAILED
+
+Environment: Node v22.16.0, Linux.
+Method: isolated transcriptions of the relevant committed function bodies, with
+comments/formatting and module context omitted; controlled EventEmitter children
+for deterministic event ordering; local real processes for the process-group case.
+This was not a complete checkout, a byte-verified import of the full runner, or a
+rerun of the project's supported Node 24/Vitest/PostgreSQL acceptance. [R1]
+
+Passing probes:
+  1. close arrives before a refused handoff's CONFIRMED_ABSENT settlement.
+     Caller and cleanup remain pending until the settlement gate is released.
+  2. error arrives before a refused handoff's CONFIRMED_ABSENT settlement.
+     The error cannot release files ahead of settlement.
+  3. close with exit zero arrives before UNKNOWN settlement.
+     OWNERSHIP_REFUSED and unresolved=true remain in the final result.
+  4. error arrives before UNKNOWN settlement.
+     The later unresolved result is retained, not replaced by the first event.
+  5. A successfully owned child exits zero.
+     The coordinator preserves the successful outcome and does not stop it.
+  6. An owned child times out and its stop returns UNKNOWN.
+     CHILD_TIMEOUT and unresolved=true are retained; cleanup follows the stop.
+  7. A real unspawnable child emits ENOENT.
+     The event is handled and the missing process identity produces a refusal.
+  8. A real leader exits on SIGTERM while its same-group descendant ignores it.
+     Cleanup waits for SIGKILL escalation and confirmed group disappearance.
+
+Observed order in the real group probe:
+  child:spawned
+  handoff:begin
+  ack:REFUSED
+  stop:begin
+  child:close
+  stop:end:CONFIRMED_ABSENT
+  handoff:refused
+  handoff-files:released
+  cleanup
+
+The descendant was observed alive at child:close. At cleanup, both leader and
+descendant were gone, the heartbeat had stopped, and the synthetic handoff/ack
+files were removed. A local Linux subreaper was used to reap the adopted probe
+descendant. All probe-owned processes were terminated and reaped. [R1]
+
+6. REPOSITORY VALIDATION — REPORTED RUN 6
+
+These figures are from the committed evidence, not independently rerun repository
+gates in this ChatGPT review. Recorded environment: macOS 27.0.0, Node 24.19.0,
+local Colima Docker, PostgreSQL 18.6, normal committed test settings, and no other
+test/build process running. [S4]
+
+  git diff --check             Clean
+  pnpm typecheck               0 errors
+  pnpm lint                   0 problems
+  pnpm build                  Passed; exactly 14 /api/ routes
+  pnpm test:run                185 files: 184 passed, 1 skipped
+                              7,102 tests: 6,776 passed, 326 skipped, 0 failed
+  Focused deployment tests     15 files; 526 passed
+  Registration tests          47 passed
+  Real-signal cancellation     4 passed
+  Supervisor tests            27 passed
+  Lifecycle tests             37 passed
+
+Reproduction command:
+  node scripts/acceptance/m12b6-acceptance.mjs
+
+Recorded acceptance-runner result: exit 0; 20 recorded checks, all PASS.
+  Carried hermetic phase       1,776 passed across 13 files; 0 inert
+  Account acceptance          34 passed; all 31 critical identities
+  Restart child               3 passed; all 3 critical identities
+  Restore-resurrection drill  30 passed; all 27 critical identities
+  Combined guarded suites     335 passed across 13 files; 3 inert tests in the
+                              specifically named parent-run child exception
+  Owned processes             2 attempted; 0 stopped by this shutdown;
+                              2 observed already absent
+  Owned resources             2; both CONFIRMED_ABSENT
+
+These are overlapping phases, not a count of unique tests that may be summed.
+The active child execution is separately checked; the parent-run inert exception
+is not presented as execution of those three checks. [S4]
+
+7. MUTATION AND RESTORE EVIDENCE
+
+The implementation record reports that temporarily restoring the competing-
+promise wiring in the shared coordinator produced 9 failed / 38 passed tests.
+Restoring the correction produced 47 passed. This review inspected that record
+but did not independently rerun the mutation. [S4]
+
+The recorded restore structure remains: consume/revoke three independent bearer
+fixtures after the dump; demonstrate all three resurrect in an unsanitized
+restore; independently restore the same archive and run one transaction:
+
+  DELETE FROM scancompass.sessions;
+  DELETE FROM scancompass.account_email_challenges;
+  DELETE FROM scancompass.account_signup_challenges;
+
+The sanitized control refuses the old capabilities, preserves recovered durable
+data, and permits fresh login. Rollback, immediate idempotence and individual
+omission controls are included in the recorded acceptance. [S4]
+
+Measured run-6 archive metadata:
+  Runner run ID:     52722289e332
+  Drill ID:          affd74bd
+  Format:            custom
+  Size:              57,269 bytes
+  SHA-256:           0e29c52887a36a61b19274a704ba33a19b04aaf70c6c3b857814dd2ed91cf075
+  pg_dump exit:      0
+  pg_restore exits:  control 0; sanitized 0
+  Server/tools:      PostgreSQL 18.6; pg_dump/pg_restore 18.6
+  Cluster ID:        7692694787209998385
+
+These are recorded per-execution measurements; this review did not retain or
+inspect the archive itself. No plaintext backup content, verifier, token,
+credential, or connection string is included in this evidence file. [S4]
+
+8. PRESERVED BOUNDARIES AND TAG
+
+The committed evidence reports unchanged protected hashes, 14 API routes,
+12 launch controls, one application pool, unchanged account/password/session/
+challenge/flag/cookie/provider policy, and unchanged anonymous scan/scanner/worker
+isolation. The comparison corroborates that no protected implementation file was
+modified by this fifth correction; the review did not rerun every historical
+boundary test. [S1,S4,S5]
+
+Tag independently checked:
+  m12a-complete-2026-10-01
+  Annotated object: ad3c7bb767443e2d699636cbe94e1a4195705252
+  Peeled target:    65ba34fde9aa5948106e4afb0540921cebb99400
+
+No tag was changed by this review. [S6]
+
+9. LIMITATIONS AND NEXT BOUNDARY
+
+Approval is limited to the reviewed source and recorded disposable acceptance.
+It is not approval to deploy, connect to production, send live email, or open
+public signup. This review made no repository writes and did not contact
+production. Remote Git state cannot establish the current local Mac worktree or
+independently prove off-repository operational activity.
+
+The logical restore rehearsal does not test the live off-host backup chain or
+production encryption keys. Restoring an older snapshot still rolls back durable
+data, including password changes and tombstones made after that snapshot; deleting
+ephemeral bearer rows does not preserve every post-backup revocation. [S4]
+
+No physical-expiry sweeper or public existing-account VERIFY_EMAIL flow is added.
+Those remain later operational/design items. The previously observed retention-
+CLI timeout remains historical; run 6 reports a green full suite, not a timeout
+waiver. Cleanup is not promised after SIGKILL, host crash or daemon failure. [S4]
+
+The next separately reviewed milestone is M12B-7: staged production migration and
+deployment with account signup and account email disabled. Its operational
+instructions and authorization are separate from this evidence record.
+
+10. SOURCE LOCATORS
+
+All repository paths below are at commit
+66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca unless otherwise stated.
+
+[S1] Commit metadata and message for the approved SHA.
+[S2] scripts/acceptance/m12b6-acceptance.mjs:
+     superviseDetachedRun, arbitrateDetachedRun, handOffDetachedChild,
+     stopProcessGroup and processPresence.
+[S3] tests/integration/persistence-account-acceptance.test.ts: runRestartChild;
+     tests/unit/deploy/m12b6-registration.test.ts: shared wrapper regressions.
+[S4] docs/evidence/M12B6_ACCEPTANCE_2026-10-03.md, especially section 15;
+     earlier sections remain historical and retain explicitly carried limitations.
+[S5] GitHub comparison: 0ebaaf1a77b5a2fe0df567f5f9ad2351594ac412
+     to 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca.
+[S6] Git refs/tags/m12a-complete-2026-10-01 and its annotated tag object.
+[R1] Independent local review execution on 4 October 2026:
+     8 isolated probes, 8 passed, 0 failed; Node v22.16.0 on Linux.
+
+END OF EVIDENCE

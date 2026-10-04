@@ -1,0 +1,886 @@
+SCANCOMPASS — M11 STEP 12 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-27
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Disabled-by-default report email delivery
+
+This is factual development evidence, not Personal Project reflection prose.
+
+STATUS
+M11 Steps 0–12 complete.
+M11 Steps 13–15 remain.
+
+EVIDENCE PROVENANCE
+Prepared from:
+1. Claude Code's Step 12 design review, implementation, reconciliation, test, commit and merge reports.
+2. The final repository state reported after Step 12 was pushed to main.
+
+This note records the reviewed implementation and merge evidence. It does not claim any
+production/provider/database action that did not occur.
+
+FINAL STEP 12 CHANGE
+Review branch:
+review/m11-step12-email-delivery
+
+Reviewed Step 12 commit:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+Subject:
+feat: add guarded report email delivery
+
+Base main before Step 12:
+e38944f00b2dcb9ee93baa6832666ec332b4f3a4
+
+Merge method:
+git merge --ff-only
+
+Final main:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+origin/main after push:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+The reviewed SHA was preserved exactly on main.
+
+MERGE-CONVENTION CHECK
+Before merging, main's actual history was inspected.
+
+The relevant previous M11 step commits had one parent each and main was strictly linear.
+Because the Step 12 review branch contained exactly one reviewed commit, a fast-forward preserved:
+- one commit for the step
+- one parent
+- the reviewed SHA
+- no squash rewrite
+- no rebase
+- no history rewrite
+
+No merge conflict occurred.
+
+STEP 12 PURPOSE
+Step 12 adds the report-email path while shipping it disabled by default.
+
+It implements:
+- POST /api/reports/email
+- recipient validation and normalization
+- recipient HMAC identity
+- delivery reservation and caps
+- report_deliveries writer/status handling
+- an email-minted revocable share
+- EmailProvider abstraction
+- Postmark adapter
+- constrained outbound HTTPS transport
+- server-side UI feature flag/control
+- two report_deliveries foreign-key indexes
+- generated additive 0001 migration
+- unit, boundary and guarded real-PostgreSQL tests
+- technical documentation updates
+
+It does NOT:
+- enable production email
+- configure production provider secrets
+- contact Postmark
+- send real email
+- provision PostgreSQL
+- contact PostgreSQL
+- execute a migration against a database
+- perform DNS/DKIM/DMARC work
+- change nginx
+- start Step 13, 14 or 15
+
+DISABLED-BY-DEFAULT BEHAVIOUR
+EMAIL_DELIVERY_ENABLED defaults off.
+
+When disabled:
+- the email UI control is not rendered
+- the server still refuses independently
+- no provider client is constructed
+- no outbound provider request occurs
+- no email share is minted
+- no report_deliveries row is inserted
+- the provider API key is not read
+- the recipient HMAC key is not read
+
+Email configuration remains outside:
+- scanExecutionGate()
+- evaluateLaunchControls()
+- getLaunchReadiness()
+- persistenceReadiness()
+
+The email subsystem has its own readiness vocabulary:
+DISABLED / UNAVAILABLE / READY
+
+DISABLED is a normal state, not a launch/persistence fault.
+
+UI FEATURE FLAG
+The repository deliberately has no NEXT_PUBLIC_* email flag.
+
+The existing Server Component boundary reads EMAIL_DELIVERY_ENABLED server-side and passes a
+plain boolean down to the client-facing report controls.
+
+The flag is only a UX hint.
+The server remains the security boundary.
+
+PublicAssessmentReport was not changed.
+
+RECIPIENT CONTRACT
+Recipient handling is:
+
+1. trim
+2. validate as one email address
+3. enforce MAX_RECIPIENT_LENGTH = 254
+4. normalize with lowercase only
+
+The request object is strict and accepts exactly:
+- managementToken
+- recipient
+
+Rejected forms include:
+- comma-separated lists
+- semicolon-separated lists
+- display-name forms
+- CR/LF injection
+- NUL
+- quoted local parts
+- localhost/no-dot domains
+- address literals
+- malformed domains
+- extra object keys
+
+Normalization deliberately does NOT:
+- remove +tags
+- remove dots
+- rewrite domains
+
+The same normalized string is:
+- HMACed
+- sent to the provider
+
+This prevents the abuse identity from diverging from the actual delivery target.
+
+RECIPIENT HMAC
+Recipient identity is:
+
+HMAC-SHA-256(
+  normalizedRecipient,
+  EMAIL_RECIPIENT_HMAC_KEY
+)
+
+The key is:
+- dedicated to recipient identity
+- base64 encoded
+- required to decode to exactly 32 bytes
+- not reused for management/share capabilities, sessions, signatures or encryption
+
+The raw recipient address is not intentionally persisted.
+
+The persistence schema stores recipient_hmac, not a plaintext recipient address/domain.
+
+HMAC ROTATION DECISION
+Step 12 uses the approved single-key v1 strategy.
+
+hmac_key_id = v1
+
+Rotation is unsupported until v1 delivery rows have aged out.
+
+Reason:
+anonymous rows are bounded by the existing 90-day maximum, so the wait is finite.
+
+Recorded trade-off:
+an emergency key rotation inside that window could allow the same address to be emailed once
+again for one scan because the new digest would not match the old-key digest.
+
+DELIVERY RESERVATION ORDER
+The approved transaction order is:
+
+1. lock scans row
+2. re-read management capability under the lock
+3. count shares
+4. count deliveries
+5. mint share and extend retention
+6. INSERT report_deliveries as RESERVED
+7. COMMIT
+8. only then attempt provider delivery
+
+No provider call occurs while the transaction is open.
+
+The unique:
+(scan_id, recipient_hmac)
+
+constraint remains the final duplicate-race backstop.
+
+CAPS
+Total shares per scan:
+5
+
+Total email delivery rows per scan:
+3
+
+Same recipient per scan:
+1 row
+
+Every delivery row counts regardless of status.
+
+Therefore:
+- FAILED does not free a slot
+- UNKNOWN does not free a slot
+- revocation does not create another recipient attempt
+- a retry for the same recipient does not create another provider call
+
+AT-MOST-ONE PROVIDER ATTEMPT
+Step 12 deliberately treats at-most-one-provider-attempt as an abuse/privacy rule.
+
+After:
+- definite failure
+- ambiguous outcome
+- lost response
+
+the same recipient is not automatically mailed again for the same scan.
+
+A same-recipient retry returns the already-requested result and performs zero additional provider
+calls.
+
+This avoids duplicate mail to a recipient when the provider outcome cannot be established safely.
+
+DELIVERY STATUS MODEL
+Stored statuses:
+
+RESERVED
+SENT
+FAILED
+UNKNOWN
+
+Meaning:
+- RESERVED: durable reservation exists, provider outcome not yet recorded
+- SENT: provider positively accepted the message
+- FAILED: provider definitely refused / definitely could not be reached in a non-ambiguous way
+- UNKNOWN: the provider may have received the request, but the final outcome cannot be established
+
+A process crash after reservation but before provider I/O can leave RESERVED.
+
+No recovery worker was added in Step 12.
+
+COMMIT AMBIGUITY
+If the database COMMIT is sent but acknowledgement is lost:
+
+- the provider is NOT called
+- no email token is sent
+- response is service-unavailable class
+- an inert share/delivery row may have committed and consumed a slot
+
+No automated recovery path was added.
+
+A later same-recipient retry is:
+- refused if the row exists
+- permitted if the row did not commit
+
+This avoids guessing the transaction outcome.
+
+PROVIDER OUTCOME MODEL
+Provider result vocabulary:
+
+ACCEPTED
+DEFINITE_FAILURE
+OUTCOME_UNKNOWN
+
+Examples of definite failure:
+- bounded valid provider refusal
+- provider 4xx
+- connection refused before request delivery
+- TLS failure before request delivery
+
+Examples of ambiguous outcome:
+- timeout/reset after the request may have been written
+- malformed/oversized response
+- provider 5xx
+
+Ambiguous outcomes are never automatically retried.
+
+API RESPONSE SEMANTICS
+Important response classes include:
+
+- invalid request / recipient -> 400
+- management-capability refusal -> neutral 404
+- email disabled/unavailable -> 503
+- DB unavailable -> 503
+- commit outcome unknown -> 503
+- provider outcome unknown -> 503-class
+- five-share cap -> existing SHARE_LIMIT_REACHED 409
+- three-delivery cap -> DELIVERY_LIMIT_REACHED 409
+- same recipient already attempted -> DELIVERY_ALREADY_REQUESTED 409
+
+The two new 409 codes are authenticated-only and are added centrally rather than hand-built in
+the route.
+
+Responses preserve:
+- no-store
+- no-referrer
+- noindex posture
+
+BROWSER REVOCATION METADATA
+Successful email creation returns:
+
+{
+  ok: true,
+  shareId,
+  expiresAt
+}
+
+It never returns shareToken.
+
+The browser records the resulting share metadata as an emailed link that is not locally copyable.
+
+The raw share URL cannot be recovered from the server later because only the digest is stored.
+
+On provider FAILED or UNKNOWN:
+- shareId is still returned
+- the owner can revoke a link that may have been delivered
+
+The server does not auto-revoke an UNKNOWN delivery, because the email may in fact have arrived.
+
+EMAIL CONTENT
+Step 12 uses plain text only.
+
+There is no HTML email body.
+
+The message is built from the frozen verified report artifact.
+
+It does not:
+- re-score findings
+- re-prioritize findings
+- render from raw scan_findings
+
+The email may include:
+- fixed subject structure
+- canonical hostname
+- stored score/grade
+- up to the top three stored priority actions
+- share URL
+
+Unpublished scores use truthful text rather than invented numeric values.
+
+MAX_TEXT_BODY_BYTES:
+8 KiB
+
+PUBLIC SITE ORIGIN
+Absolute report URLs use the existing validated PUBLIC_BASE_URL through configuredPublicOrigin().
+
+The implementation does NOT infer origin from:
+- Host
+- X-Forwarded-Host
+- request.url
+
+If PUBLIC_BASE_URL is absent, email is UNAVAILABLE.
+
+Share link form:
+<canonical-origin>/r/#<share-token>
+
+PROVIDER ABSTRACTION
+EmailProvider is vendor-neutral.
+
+Vendor-specific implementation is confined to:
+src/server/notify/providers/
+
+The Postmark adapter is the only provider implementation added in Step 12.
+
+It uses:
+POST https://api.postmarkapp.com/email
+
+Provider-specific payload properties include:
+- X-Postmark-Server-Token
+- TrackLinks: "None"
+- TrackOpens: false
+- TextBody only
+- no attachments
+- no Cc/Bcc
+- no Metadata
+
+Only the provider message identifier is persisted where applicable.
+
+OUTBOUND HTTPS BOUNDARY
+The notify transport is separate from scanner networking.
+
+Rules include:
+- HTTPS only
+- exact allowlisted provider origin
+- POST only
+- redirects refused
+- default TLS verification
+- no proxy-env behaviour
+- bounded request
+- bounded response
+- scanner/net is not imported
+- notify is not a generic reusable HTTP subsystem
+
+scanner/** imports nothing from notify/**
+notify/** imports nothing from scanner/**
+
+Both directions are pinned by tests.
+
+TIMEOUT RECONCILIATION
+The original design review described a 5-second connect timeout and 10-second total timeout.
+
+Implementation review established:
+- fetch has no connection-phase hook
+- undici Agent connect timeout was unavailable because undici was not resolvable as a project dependency
+- node:https could implement connect-only timing, but is banned by the raw-network boundary and
+  weakening that boundary was not approved
+
+The final enforced contract is:
+
+PROVIDER_HEADERS_TIMEOUT_MS = 5,000 ms
+covering:
+- DNS
+- TCP
+- TLS
+- request write
+- response headers
+
+PROVIDER_TOTAL_TIMEOUT_MS = 10,000 ms
+covering:
+- the complete exchange
+- response-body drain
+
+MAX_PROVIDER_RESPONSE_BYTES = 64 KiB
+
+This is stricter than a connect-only timeout because a provider that connects but stalls before
+headers is also bounded.
+
+The implementation empirically verified that fetch resolves when response headers arrive before
+the body finishes, so the early and total bounds can be armed independently.
+
+A dedicated regression test proves clearing the headers timer does not disarm the total timer.
+
+The documentation was corrected to describe the actual behaviour honestly rather than continuing
+to call the 5-second bound a connect-only timeout.
+
+SECRETS
+EMAIL_PROVIDER_API_KEY is wrapped in SecretValue.
+
+Its explicit reveal is confined to the final provider transport boundary where the authorization
+header is constructed.
+
+The email route itself does not reveal the provider key.
+
+Secrets are not intentionally placed in:
+- React
+- response bodies
+- logs
+- thrown errors
+
+SENDER CONFIGURATION
+EMAIL_FROM_ADDRESS is server configuration.
+
+It accepts one address and rejects:
+- CR/LF
+- display-name form
+- list syntax
+
+Callers cannot supply:
+- From
+- Reply-To
+- Subject override
+- Tag
+- MessageStream
+- arbitrary headers
+
+Sender identity is not inferred from the request host.
+
+STEP 12 MIGRATION
+Step 12 adds two indexes:
+
+report_deliveries_share_id_idx
+on (share_id)
+
+report_deliveries_created_by_management_id_idx
+on (created_by_management_id)
+
+They were added to the Drizzle schema and generated as the additive migration:
+
+db/migrations/0001_report_deliveries_fk_indexes.sql
+
+No manual migration-journal/snapshot editing was used.
+
+The generated 0001 contains the two CREATE INDEX statements and nothing else.
+
+drizzle-kit generate after implementation reported:
+No schema changes, nothing to migrate.
+
+MIGRATION ARTIFACT HASHES
+Immutable 0000 SQL:
+db/migrations/0000_m11_persistence.sql
+
+SHA-256:
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+Status:
+byte-identical
+
+Immutable 0000 snapshot:
+db/migrations/meta/0000_snapshot.json
+
+SHA-256:
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+Status:
+byte-identical
+
+New 0001 SQL:
+db/migrations/0001_report_deliveries_fk_indexes.sql
+
+SHA-256:
+155537e40e81aac800d3d1ca86bef4c89f330552cca1e86a4facc134b1f2d94c
+
+New 0001 snapshot:
+db/migrations/meta/0001_snapshot.json
+
+SHA-256:
+add40d3b8a647a685eaee8bb0b748320e6e43eb9c238c015b2a5b4e09e689d4d
+
+Migration journal after Step 12:
+db/migrations/meta/_journal.json
+
+SHA-256:
+836715b23ae1625f215f51aad8f8ba52d5b22c11912abbb665f7c2801e5b1a84
+
+The journal changed only by the new migration entry.
+
+POSTGRESQL PRIVILEGES
+No new application-role grant was required.
+
+The existing application role already has the required:
+- SELECT
+- INSERT
+- UPDATE
+
+permissions on report_deliveries.
+
+CREATE INDEX remains migration-role work.
+
+REAL-POSTGRESQL ACCEPTANCE COVERAGE
+The Step 12 review reconciled the guarded PostgreSQL suite against the approved acceptance
+properties rather than padding the suite to an arbitrary target count.
+
+Covered properties include:
+- 0001 applies after 0000
+- migration ordering
+- ledger idempotency
+- 0000 checksum remains valid
+- both new FK indexes exist with expected definitions
+- 0001 is additive/non-destructive
+- pre-existing unique constraint remains intact
+- share FK cascade with populated delivery
+- management-capability FK cascade with populated delivery
+- parent-scan cascade with populated delivery
+- application-role privileges remain unchanged
+- app role can perform required share/delivery insert/update operations
+- recipient HMAC byte round-trip
+- equivalent normalized recipients resolve to one identity
+- distinct recipients remain distinct
+- +tag remains distinct
+- dotted local part remains distinct
+- duplicate recipient reservation is refused atomically
+- exact three-delivery cap
+- three-delivery cap under real concurrency
+- email-created shares count toward five-share cap
+- five-share cap under the relevant email race
+- status UPDATE persists
+- RESERVED/SENT/FAILED/UNKNOWN values round-trip
+- FAILED/UNKNOWN rows continue consuming slots
+- duplicate protection remains effective regardless of status
+
+Guarded PostgreSQL suites after Step 12:
+- writer: 35
+- migrations: 30
+- retention: 22
+- readiness: 15
+- email: 26
+
+TOTAL:
+128
+
+EXECUTED:
+0
+
+STATUS:
+PENDING
+
+No PostgreSQL database was configured or contacted.
+
+IMPLEMENTATION DEFECTS FOUND AND CORRECTED
+Four important defects/design problems were found during implementation:
+
+1. UNIQUE-VIOLATION TRANSACTION HANDLING
+An early version tried to catch a PostgreSQL unique violation and continue inside the transaction.
+
+Problem:
+a statement error aborts the PostgreSQL transaction, so continuing to COMMIT could not work
+correctly.
+
+Correction:
+duplicate pre-check occurs under the scan lock; the unique index remains the final race backstop.
+
+2. SERVER-ONLY IMPORT GRAPH
+The first request-schema composition pulled a notify/server-only module into a transport import
+graph that could become jsdom-reachable.
+
+Correction:
+the cross-dependency was removed instead of weakening the server-only guard.
+
+3. VENDOR CONFINEMENT
+An intermediate config module hard-coded Postmark-specific details outside the provider area.
+
+Correction:
+the provider registry/adapter owns the vendor mapping.
+
+4. UNUSED DIGEST COMPARISON
+An unused timingSafeEqual-based digest helper widened a security-rule allowlist without serving
+runtime behaviour.
+
+Correction:
+the dead helper was removed rather than exempted.
+
+FILE-COUNT RECONCILIATION
+The first implementation report said 34 changed/new files.
+
+A later authoritative reconciliation found the correct count:
+40 files
+
+Breakdown:
+- 21 modified
+- 19 new
+
+The earlier error came from:
+- git status collapsing untracked directories into single entries
+- a manual prose miscount
+
+MODIFIED FILES
+1. db/migrations/meta/_journal.json
+2. docs/DATA_MODEL.md
+3. docs/M11_PERSISTENCE_IMPLEMENTATION.md
+4. docs/MILESTONES.md
+5. docs/ROADMAP.md
+6. eslint.config.mjs
+7. src/app/page.tsx
+8. src/components/report/ShareControls.tsx
+9. src/components/scan/HomeExperience.tsx
+10. src/components/scan/ScanExperience.tsx
+11. src/server/application/report-capabilities.ts
+12. src/server/persistence/schema.ts
+13. src/server/persistence/write/connection.ts
+14. src/server/persistence/write/index.ts
+15. src/server/persistence/write/runtime.ts
+16. src/server/transport/report-request.ts
+17. src/server/transport/report-response.ts
+18. tests/boundaries.test.ts
+19. tests/helpers/persistence-write-fakes.ts
+20. tests/unit/server/persistence-config.test.ts
+21. tests/unit/server/persistence-schema.test.ts
+
+NEW FILES
+22. db/migrations/0001_report_deliveries_fk_indexes.sql
+23. db/migrations/meta/0001_snapshot.json
+24. src/app/api/reports/email/route.ts
+25. src/components/report/EmailControl.tsx
+26. src/server/notify/config.ts
+27. src/server/notify/email-content.ts
+28. src/server/notify/email-provider.ts
+29. src/server/notify/https-client.ts
+30. src/server/notify/providers/index.ts
+31. src/server/notify/providers/postmark.ts
+32. src/server/notify/recipient.ts
+33. src/server/persistence/capability/email-delivery.ts
+34. tests/integration/persistence-email.test.ts
+35. tests/unit/server/email-config.test.ts
+36. tests/unit/server/email-content.test.ts
+37. tests/unit/server/email-delivery.test.ts
+38. tests/unit/server/email-provider.test.ts
+39. tests/unit/server/email-recipient.test.ts
+40. tests/unit/server/email-route.test.ts
+
+All 40 paths were verified as Step 12-related.
+
+.claude/ remained the only unrelated untracked item and was not committed.
+
+FINAL TEST EVIDENCE
+Post-merge gates on main:
+
+pnpm install --frozen-lockfile:
+PASS
+
+typecheck:
+PASS
+
+lint:
+PASS
+
+full test suite:
+- 119 files
+- 4,630 passed
+- 128 skipped
+
+boundaries:
+960 passed
+
+drizzle-kit check:
+Everything's fine
+
+drizzle-kit generate:
+No schema changes, nothing to migrate
+
+schema + config suites:
+72 passed
+
+build:
+PASS
+0 errors
+
+Focused Step 12 counts recorded during reconciliation:
+- boundaries: 960
+- email-provider: 45
+- email-recipient: 40
+- email-config: 40
+- email-route: 22
+- email-delivery: 21
+- email-content: 13
+
+The final timeout/documentation correction reran:
+email-provider + boundaries
+= 1,005 passed
+
+PUBLIC REPORT GOLDEN
+Unchanged:
+
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+src/server/assessment/ was untouched by Step 12.
+
+PublicAssessmentReport remained unchanged.
+
+SECURITY / BOUNDARY EVIDENCE
+Verified after implementation and again after merge:
+
+- EMAIL_DELIVERY_ENABLED remains disabled by absence/default
+- empty email configuration returns DISABLED
+- no NEXT_PUBLIC_* email flag exists
+- PublicAssessmentReport unchanged
+- report golden unchanged
+- no plaintext recipient address/domain persistence column
+- recipient_hmac is the recipient persistence identity
+- notify networking and scanner networking remain separate
+- vendor-specific code is confined to the provider boundary
+- application grants unchanged
+- deploy/ untouched
+- launch gates unchanged
+- Step 13 absence pin passes
+
+Mutation checks confirmed the boundary suite fails when deliberately introducing:
+- a vendor leak
+- a scanner <-> notify import
+- a NEXT_PUBLIC_* read
+
+REVIEW BRANCH / COMMIT EVIDENCE
+Before commit:
+- exact Step 12 diff reconciled to 40 files
+- no unrelated tracked modifications
+- .claude/ was the only unrelated untracked item
+
+Commit:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+Branch:
+review/m11-step12-email-delivery
+
+Push:
+origin/review/m11-step12-email-delivery
+->
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+Before merge:
+- review branch and remote review branch matched
+- origin/main remained e38944f00b2dcb9ee93baa6832666ec332b4f3a4
+- review branch was exactly one commit ahead
+- tracked working tree was clean
+- only ?? .claude/ remained
+- diff against main was exactly the approved 40 files
+
+POST-MERGE WORKTREE / BRANCH STATUS
+Branch:
+main
+
+main:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+origin/main:
+cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+git status --short:
+?? .claude/
+
+The review branch was retained locally and remotely after merge and was not modified after review.
+
+PERSONAL PROJECT BASELINE
+Tag:
+pp-start-2026-09-24
+
+Tag target remained:
+987f54cf7ccd76007611e1a1b0356d2e03013194
+
+The PP baseline tag was not moved.
+
+PRODUCTION IMPACT
+None.
+
+According to the contemporaneous Step 12 execution record:
+- no production access
+- no PostgreSQL provisioning
+- no PostgreSQL contact
+- no migration executed against any database
+- no Postmark contact
+- no real email sent
+- no DNS changes
+- no DKIM work
+- no DMARC changes
+- no nginx work
+- no scheduler work
+- no deployment work
+- Step 13 not started
+- Step 14 not started
+- Step 15 not started
+
+All provider tests injected a transport so requests could not leave the process.
+
+CURRENT M11 STATUS
+Complete:
+Steps 0–12
+
+Remaining:
+Step 13 — legal/runbook/env documentation
+Step 14 — M11 edge additions including reports_per_ip
+Step 15 — production provisioning/deployment, restore rehearsal, migrations,
+          real-PostgreSQL acceptance, benchmark and live validation
+
+M11 completion count:
+13 of 16 steps complete.
+
+PERSONAL PROJECT VALUE
+This step can support evidence for:
+- Critical thinking: the implementation identified and corrected PostgreSQL transaction,
+  import-boundary, vendor-confinement and timeout-contract problems before merge.
+- Organization: design review, implementation, reconciliation, commit and merge were separated
+  into explicit gates.
+- Testing: unit, boundary, mutation and guarded real-PostgreSQL acceptance properties were mapped
+  and checked.
+- Security engineering: recipient privacy, at-most-one delivery attempts, disabled-by-default
+  behaviour, origin control, secret boundaries and outbound network restrictions were designed
+  before production enablement.
+- Process transparency: the first file/test counts and timeout wording were corrected instead of
+  being left as inaccurate evidence.
+- Academic integrity / development history: the PP baseline tag remained unchanged while Step 12
+  work is recorded as later development.
+
+PERSONAL PROJECT NOTE
+This file records factual development evidence only.
+
+Any Personal Project reflection, analysis of learning, ATL reflection, success-criteria judgment
+or personal evaluation should be written by the student in their own words and according to
+supervisor/school instructions.

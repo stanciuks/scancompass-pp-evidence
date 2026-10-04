@@ -1,0 +1,573 @@
+SCANCOMPASS — M11 STEP 14 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-27
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Report API edge rate limiting and share-shell edge routing
+
+This is factual development evidence, not Personal Project reflection prose.
+
+STATUS
+M11 Steps 0–14 complete.
+M11 Step 15 remains.
+
+EVIDENCE PROVENANCE
+Prepared from:
+1. Claude Code's Step 14 design review, implementation, correction, independent-review and merge reports.
+2. GitHub PR #6 review/merge history as reported after merge.
+3. The final post-merge repository state and gate results reported after Step 14 landed on main.
+
+This note records reviewed repository/source evidence only. It does not claim any live production
+edge/database/provider action that did not occur.
+
+FINAL MERGED PR
+PR:
+#6 — M11 step 14 — report API edge rate limit
+
+State:
+MERGED / CLOSED
+
+Merge method:
+Squash merge
+
+Approved PR head:
+5d1ff4252cf97f318edd064b94d7dd7db98fc2ab
+
+Base main before merge:
+272624f614b92a29046cb83120fdb430507b154a
+
+Final Step 14 / main SHA:
+101c6da34c3d9bf0aba90b4504fd93c8e88e9965
+
+Parent SHA:
+272624f614b92a29046cb83120fdb430507b154a
+
+Squash subject:
+feat: add report API edge rate limit
+
+Merged at:
+2026-09-27T18:03:41Z
+
+The squash commit has exactly one parent, so Step 13 -> Step 14 is exactly one commit on main.
+
+REVIEW WORKFLOW
+Step 14 was developed on:
+review/m11-step14-report-edge
+
+The branch carried two reviewed commits.
+
+The final independent review result was:
+REVIEW APPROVED — no further changes requested
+
+GitHub formal APPROVE could not be recorded because the authenticated reviewer identity was the
+same account that authored the PR. The independent review was recorded as a review COMMENT instead.
+No formal GitHub APPROVE is claimed.
+
+STEP 14 PURPOSE
+Step 14 adds the M11 reverse-proxy / edge protection required before any report endpoint can be
+deployed publicly.
+
+Approved edge policy:
+reports_per_ip
+10 requests per minute
+burst 5
+nodelay
+
+covering:
+/api/reports/
+
+The same step also commits an explicit edge location for:
+/r/
+
+The implementation is repository-only and is not installed on production yet.
+
+RATE-LIMIT ZONE
+Added to:
+deploy/nginx/conf.d/10-site-security-limits.conf
+
+Exact declaration:
+limit_req_zone $binary_remote_addr zone=reports_per_ip:10m rate=10r/m;
+
+Properties:
+- key: $binary_remote_addr
+- zone name: reports_per_ip
+- shared-memory size: 10m
+- steady rate: 10r/m
+- global limit_req_status 429 remains unchanged
+- global limit_req_log_level warn remains unchanged
+
+The zone is declared exactly once.
+
+CLIENT IDENTITY
+The report limiter is keyed on $binary_remote_addr, the nginx-observed TCP peer address.
+
+Current topology:
+internet -> nginx -> loopback application
+
+There is no CDN, upstream load balancer or RealIP rewriting in front of nginx. Therefore the limiter
+key is the public TCP client address under the current architecture.
+
+No client-controlled forwarding header is used as a limiter key.
+
+The application trust boundary remains separate:
+- nginx sets X-Site-Security-Client-IP from $remote_addr;
+- nginx supplies the proxy trust token;
+- generic forwarding headers remain stripped;
+- Step 14 changes none of those server-level proxy_set_header directives.
+
+REPORT API LOCATION
+Added to deploy/nginx/sites-available/site-security.conf:
+
+location ^~ /api/reports/ {
+    limit_req zone=reports_per_ip burst=5 nodelay;
+    proxy_pass http://site_security_app;
+}
+
+This location covers the five M11 report endpoints:
+- POST /api/reports/share
+- POST /api/reports/share/revoke
+- POST /api/reports/resolve
+- POST /api/reports/download
+- POST /api/reports/email
+
+The prefix is /api/reports/, not /api/, so unrelated API routes are not pulled into the report
+budget.
+
+LOCATION PRECEDENCE
+The final nginx model preserves:
+- exact /api/scan
+- exact /api/health
+- ^~ /api/reports/
+- ^~ /r/
+- /_next/static/
+- ordinary site /
+
+Important properties:
+- exact /api/scan outranks the report prefix;
+- exact /api/health outranks the report prefix;
+- ^~ /api/reports/ covers report subpaths and prevents regex re-selection;
+- /r/ is separate from report API traffic;
+- /_next/static/ remains separate;
+- ordinary TLS location / remains unthrottled.
+
+SHARE-SHELL LOCATION
+Added:
+
+location ^~ /r/ {
+    proxy_pass http://site_security_app;
+}
+
+It has no rate limit, so the share shell does not consume the report API request budget.
+
+The block contains no:
+- proxy_set_header
+- add_header
+- root
+- alias
+- try_files
+- limit_req
+
+HIDDEN-FILE REGEX TRADE-OFF
+Because ^~ short-circuits regex matching, paths such as /api/reports/.env and /r/.git do not fall
+through to the generic hidden-file regex.
+
+This was explicitly reviewed and accepted because both new locations only proxy to the application.
+They expose no filesystem path and declare no root, alias or try_files. Tests pin that assumption.
+
+SCAN RATE LIMITS
+The existing scan controls remain scan_per_ip and scan_global on location = /api/scan.
+
+Step 14 does not change the scan rates or burst values.
+
+Total active limit_req applications after Step 14: exactly three.
+1. scan_per_ip on /api/scan
+2. scan_global on /api/scan
+3. reports_per_ip on /api/reports/
+
+SCAN 429 SCOPING
+Before Step 14, error_page 429 = @scan_rate_limited; was server-scoped. That would have made report
+rate limits return SCAN_RATE_LIMITED, a scan-specific error.
+
+Step 14 moves that directive into location = /api/scan.
+
+The existing handler remains unchanged and still returns:
+{"ok":false,"error":"SCAN_RATE_LIMITED"}
+
+with the existing scan Retry-After behavior.
+
+REPORT 429 SEMANTICS
+The report prefix deliberately does not use @scan_rate_limited and no new report-specific application
+error vocabulary was invented.
+
+A report request rejected by nginx rate limiting receives nginx's native 429 response. It is refused
+at the edge before Node/database/provider work.
+
+No report-specific Retry-After requirement was added.
+
+SHARED REPORT 429 CLIENT DEFECT
+Independent Step 14 review identified a client-lifecycle defect that had to be fixed before the edge
+limit could safely ship.
+
+Before Step 14, SharedReportView treated 503 as temporary/retryable but treated every other
+non-success response as terminal. The terminal branch cleared tokenRef and rendered the invalid-link
+state.
+
+After Step 14, nginx can legitimately return 429 for a valid share token. If unchanged, a temporary
+rate limit would have been interpreted as an invalid/revoked/expired capability, destroyed the only
+in-memory token, and made Retry impossible.
+
+STEP 14 CLIENT FIX
+SharedReportView now treats 503 OR 429 as temporary/unavailable.
+
+On 429:
+- tokenRef is retained;
+- unavailable/retry UI is shown;
+- Retry reuses the same capability;
+- the fragment is not restored;
+- no invalid-capability conclusion is made.
+
+A genuine terminal authorization refusal still clears the token.
+
+OTHER REPORT CLIENTS
+ShareControls create/revoke discard management capabilities only on 404, so 429 already preserved the
+capability. EmailControl falls through to generic unavailable wording and does not own/destroy the
+management capability. No additional client changes were required.
+
+DOWNLOAD 429
+The native form POST download may navigate to nginx's ordinary 429 response when rate-limited. Step 14
+deliberately does not redesign the download mechanism.
+
+REQUEST BODY POLICY
+No new report-specific nginx body-size limit was added.
+
+Current relevant bounds remain:
+- server default client_max_body_size: 64k
+- /api/scan edge body ceiling: 4k
+- application report-request body ceiling: 1,024 bytes
+
+The Step 10 download's maximum 4 MiB rendered report is a response-size limit and is unrelated to
+request-body limiting.
+
+TIMEOUTS / BUFFERING
+Step 14 adds no change to:
+- proxy_connect_timeout
+- proxy_send_timeout
+- proxy_read_timeout
+- request buffering
+- response buffering
+
+The email provider's application-side 5 s headers / 10 s total bounds are unrelated to nginx
+client-proxy timeouts.
+
+HEADER OWNERSHIP
+Step 14 adds no new nginx CSP, Cache-Control, Referrer-Policy, X-Robots-Tag or
+X-Content-Type-Options behavior.
+
+The two new locations deliberately declare no proxy_set_header because a location-level declaration
+would replace the inherited server-level set rather than merge with it.
+
+They also declare no add_header so they do not break inheritance of server-level HSTS.
+
+NO REQUEST-BODY LOGGING
+The committed nginx configuration contains no $request_body reference. This is explicitly pinned
+because report capabilities travel in POST bodies.
+
+ACTIVE-DIRECTIVE FINGERPRINT
+Pre-Step-14:
+- site-security.conf: 92 active directives
+- 10-site-security-limits.conf: 7 active directives
+- site-security-bootstrap.conf: 13 active directives
+
+Post-Step-14:
+- site-security.conf: 99 active directives
+- 10-site-security-limits.conf: 8 active directives
+- site-security-bootstrap.conf: 13 active directives
+
+The site-config +7 is exactly the two new location blocks. Moving the scan error_page directive from
+server scope into /api/scan changed placement but not the total active-directive count.
+
+LIMITS FILE HASH
+Previous reconciled SHA-256:
+5ab9fb21b2b5ab40256c551352b6c54c55a225bdf3a74b8a67907e0514853ef1
+
+Final Step 14 SHA-256:
+1eeddcdf748277529af760afae7735acfd460c31d457c96a05c58422e536efa3
+
+The pinned hash was deliberately refreshed because the limits file intentionally changed.
+
+BOOTSTRAP TEMPLATE
+Reviewed and intentionally unchanged:
+deploy/nginx/sites-available/site-security-bootstrap.conf
+
+Reason: the bootstrap site only handles certificate bootstrap/ACME behavior and serves no report API.
+
+TLS-VS-HTTP TEST DEFECT
+Independent review found a pre-existing false-positive test helper.
+
+Both nginx suites used SITE.indexOf("location / {"). But site-security.conf has two root locations:
+1. port-80 redirect location /
+2. TLS application-proxy location /
+
+The helper returned the first/port-80 block, so an assertion intended to prove ordinary HTTPS
+browsing was unthrottled was actually checking the redirect server and passing for the wrong reason.
+
+TEST FIX
+The helper was corrected structurally.
+
+Tests now identify the production TLS server from its listen 443 ssl http2; server block,
+brace-balance that server, and resolve TLS locations within it. The HTTP redirect server remains
+separately identified/tested.
+
+The fix does not rely on first-occurrence or last-occurrence ordering.
+
+MUTATION EVIDENCE
+Mutation 1:
+Temporarily added limit_req zone=reports_per_ip burst=5 nodelay; inside the TLS location /.
+Expected: FAIL.
+Observed: FAIL. The ordinary-browsing unthrottled test caught it.
+
+Before the helper correction, this mutation passed because the test looked at the port-80 location.
+
+Mutation 2:
+Added the same text only as a comment near the TLS root.
+Expected: PASS.
+Observed: PASS. Comments are stripped correctly.
+
+Mutation 3:
+Added the directive to the port-80 redirect location /.
+Observed: the separate redirect assertion failed and attributed the problem to the correct HTTP
+block rather than the TLS application block.
+
+All mutations were restored byte-identically.
+
+NGINX TEST COVERAGE
+Final tests prove:
+- reports_per_ip zone declared exactly once
+- key = $binary_remote_addr
+- size = 10m
+- rate = 10r/m
+- report location exists exactly once
+- location uses ^~
+- burst=5
+- nodelay
+- scan endpoint retains both existing zones
+- /api/health unthrottled
+- /r/ unthrottled
+- TLS / unthrottled
+- /_next/static/ unthrottled
+- scan-specific 429 remains scoped to /api/scan
+- report prefix does not use @scan_rate_limited
+- neither new block declares proxy_set_header
+- neither new block declares add_header
+- neither new block declares root
+- neither new block declares alias
+- neither new block declares try_files
+- $request_body absent
+- security.txt preserved
+- ACME preserved
+- hidden-file deny preserved
+- hostname-placeholder discipline preserved
+- existing proxy trust headers preserved
+
+STEP 13 STRUCTURAL PIN MOVE
+Step 13 had a mandatory boundary assertion proving Step 14 had not started. Step 14 legitimately
+implements the report edge, so that absence pin was moved forward.
+
+The final boundary suite positively pins the Step 14 edge implementation while preserving Step 15
+absence.
+
+STEP 15 absence checks continue to prove:
+- no production PostgreSQL service
+- no production persistence provisioning
+- no retention scheduler/timer/crontab
+- email still ships disabled
+- no committed production secrets
+- no Step 15 deployment state
+
+DOCUMENTATION RECONCILIATION
+Updated current-state docs:
+- docs/ARCHITECTURE.md
+- docs/M11_PERSISTENCE_IMPLEMENTATION.md
+- docs/MILESTONES.md
+- docs/OPERATIONS_RUNBOOK.md
+- docs/ROADMAP.md
+
+Historical Step 0–13 evidence remains unchanged. The operations runbook documents the intended
+report-edge validation but leaves all host actions explicitly to Step 15.
+
+FILES IN FINAL STEP 14 COMMIT
+Exactly 12 files:
+1. deploy/nginx/conf.d/10-site-security-limits.conf
+2. deploy/nginx/sites-available/site-security.conf
+3. docs/ARCHITECTURE.md
+4. docs/M11_PERSISTENCE_IMPLEMENTATION.md
+5. docs/MILESTONES.md
+6. docs/OPERATIONS_RUNBOOK.md
+7. docs/ROADMAP.md
+8. src/components/report/SharedReportView.tsx
+9. tests/boundaries.test.ts
+10. tests/unit/deploy/nginx-edge-reconciliation.test.ts
+11. tests/unit/deploy/nginx-rate-limits.test.ts
+12. tests/unit/shared-report-view.test.tsx
+
+Final diff:
++678 / -84
+
+EXPLICITLY UNCHANGED
+- deploy/nginx/sites-available/site-security-bootstrap.conf
+- src/content/en/report.ts
+- src/server/transport/report-response.ts
+- src/proxy.ts
+- all /api/reports/** route handlers
+- src/app/r/page.tsx
+- next.config.ts
+- all persistence schema/migration files
+- scanner/scoring source
+
+FINAL POST-MERGE TEST EVIDENCE
+pnpm install --frozen-lockfile: PASS; already up to date; lockfile unchanged.
+Typecheck: PASS.
+Lint: PASS.
+nginx-rate-limits: 44 passed.
+nginx-edge-reconciliation: 18 passed.
+shared-report-view: 21 passed.
+boundaries: 963 passed.
+Full suite: 120 files, 4,672 passed, 128 skipped, 4,800 total.
+Next build: PASS.
+drizzle-kit check: Everything's fine.
+drizzle-kit generate: No schema changes.
+Guarded real-PostgreSQL: 5 files, 128 skipped, 0 executed.
+Docs links/anchors: 0 broken.
+Public report golden:
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+Status: unchanged.
+
+FINAL EDGE INVARIANTS
+All 19 final edge invariants were reported verified on merged main.
+
+Important confirmed properties:
+- reports_per_ip zone exact and unique
+- report location exact and unique
+- burst=5 nodelay
+- share shell no limiter
+- scan-specific 429 scope preserved
+- report native 429
+- /api/scan retains both original limits
+- /api/health unthrottled
+- TLS root unthrottled
+- static assets unthrottled
+- exactly three active limit_req applications
+- trust-boundary proxy headers intact
+- no RealIP/CDN configuration
+- $request_body absent
+- no new location-level proxy header shadowing
+
+SCHEMA / MIGRATION
+No schema change.
+No migration artifact changed.
+No migration generated.
+No migration executed.
+
+BRANCH / WORKTREE STATUS
+After merge:
+local main = 101c6da34c3d9bf0aba90b4504fd93c8e88e9965
+origin/main = 101c6da34c3d9bf0aba90b4504fd93c8e88e9965
+Equal: yes
+
+Step 14 review branch:
+review/m11-step14-report-edge
+Status: deleted locally and remotely after successful squash merge and post-merge verification.
+
+Step 12 review branch:
+review/m11-step12-email-delivery
+Status: retained and untouched
+SHA: cc23389f851e043d0ef3144a6559a4a988ab6f9f locally and remotely
+
+git status --short:
+?? .claude/
+
+0 staged changes.
+0 tracked modifications.
+
+PERSONAL PROJECT BASELINE
+Tag:
+pp-start-2026-09-24
+
+Type:
+annotated tag
+
+Tag target commit:
+987f54cf7ccd76007611e1a1b0356d2e03013194
+
+The PP baseline tag was not moved.
+
+PRODUCTION IMPACT
+None.
+
+According to the contemporaneous Step 14 implementation/review/merge record:
+- no production access
+- no nginx command executed
+- no nginx -t
+- no nginx -T
+- no /etc/nginx write
+- no nginx reload
+- no PostgreSQL contact
+- no PostgreSQL provisioning
+- no migration execution
+- no Postmark/provider contact
+- no email sent
+- no DNS action
+- no SPF/DKIM/DMARC action
+- no scheduler installation
+- no deployment
+- Step 15 not started
+
+DEPLOYMENT STATUS
+The report edge limit is committed to the repository but is NOT installed on the running production
+edge. The report endpoints remain not publicly deployed.
+
+Step 15 owns:
+- installing the reviewed nginx files on the host
+- nginx -t
+- nginx reload
+- live report-limit verification
+- PostgreSQL provisioning
+- migration execution
+- persistence acceptance
+- restore rehearsal
+- benchmark
+- live email/provider acceptance
+
+CURRENT M11 STATUS
+Complete:
+Steps 0–14
+
+Remaining:
+Step 15 — production provisioning/deployment, restore rehearsal, migrations, real-PostgreSQL
+acceptance, persistence benchmark, live edge validation and provider/email acceptance
+
+M11 completion count:
+15 of 16 steps complete.
+
+PERSONAL PROJECT VALUE
+This step can support evidence for:
+- Critical thinking: a temporary edge 429 was found to interact destructively with the share-token
+  lifecycle and was corrected before deployment.
+- Testing: nginx structure, route precedence, limiter identity and TLS-vs-HTTP server selection were
+  mutation-tested rather than assumed.
+- Security engineering: the report edge adds request-rate control without weakening the trusted-
+  proxy header boundary or exposing capability-bearing request bodies.
+- Organization: source implementation and live deployment were deliberately separated, leaving
+  production validation to Step 15.
+- Iteration: a pre-existing false-positive nginx test was found during independent review and
+  corrected before merge.
+- Process transparency: directive counts, SHA fingerprints, skipped real-PostgreSQL tests and
+  unperformed live actions are recorded explicitly.
+- Academic integrity / development history: historical Steps 0–13 remain unchanged, the PP baseline
+  tag remains fixed, and the later Step 14 work is recorded separately.
+
+PERSONAL PROJECT NOTE
+This file records factual development evidence only.
+
+Any Personal Project reflection, ATL reflection, success-criteria judgment or personal evaluation
+should be written by the student in their own words and according to supervisor/school
+instructions.

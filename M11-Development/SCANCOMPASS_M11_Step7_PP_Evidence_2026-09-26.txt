@@ -1,0 +1,431 @@
+SCANCOMPASS — M11 STEP 7 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-26
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Durable report persistence write path
+
+EVIDENCE PROVENANCE
+Prepared from:
+1. Claude Code's Step 7 implementation, test, lifecycle-audit and commit reports.
+2. Independent GitHub verification of commit:
+   7447cf90077b71f208b3b57aebba98d0e197af85
+
+This is a factual evidence summary, not a Personal Project reflection.
+
+STEP STATUS
+Steps 0–7 complete.
+Steps 8–15 not started.
+
+COMMIT
+SHA:
+7447cf90077b71f208b3b57aebba98d0e197af85
+
+Subject:
+feat: add durable report persistence write path
+
+Independent GitHub verification:
+- commit exists at the expected SHA
+- it is exactly one commit after 1842f98fdd8d581777955da408f804c3e30b2bc0
+- compare status: ahead by 1, behind by 0
+- exactly 32 files changed
+- the 32 paths match the reviewed Step 7 set
+
+PURPOSE
+Make a finished assessment durable without allowing persistence failure to
+refuse, alter, or consume global outbound scan capacity.
+
+ARCHITECTURE
+Persistence writer:
+- src/server/persistence/write/mapping.ts
+- src/server/persistence/write/persist-assessment.ts
+- src/server/persistence/write/runtime.ts
+- src/server/persistence/write/index.ts
+
+Supporting modules:
+- src/server/persistence/retention.ts
+- src/server/persistence/numeric.ts
+- src/server/persistence/circuit-breaker.ts
+
+Composition:
+- src/server/application/persistence-composition.ts
+
+Launch-facing neutral vocabulary:
+- src/server/launch/durability.ts
+
+Boundary:
+- launch/** imports no persistence implementation
+- launch/** imports no pg/drizzle
+- assessment/** imports no persistence
+- scanner/** imports no persistence
+- browser/client code imports no persistence internals
+- the application composition module is the only reviewed module importing both
+  launch and the persistence writer
+
+PERSISTABILITY RULE
+Application rule, evaluated before opening a transaction:
+
+COMPLETED        -> persist
+PARTIAL          -> persist
+DEADLINE_REACHED -> do not persist
+CANCELLED        -> do not persist
+FAILED           -> do not persist
+
+The PostgreSQL CHECK constraint is a backstop, not the primary decision-maker.
+
+INTERNAL PROVENANCE ADDED
+AssessmentReportModel:
+- scannerVersion from FreeScanResult.versions.scanner
+
+EnrichedFinding:
+- informational from CheckResult.informational
+- checkVersion from CheckResult.checkVersion
+- observedAt from CheckResult.observedAt
+
+These are internal provenance fields only.
+
+PublicAssessmentReport remains unchanged.
+
+THREE-PHASE WRITE
+Normal Step 7 transaction:
+1. INSERT scans
+2. bulk INSERT scan_findings
+3. INSERT scan_reports
+4. COMMIT
+
+No report_management_tokens row is created in Step 7.
+Management capability remains Step 8 work.
+
+Current finding insert:
+- 18 insertable columns
+- 42 findings
+- 42 × 18 = 756 bind parameters
+
+PostgreSQL bind parameter limit:
+65,535
+
+Derived current chunk bound:
+floor(65,535 / 18) = 3,640 findings per statement
+
+Future overflow is chunked inside the same transaction; atomicity remains the
+invariant.
+
+FROZEN REPORT ARTIFACT
+The writer calls the Step 6 issueReportArtifact() on the exact public report
+returned to the browser.
+
+Artifact issuance happens before database acquisition.
+
+The writer stores:
+- exact document
+- document version
+- UTF-8 byte size
+- raw SHA-256 Buffer
+
+No second JSON serialization is performed by the writer.
+
+TRI-STATE DURABILITY
+Public response durability:
+
+persisted: true
+- COMMIT positively acknowledged
+- scanId returned
+
+persisted: false
+- definitely not committed, or no transaction attempted
+- no scanId
+
+persisted: null
+- COMMIT was sent but the outcome cannot be established
+- no public scanId
+
+Core invariant:
+A response with persisted:false cannot later correspond to a committed
+transaction.
+
+COMMIT AMBIGUITY
+Explicit phase tracking:
+NO_TRANSACTION
+-> TRANSACTION_OPEN
+-> COMMIT_SENT
+-> COMMIT_ACKNOWLEDGED
+
+Before COMMIT:
+failure or expiry gives definite NOT_PERSISTED.
+
+After COMMIT has been sent:
+a connection loss / timeout / unacknowledged result is classified as
+UNKNOWN / COMMIT_OUTCOME_UNKNOWN, not false.
+
+The candidate scanId is retained only for safe internal logging and never becomes
+a public scanId or management capability.
+
+DEADLINE / CLIENT LIFECYCLE
+A targeted pre-commit lifecycle audit verified:
+- deadline timer is disposed on every completed attempt
+- a timer cannot destroy a client after PERSISTED has returned
+- client release/destroy is idempotent and occurs at most once
+- late acquisition after timeout is destroyed and never starts BEGIN
+- successful COMMIT cannot later turn into timeout behaviour
+- no deadline callback mutates breaker state
+- no abandoned promise produces an unhandled rejection
+- candidateScanId is internal/log-only
+
+The audit required no source change.
+
+POOL ACQUISITION SAFETY
+A real Step 7 gap was found during fault-injection testing:
+
+persistAssessment originally awaited acquire() without its own wall-clock bound,
+relying on pg's connectionTimeoutMillis.
+
+It was corrected so acquisition races the writer's own deadline.
+
+A late-resolving acquisition is immediately destroyed/released and never begins
+a transaction.
+
+CIRCUIT BREAKER
+Process-local state machine:
+CLOSED
+OPEN
+HALF_OPEN
+
+Open duration:
+30,000 ms
+
+Behaviour:
+- DB runtime failure -> OPEN
+- OPEN before cooldown -> skip immediately
+- after cooldown exactly one caller becomes HALF_OPEN
+- concurrent callers skip
+- successful probe -> CLOSED
+- failed/unknown probe -> OPEN again
+
+Breaker opens on:
+- DATABASE_ERROR
+- WRITE_TIMEOUT
+- COMMIT_OUTCOME_UNKNOWN
+
+Breaker does not open on:
+- NOT_CONFIGURED
+- CONFIG_INVALID
+- STATE_NOT_PERSISTABLE
+- ARTIFACT_INVALID
+- ARTIFACT_TOO_LARGE
+- INTERNAL_ERROR
+
+No timer job, polling loop, or background DB health task is used.
+
+RUNTIME DEGRADATION OBSERVABILITY
+Runtime degradation is surfaced through the structured persistence_write event
+and breaker state.
+
+The Step 5 boot-time persistenceReadiness() semantics remain unchanged.
+
+When DATABASE_URL is absent, production installs no persistence hook, so there is
+no per-scan NOT_CONFIGURED persistence_write log. Configuration absence remains
+observable through the Step 5 startup/readiness path.
+
+EVIDENCE BOUNDARY
+scan_findings.evidence is derived only through:
+
+persistableEvidence(finding.id, finding.evidence)
+
+The writer does not persist raw finding evidence directly.
+
+Tests proved:
+- hostile evidence keys do not reach row data
+- authorization/cookie-like values are excluded
+- an oversized unreviewed payload is excluded
+- copyParams does not reach mapped persistence rows
+- the writer contains no second evidence allowlist
+
+CACHE SEMANTICS
+CachedAssessment stores:
+- reviewed public report
+- small durability metadata
+
+It does not store the internal report model or raw findings.
+
+Cache replay:
+- persisted true -> same scanId
+- persisted false -> false, no scanId
+- persisted null -> null, no scanId
+
+Cache hits do not retry the database write.
+
+CONCURRENCY ORDERING
+Global outbound scanner permit:
+- released immediately after outbound assessment work
+- not held during persistence
+
+Per-target lock:
+- remains held during bounded persistence and cache insertion
+- prevents same-target duplicate scanning until the cache entry is ready
+
+Deterministic tests proved:
+- another hostname can obtain scanner capacity while the first waits for
+  persistence
+- the same hostname remains blocked
+- early release plus finally does not over-credit the limiter
+
+RETENTION
+Durable retention class:
+anonymous-free-30d
+
+Duration:
+30 days
+
+One injected createdAt stamps:
+- scans.created_at
+- scans.expires_at
+- scan_reports.created_at
+
+No retention purge job exists yet; that remains Step 11.
+
+NUMERIC FIDELITY
+NUMERIC columns use explicit finite-number conversion based on number.toString().
+
+Rejected before DB activity:
+- NaN
+- +Infinity
+- -Infinity
+- -0
+
+No fixed-decimal rounding or parseFloat write path is used.
+
+The documented invariant is numeric value fidelity, not exact PostgreSQL textual
+spelling.
+
+PUBLIC RESPONSE PRESERVATION
+Nine persistence failure modes were tested against the same successful public
+assessment:
+
+1. DATABASE_URL absent
+2. DATABASE_URL invalid
+3. pool acquisition/connect failure
+4. INSERT/query failure
+5. pre-COMMIT timeout
+6. circuit OPEN
+7. artifact too large
+8. artifact invalid
+9. COMMIT outcome unknown
+
+In every case:
+- assessment succeeds
+- returned public report is unchanged
+- score is unchanged
+- findings are unchanged
+- state is unchanged
+- persistence failure does not create a 5xx response
+
+Only durability metadata changes.
+
+TEST RESULTS
+Final full-gate state:
+- pnpm install --frozen-lockfile: PASS
+- drizzle-kit check: PASS
+- drizzle-kit generate: PASS; no migration generated
+- typecheck: PASS
+- lint: PASS
+- test:run:
+  88 files
+  3,551 passed
+  61 skipped
+- build: PASS
+- focused scoring/public-report/artifact/determinism:
+  417 passed
+- focused post-lifecycle audit:
+  4 files
+  840 passed
+
+REAL POSTGRESQL ACCEPTANCE
+PENDING.
+
+New Step 7 writer integration cases:
+16 skipped
+
+Total integration skips:
+61
+= 45 pre-existing + 16 new
+
+The real suite reuses the Step 4 destructive-target guard.
+
+No database was contacted during Step 7.
+
+REAL WRITE BENCHMARK
+PENDING.
+
+No p50/p95 number has been fabricated from mocks.
+
+Pre-written rule:
+if real p95 > 60% of PERSISTENCE_WRITE_BUDGET_MS:
+- deliberately raise the budget with the measurement attached; or
+- move to write-behind
+
+This remains a hard gate before Step 15.
+
+PUBLIC REPORT GOLDEN
+Unchanged:
+
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+MIGRATION ARTIFACT HASHES
+Unchanged:
+
+db/migrations/0000_m11_persistence.sql
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+db/migrations/meta/0000_snapshot.json
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+db/migrations/meta/_journal.json
+24186ee4e92b0dc52ecd0fb7f230342f66ddd18300957d7619490dbdddaac896
+
+PRODUCTION IMPACT
+None.
+
+No:
+- production access
+- PostgreSQL provision
+- database contact
+- migration execution
+- production row write
+- management capability
+- share route
+- download
+- email
+- retention purge
+
+Scanner networking unchanged.
+Scoring unchanged.
+Public report unchanged.
+Launch gate/control inventory unchanged.
+Persistence readiness semantics unchanged.
+Role templates unchanged.
+
+FAILURE / CHANGE DISCOVERIES
+1. Five NOT NULL schema values lacked an honest source in the retained internal
+   presentation model. Fixed by retaining internal provenance rather than weakening
+   the schema.
+2. observedAt revealed that one composed-report determinism test was not truly
+   deterministic because observedAt is wall-clock data. The test was corrected
+   without changing public report bytes.
+3. A replacement determinism assertion was itself timing-dependent and was replaced
+   with deterministic non-vacuity checks.
+4. Several new boundary rules were initially too broad because they matched
+   "persistence" by substring. They were narrowed to structural/import semantics.
+5. An import cycle appeared when durability vocabulary lived in admission.ts.
+   Resolved with neutral launch/durability.ts.
+6. Pool acquisition was initially unbounded by the writer's own deadline. This was
+   found by fault-injection tests and corrected.
+7. The first fake pg connection did not reject an in-flight query when destroyed,
+   unlike the real driver behaviour. The fake was corrected rather than weakening
+   the assertion.
+8. Two structural rules incorrectly treated legitimate existing repository concepts
+   as forbidden globally (copyParams and declarative management-token schema
+   references). They were scoped to executable Step 7 writer behaviour instead.
+
+PERSONAL PROJECT NOTE
+This file is factual development evidence, not reflective prose. Any required
+Personal Project reflection should be written by the student in their own words
+and according to supervisor/school instructions.

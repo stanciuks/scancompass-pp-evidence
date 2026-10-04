@@ -1,0 +1,97 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-3 — Standalone bundled scanner-worker runtime
+STATUS: COMPLETE
+IMPLEMENTATION COMMIT
+- ce15578ae2649228a4e2447ec6e86724ac46b786
+CORRECTIVE COMMIT
+- 73c6c2838ccc966bc360107fdef703b8b444c28a
+
+PURPOSE
+Create and prove the standalone scanner worker without yet switching the application over to it.
+
+RUNTIME CREATED
+- src/worker/main.ts
+- src/worker/server.ts
+- src/worker/handler.ts
+- src/worker/execute-scan.ts
+- src/worker/identity.ts
+- src/worker/concurrency.ts
+- src/worker/logger.ts
+
+PRIVATE SURFACE
+- POST /scan
+- GET /healthz
+No public application route was added.
+
+SECURITY / PRIVACY PROPERTIES
+- Worker validates the strict v1 protocol.
+- Canonical hostname is revalidated before identity policy.
+- Invalid identity is refused before scanner network work.
+- Worker reads no scanner identity from environment and has no development fallback.
+- Worker-local concurrency is immediate admit/refuse only; no queue.
+- Logger is allowlisted by data shape and cannot accept target-derived free-form strings.
+
+CORRECTED VALIDATION PRECEDENCE
+Final order:
+1. body / JSON parse
+2. strict v1 schema
+3. canonical hostname validation
+4. identity validation
+5. worker concurrency permit
+6. scan
+7. result re-validation
+
+BUNDLE
+- esbuild exact-pinned: 0.28.2
+- pnpm build:worker
+- single deployable scanner-worker.mjs bundle
+- metafile used as actual bundle-membership evidence
+
+METAFILE EVIDENCE
+156 inputs at initial M12A-3 close:
+- 54 source inputs
+- 102 node_modules inputs
+- five package directories: zod, tldts, ipaddr.js, parse5, entities
+
+Asserted absent included scanner/net/identity.ts, src/server/**, database/persistence/scoring/
+presentation authority, web UI/runtime packages, and dynamic import/require/eval escape hatches.
+
+DOCKERFILE
+Added worker-build and scanner stages. Scanner runtime stage copies only the worker bundle and runs
+non-root. Compose was NOT changed in this step. Docker was unavailable locally, so the image itself
+was not empirically built/run yet. That limitation is recorded rather than hidden.
+
+GATES
+Original M12A-3:
+- 5,231 tests passed, 128 skipped
+- typecheck clean
+- lint clean / zero warnings
+- app build succeeded, seven public routes
+- worker bundle succeeded
+
+Corrective:
+- 5,237 tests passed, 128 skipped
+- typecheck/lint/build/build:worker clean
+- 156 bundle inputs and all forbidden-module/no-escape assertions passed
+
+PRODUCTION SAFETY
+Production untouched. No deployment, Compose, firewall or host changes.
+Web application still scanned in-process at the end of M12A-3.
+
+PP / ATL VALUE
+- Creative/critical thinking: designing a process boundary that reduces authority rather than
+  merely adding another service.
+- Information literacy: using the esbuild metafile as measured evidence instead of assumptions.
+- Reflection: fixing validation precedence after review and proving the regression test would catch it.

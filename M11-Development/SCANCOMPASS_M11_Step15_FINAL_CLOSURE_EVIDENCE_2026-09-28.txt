@@ -1,0 +1,746 @@
+----- BEGIN FINAL M11 EVIDENCE FILE -----
+
+SCANCOMPASS — M11 FINAL CLOSURE EVIDENCE
+
+Date: 2026-09-28
+
+
+Save as: SCANCOMPASS_M11_Step15_FINAL_CLOSURE_EVIDENCE_2026-09-28.txt
+
+
+1. M11 STATUS
+
+-------------
+
+M11 Persistence & Durable Reports: COMPLETE.
+
+All 15 steps (0-15) complete.
+
+Production live.
+
+Documentation reconciled with the deployed state.
+
+
+2. REPOSITORY CLOSURE
+
+---------------------
+
+Final main commit ........ 6e74ee3c48225136c38903be7ddce0ae0aa3227f
+
+Final main tree .......... 6f23052ac16ccfd643703bdd927c204a19579a2e
+
+Parent commit ............ 3b455ae129a3638bb3ab3894837a92031d47e325  (exactly one parent)
+
+PR #12 ................... squash merged, closed, merged=true
+
+                           merged at 2026-09-28T16:49:29Z
+
+                           subject: "docs: reconcile current-state documentation with
+
+                                     live M11 deployment"
+
+
+Annotated closure tag .... m11-complete-2026-09-28
+
+Tag object type .......... annotated tag object (not lightweight)
+
+Annotated tag object SHA . bcf2113bfe3bd0bbbd532848ff816c73fc16dab7
+
+Tag -> commit ............ 6e74ee3c48225136c38903be7ddce0ae0aa3227f
+
+Tag -> tree .............. 6f23052ac16ccfd643703bdd927c204a19579a2e
+
+Remote tag verified ...... refs/tags/m11-complete-2026-09-28 = bcf2113bfe3bd0bbbd532848ff816c73fc16dab7
+
+                           refs/tags/m11-complete-2026-09-28^{} = 6e74ee3c48225136c38903be7ddce0ae0aa3227f
+
+
+Golden public report artifact hash:
+
+  7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+
+3. DEPLOYED PRODUCTION IDENTITY
+
+-------------------------------
+
+Deployed source commit ... 3b455ae129a3638bb3ab3894837a92031d47e325
+
+Deployed tree ............ b8a102fb0194583985a8c6edf725f26f9195546e
+
+
+Final main differs from the deployed source by DOCUMENTATION ONLY. The diff from
+
+3b455ae to 6e74ee3 is exactly six files under docs/ (+890 / -267) and contains no
+
+runtime source, deployment configuration, schema, migration or test file.
+
+
+NO REDEPLOYMENT OCCURRED AFTER PR #12. The running application, PostgreSQL, nginx
+
+configuration and systemd timers remain those of 3b455ae / tree b8a102f. Deploying
+
+6e74ee3 would change no behaviour, because nothing outside docs/ differs.
+
+
+4. POSTGRESQL / PERSISTENCE
+
+---------------------------
+
+PostgreSQL 18.6, running in Compose on the production host.
+
+Image pinned by digest:
+
+  sha256:3725f4e2499eef5134592b3b4ab79a543ed7f8e533b05b5b637af926630f6650
+
+data_checksums ........... on
+
+Host port 5432 ........... NONE. The database is reachable only on the internal
+
+                           Compose network; the application is published on
+
+                           127.0.0.1:3000 and nginx is the only thing that reaches it.
+
+Named volume ............. site-security_pgdata
+
+Migrations ............... 0000 and 0001 applied; schema_migrations ledger holds 2 rows,
+
+                           checksums matching the committed SQL.
+
+Application role ......... scancompass_app on database scancompass
+
+Privilege separation ..... unchanged from the reviewed design; the application role holds
+
+                           zero privileges on the migration ledger.
+
+Persistence readiness .... READY / OK (persistence_readiness boot log)
+
+
+5. REAL-POSTGRES ACCEPTANCE + BENCHMARK
+
+---------------------------------------
+
+Guarded acceptance: 128 cases across five suites, all executed and all passing
+
+(0 failed, 0 skipped) against a DISPOSABLE PostgreSQL 18.6 cluster that was
+
+destroyed afterwards. Suites: writer 35, migrations 30, retention 22, readiness 15,
+
+email 26. This proved reviewed database semantics only; deployment was a separate
+
+gate and was never substituted by it.
+
+
+Production write benchmark, measured on the real production topology:
+
+  concurrency 1 .......... p95  15.3 ms
+
+  concurrency 2 .......... p95  25.2 ms
+
+  acceptance threshold ... 450 ms
+
+Decision rule was written BEFORE the numbers (if real p95 exceeds 60% of
+
+PERSISTENCE_WRITE_BUDGET_MS, raise the budget deliberately with the measurement
+
+attached, or move to write-behind). Both figures sit far inside it, so neither
+
+branch was taken and the budget is unchanged.
+
+Benchmark cleanup left ZERO synthetic rows.
+
+
+6. BACKUP / RESTORE
+
+-------------------
+
+Pipeline: pg_dump -Fc --no-owner --no-acl inside the database container as the
+
+postgres superuser over the container local socket -> age encryption with a
+
+recipients file -> ciphertext verified -> plaintext deleted -> upload -> remote
+
+presence confirmed -> prune older than the retention window. Encryption happens
+
+BEFORE any network call. The host holds only the age recipient (public) key.
+
+
+RESTORE-TESTED OBJECT: scancompass-20260928T054857Z.dump.age
+
+
+  - the actual uploaded object was downloaded off-host with a read-only restore
+
+    credential;
+
+  - decrypted off-host with the operator-held age private identity (deliberately
+
+    not present on the server);
+
+  - restored into a disposable PostgreSQL 18.6 instance, into a new scratch
+
+    database, never over production;
+
+  - schema tables ................ 7
+
+  - scan_findings sequence ....... present
+
+  - migration ledger ............. 2 rows, checksums matched the committed SQL
+
+  - representative counts ........ 1 | 42 | 1 | 1 | 0 | 0
+
+                                   (scans | findings | reports | management |
+
+                                    shares | deliveries)
+
+  - orphan counts ................ 0 | 0 | 0 | 0 | 0
+
+  - frozen artifact byte size .... verified equal to octet_length(document)
+
+  - frozen artifact SHA-256 ...... recomputed from the restored bytes and matched
+
+                                   the stored digest
+
+  - scratch database, its volume, the decrypted plaintext and the downloaded
+
+    ciphertext were all DESTROYED afterwards.
+
+
+The restore-tested object remains in off-host storage.
+
+
+POST-LAUNCH ADDITIONAL BACKUP: scancompass-20260928T123218Z.dump.age
+
+  - succeeded;
+
+  - is an additional live-data snapshot;
+
+  - was NOT separately restore-rehearsed. Only the object named above carries a
+
+    completed restore proof.
+
+
+7. RETENTION / BACKUP AUTOMATION
+
+--------------------------------
+
+scancompass-retention.timer ... installed, enabled, ACTIVE. 02:10 UTC daily,
+
+                                Persistent=true, RandomizedDelaySec=300.
+
+scancompass-backup.timer ...... installed, enabled, ACTIVE. 02:40 UTC daily,
+
+                                Persistent=true, RandomizedDelaySec=300.
+
+Both survived the controlled reboot.
+
+Both were exercised successfully through systemd before being left to their timers.
+
+Retention runs as a one-shot container from the dedicated maintenance image; the
+
+production application image contains no scripts/ and the host has no Node, which
+
+is why it is packaged separately.
+
+Retention runs before backup so an expired row is less likely to be copied into a
+
+fresh backup; the timers are otherwise independent, so a retention failure does not
+
+cost a day of recoverability.
+
+No plaintext dump and no staged ciphertext remain on the VPS after a completed run.
+
+
+8. EDGE ACCEPTANCE
+
+------------------
+
+reports_per_ip is LIVE:
+
+  key .................... $binary_remote_addr
+
+  zone size .............. 10m
+
+  rate ................... 10r/m
+
+  application ............ burst=5 nodelay on location ^~ /api/reports/
+
+
+Externally observed, from a machine that is not the server:
+
+  - malformed report requests below the limit reached the application -> 400
+
+  - past the burst -> 429 from nginx, without reaching the application
+
+  - a forged X-Forwarded-For did NOT reset the bucket (the zone is keyed on the
+
+    socket peer, and nginx strips that header before the application sees it)
+
+  - the scan limiter refused INDEPENDENTLY -> 429
+
+  - the scan 429 retained SCAN_RATE_LIMITED and Retry-After: 20
+
+  - the report 429 did NOT borrow the scan error vocabulary
+
+  - ordinary browsing stayed outside both budgets
+
+  - /.well-known/security.txt continued to answer 200
+
+
+Share shell canonical behaviour, live:
+
+  GET /r ................. 200
+
+  GET /r/ ................ 308, Location: /r
+
+  curl -L /r/ ............ 200 (one redirect, no loop)
+
+
+nginx -T was NEVER run and NEVER printed at any point in M11. Syntax was checked
+
+with nginx -t only. The prohibition is recorded in the operator documentation.
+
+
+9. DEPLOYMENT INCIDENTS
+
+-----------------------
+
+Two deployment defects occurred. Both are recorded because the rollback and
+
+source-fix paths working is part of the evidence the gates were real.
+
+
+INCIDENT 1 - application image stage
+
+  - the Compose build block for the app service specified no target, so it built
+
+    the Dockerfile's LAST stage (acceptance) instead of runtime;
+
+  - the production container restart-looped;
+
+  - recovered;
+
+  - fixed IN SOURCE with an explicit \target: runtime\;
+
+  - a structural test was added so the omission cannot recur silently.
+
+
+INCIDENT 2 - share-shell redirect loop
+
+  - installing step 14's edge produced an infinite redirect loop:
+
+      GET /r   -> nginx 301 Location: /r/
+
+      GET /r/  -> Next  308 Location: /r
+
+  - cause: nginx answers a slashless URI with a 301 to the slash form when the
+
+    matching prefix location ends in '/' and is handled by proxy_pass, while Next
+
+    canonicalises in the opposite direction;
+
+  - nginx -t had passed and the reload had succeeded; EXTERNAL ACCEPTANCE caught it,
+
+    failing with: curl: (47) Maximum (50) redirects followed;
+
+  - the ROLLBACK SUCCEEDED and restored the previous files;
+
+  - PR #11 fixed it in source by adding the exact \location = /r\ alongside the
+
+    \^~ /r/\ prefix (the documented nginx remedy), reproduced on nginx 1.24.0 before
+
+    merging;
+
+  - the corrected edge was deployed, is byte-identical to the committed source,
+
+    passes nginx -t, and survived the controlled reboot.
+
+
+10. CONTROLLED REBOOT
+
+---------------------
+
+Host ..................... Ubuntu 24.04.4
+
+Kernel ................... 6.8.0-139-generic -> 6.8.0-142-generic
+
+Application .............. recovered, same container identity and image
+
+PostgreSQL ............... recovered, same container identity and image
+
+Volume ................... site-security_pgdata persisted
+
+nginx correction ......... persisted (the two-location share shell)
+
+Timers ................... both recovered
+
+
+11. LAUNCH
+
+----------
+
+EDGE_RATE_LIMIT_CONFIRMED=1 ................ OPERATOR ATTESTATION, not a measurement
+
+HOSTING_PROVIDER_PERMISSION_CONFIRMED=1 .... OPERATOR ATTESTATION, not a measurement
+
+SCAN_PRODUCTION_ENABLED=1
+
+EMAIL_DELIVERY_ENABLED=0
+
+
+Boot readiness:
+
+  readyForProduction ............ true
+
+  productionScanningEnabled ..... true
+
+  blockerCount .................. 0
+
+  persistence_readiness ......... READY / OK
+
+
+Trust boundary verified on the running system: a direct loopback
+
+POST /api/scan without trusted-proxy identity was refused
+
+403 INVALID_REQUEST. A request that bypasses nginx cannot scan.
+
+
+The two attestations record that a human performed a check. Nothing in this system
+
+can measure them, and neither may ever be set to clear a blocker.
+
+
+Launch order (the gate was opened before the acceptance scan, deliberately in this
+
+order):
+
+  1. SCAN_PRODUCTION_ENABLED changed 0 -> 1
+
+  2. application recreated
+
+  3. boot readiness reported readyForProduction=true,
+
+     productionScanningEnabled=true, blockerCount=0
+
+  4. direct app-port bypass verified 403
+
+  5. then the first owner-controlled production scan was executed
+
+
+12. FIRST DURABLE PRODUCTION ASSESSMENT
+
+---------------------------------------
+
+This is a POINT-IN-TIME record of the first verified durable production assessment
+
+at launch acceptance. Public scanning had just been enabled before it, so this is
+
+NOT a standing claim about how many assessments the production database holds.
+
+
+Target ................... scancompass.com  (owner-controlled)
+
+Scan id .................. 8bce6eaa-c047-4bf9-a6b3-a2ef2e5f2ee1
+
+Execution id ............. 920edf9d-6f85-4aaa-a11b-4aea7dc5afd5
+
+
+API response:
+
+  HTTP 200
+
+  state = COMPLETED
+
+  resultSource = LIVE
+
+  persisted = true
+
+
+Verified against the database rather than trusted from the response:
+
+  findings ............... 42
+
+  reports ................ 1
+
+  management ............. 1
+
+  shares ................. 0
+
+  deliveries ............. 0
+
+  document_version ....... public-report-v1
+
+  stored byte_size ....... equal to octet_length(document)
+
+  stored SHA-256 ......... equal to a digest recomputed from the document bytes
+
+  orphan counts .......... 0 across every child table
+
+
+Note on shares=0: a persisted assessment does NOT automatically have a share link.
+
+The durable write produces the scan, its findings, the frozen report and a
+
+management capability. Share capabilities are minted later by an explicit share
+
+operation.
+
+
+MANAGEMENT CAPABILITY EVIDENCE (stated precisely):
+
+  - the capability VALUE was returned once to the owner-run client;
+
+  - it was never printed;
+
+  - the acceptance response existed transiently in a mode-restricted temporary file;
+
+  - a parser confirmed the capability field was PRESENT without emitting its value;
+
+  - that temporary file was destroyed;
+
+  - the value was not preserved in the deployment evidence or in the repository;
+
+  - PostgreSQL stores ONLY its SHA-256 digest, never the plaintext;
+
+  - this evidence does NOT establish who currently possesses the original value,
+
+    and no claim is made about that.
+
+
+13. CAPABILITY LOG-ABSENCE TEST
+
+-------------------------------
+
+A synthetic 32-byte body-carried canary was sent in the body of
+
+POST /api/reports/resolve against the live system.
+
+
+  - the application answered a neutral 404 INVALID_REQUEST;
+
+  - the value was ABSENT from the nginx access log;
+
+  - ABSENT from the nginx error log;
+
+  - ABSENT from the application log.
+
+
+The canary VALUE is deliberately not recorded in this evidence file. Writing it
+
+down would defeat the purpose of testing whether values like it leak. The absence
+
+is the evidence.
+
+
+14. OPTIONAL EMAIL
+
+------------------
+
+EMAIL_DELIVERY_ENABLED=0. Optional email delivery is deliberately disabled.
+
+
+  - NO live email-provider delivery was exercised during M11 acceptance;
+
+  - NO email was sent during M11 acceptance;
+
+  - NO sender-authentication, DKIM or SPF acceptance was established;
+
+  - the disabled path returns DISABLED BEFORE reading any email-delivery secret.
+
+
+THEREFORE: M11 acceptance establishes NOTHING about the presence or absence of
+
+dormant provider credentials, external provider accounts or sender DNS records.
+
+They were never read and never inspected. "Not used" is not "not present", and this
+
+record claims neither.
+
+
+Operational consequence: with the flag off, an operator must NOT infer that the
+
+remaining email configuration is incomplete - or that it is complete. Before
+
+enabling email, validate the required provider, sender, HMAC and DNS configuration
+
+through the documented enablement procedure.
+
+
+Email was NOT an M11 launch blocker. Its being off is a chosen configuration.
+
+
+15. FINAL GATES
+
+---------------
+
+Run on the merged main commit 6e74ee3c48225136c38903be7ddce0ae0aa3227f:
+
+
+  git diff --check ............................ clean (exit 0)
+
+  typecheck (tsc --noEmit) .................... PASS (exit 0)
+
+  lint (eslint .) ............................. PASS (exit 0)
+
+  boundaries + launch independence ............ 1010 / 1010 passed
+
+  deploy unit tests ........................... 197 / 197 passed (7 files)
+
+  full hermetic suite ......................... 4820 passed, 128 skipped (4948 total,
+
+                                                125 files)
+
+  golden / evidence policy .................... 64 / 64 passed
+
+  next build .................................. PASS (compiled successfully)
+
+
+  Golden public report artifact hash:
+
+    7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+
+EXPLANATION OF THE 128 SKIPPED:
+
+The 128 skipped cases are the guarded real-PostgreSQL integration suites. In
+
+ordinary hermetic execution they are SKIPPED, not passed - they refuse to run
+
+without an explicitly identified disposable scratch database. They were executed
+
+and passed separately (see section 5) against a disposable PostgreSQL 18.6 cluster.
+
+A skip is never to be read as a pass.
+
+
+16. DOCUMENTATION CLOSURE
+
+-------------------------
+
+PR #12, squash merged into main.
+
+Six documentation files changed (+890 / -267):
+
+  docs/ARCHITECTURE.md
+
+  docs/M11_PERSISTENCE_IMPLEMENTATION.md
+
+  docs/MILESTONES.md
+
+  docs/OPERATIONS_RUNBOOK.md
+
+  docs/PRODUCTION_DEPLOYMENT.md
+
+  docs/ROADMAP.md
+
+
+The final main TREE (6f23052ac16ccfd643703bdd927c204a19579a2e) equals the approved
+
+PR-head tree exactly. A squash changes commit identity, not content.
+
+
+The documentation now describes the deployed M11 state. Historical evidence was
+
+PRESERVED rather than rewritten: statements scoped to an earlier step ("at this step
+
+production was untouched", "production impact: none") remain as written, and where a
+
+paragraph stated the old position it was labelled with its outcome recorded beside it
+
+rather than deleted.
+
+
+No production action occurred at any point during the documentation reconciliation.
+
+
+17. BRANCH / REF CLOSURE
+
+------------------------
+
+DELETED (merged, superseded by main, PR #12 history and the closure tag):
+
+  review/m11-step15-final-reconciliation   - deleted locally AND remotely
+
+                                             (was 1d5b9565c65903fdd9d6975b1d78740bcb1ed131)
+
+                                             verified absent: 0 local, 0 remote
+
+
+RETAINED DELIBERATELY:
+
+  review/m11-step12-email-delivery ......... cc23389f851e043d0ef3144a6559a4a988ab6f9f
+
+                                             (local and remote, unchanged)
+
+
+TAGS RETAINED (all annotated tag objects):
+
+  pp-start-2026-09-24 ...... obj 071c33b3af5f2bb94c81f7fd7738a3dbab4ef40f
+
+                             -> commit 987f54cf7ccd76007611e1a1b0356d2e03013194
+
+                             Personal Project baseline
+
+  prod-pre-m11-2026-09-28 .. obj f6e4ec93de1928557ce663f1c6d6470da3f95991
+
+                             -> commit 867b8609f29966b0259a3c3469127b44ac8ac733
+
+                             pre-M11 production rollback point
+
+  m11-complete-2026-09-28 .. obj bcf2113bfe3bd0bbbd532848ff816c73fc16dab7
+
+                             -> commit 6e74ee3c48225136c38903be7ddce0ae0aa3227f
+
+                             -> tree   6f23052ac16ccfd643703bdd927c204a19579a2e
+
+                             M11 closure (created in this action)
+
+
+No existing tag was moved, deleted or recreated.
+
+Final branches: main, review/m11-step12-email-delivery.
+
+Working tree: clean (no tracked modification).
+
+
+18. FINAL RESULT
+
+----------------
+
+M11 CLOSED.
+
+Production persistence LIVE.
+
+Production scanning ENABLED.
+
+Optional email DISABLED.
+
+Next milestone: M12 - scanner-worker isolation FIRST, then accounts, domain
+
+ownership verification, real PDF via a non-browser renderer, and minimal CI. The
+
+isolation must complete and be verified BEFORE any account, session or
+
+domain-authorisation row exists in production.
+
+
+SECURITY STATEMENT
+
+------------------
+
+This record contains NO password, management capability value, share capability
+
+value, canary value, proxy trust token, database credential, B2 application key,
+
+age private key or HMAC key. It contains only commit and tree SHAs, scan and
+
+execution identifiers, the owner-controlled hostname, row counts, backup object
+
+filenames, version numbers, timing measurements, service and timer names, and
+
+public route and status evidence.
+
+
+END OF RECORD
+
+----- END FINAL M11 EVIDENCE FILE -----

@@ -1,0 +1,71 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-1 — Worker protocol contracts
+STATUS: COMPLETE
+IMPLEMENTATION COMMITS
+- Initial: 4275cfd3c39fb75edaea26a6cdec9938c39ace9c
+- Corrective: 599a3dc819a7c6bfe3d
+
+PURPOSE
+Define the only command/result vocabulary allowed across the future web↔scanner-worker boundary.
+
+IMPLEMENTED
+- Protocol version fixed at v: 1.
+- Strict worker command schema with executionId, canonical hostname, remaining budget,
+  legacy-TLS/RDAP capability booleans, and three configured identity values.
+- Strict result envelopes: COMPLETED, ABORTED and REFUSED.
+- REFUSED codes: IDENTITY_REJECTED, COMMAND_INVALID, BUSY.
+- FreeScanResult is strictly validated at the boundary.
+- Unknown fields are rejected at every relevant object level.
+- No coercion, passthrough, schema defaults or silent repair.
+- Compile-time drift guards were added so protocol schema and scanner model cannot silently diverge.
+
+IMPORTANT CORRECTIVE REVIEW
+Two initially invented limits were removed:
+- MAX_RESULT_BYTES = 1 MiB had no authoritative source.
+- MAX_IDENTITY_FIELD_LENGTH = 256 was proven wrong because current valid publicBaseUrl values
+  can exceed it.
+
+The replacement principle was:
+Do not introduce protocol-only policy unless it is derived from an existing authority or proven
+not to narrow the authoritative validation rules.
+
+APPROVED BUDGET BEHAVIOUR
+budgetMs must be an integer in 1..SCAN_BUDGET_MS.
+Out-of-range values are rejected; they are not silently clamped by the schema.
+
+VERIFICATION
+Initial M12A-1 gate:
+- typecheck clean
+- lint clean / zero warnings
+- 5,005 tests passed, 128 skipped
+- production build succeeded
+- public HTTP surface stayed at seven API routes
+
+Corrective gate:
+- protocol suite: 151 passed
+- typecheck clean
+- lint clean / zero warnings
+- 5,011 tests passed, 128 skipped
+- build succeeded
+- seven public API routes unchanged
+
+PRODUCTION SAFETY
+No production/SSH/database/container/network/firewall contact.
+M12A-2 was not started until this step was reviewed.
+
+PP / ATL VALUE
+- Critical thinking: rejecting plausible but unsupported limits.
+- Information literacy: tracing each proposed limit back to an authoritative source.
+- Reflection: correcting protocol policy before later code depended on it.

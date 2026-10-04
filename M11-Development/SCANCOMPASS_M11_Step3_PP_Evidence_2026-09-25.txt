@@ -1,0 +1,220 @@
+SCANCOMPASS — M11 STEP 3 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-25
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Shared evidence policy extraction
+
+EVIDENCE PROVENANCE
+This note was created on 2026-09-25 from:
+1. the Claude Code Step 3 completion report pasted into ChatGPT; and
+2. the committed GitHub record for commit
+   667b0a28dd9bd67516dce008c6e2ecd385fcf56c.
+
+This is a factual evidence summary. It is not a reconstructed terminal screenshot
+and not a Personal Project reflection.
+
+PURPOSE
+Create one reviewed evidence-retention policy shared by the existing browser
+report and the future persistence layer, so a new evidence key cannot silently
+reach one surface while being blocked by the other.
+
+BASELINE / PRECONDITIONS
+Before Step 3:
+- branch: main
+- HEAD: 1f25c6b07c0ba2c4408a7302eb1b8ce84ec4f0d2
+- formal PP baseline tag: pp-start-2026-09-24
+- tag target: 987f54cf7ccd76007611e1a1b0356d2e03013194
+- working tree: clean
+- no database or persistence foundation existed
+- no production access was needed
+
+KEY ARCHITECTURE DECISION
+The existing browser evidence allowlist was extracted from
+src/server/assessment/public-report.ts into:
+
+- src/server/evidence/policy.ts
+- src/server/evidence/index.ts
+
+The module now exposes two projections over ONE policy:
+
+- publicEvidenceItems() -> browser representation
+- persistableEvidence() -> persistence-safe structured representation
+
+The raw policy tables remain internal rather than being exported for consumers to
+filter independently.
+
+The scanner still knows nothing about the server or database.
+
+BEHAVIOUR PRESERVATION
+The Step 3 refactor was required to preserve existing browser output exactly.
+
+Deterministic pre/post report:
+- bytes: 63,960 before and after
+- findings: 42 before and after
+- findings with evidence: 22 before and after
+- report SHA-256:
+  7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+- result: byte-identical
+
+The golden is now pinned by test. Future intentional PublicAssessmentReport
+changes may update it only with explicit review and a documented reason.
+
+PERSISTENCE-SAFE EVIDENCE RULES
+- unknown check -> nothing retained
+- unknown evidence key -> omitted
+- empty/unsupported value -> omitted
+- shallow object/null -> omitted
+- strings bounded to 200 characters
+- numbers preserved as numbers
+- booleans preserved as booleans
+- supported arrays remain structured arrays under the same textual budget
+- at most 8 retained evidence keys/items
+- policy declaration order determines retained key order
+- enumerated values are also fail-closed by value
+
+Example reviewed enum behavior:
+- browser: UNDER_1_DAY -> "Under 1 day"
+- persistence-safe projection: UNDER_1_DAY
+- unknown/unreviewed enum token -> omitted by both
+
+COPY PARAMS BOUNDARY
+copyParams was intentionally left unchanged:
+
+CheckResult.copyParams
+-> build-report.ts interpolation
+-> headline/detail
+
+copyParams is not:
+- an input to persistableEvidence()
+- a member of EnrichedFinding
+- part of the evidence policy
+- part of a persistence-safe data contract
+- a database column
+
+TYPE-SAFETY CHANGE
+EnrichedFinding.evidence was narrowed from a generic
+Readonly<Record<string, unknown>> to the actual EvidenceRecord type.
+
+No runtime cast was introduced.
+
+TESTING
+New:
+- tests/unit/server/evidence-policy.test.ts
+- additional narrow structural rules in tests/boundaries.test.ts
+
+Final focused results:
+- evidence-policy.test.ts: PASS — 34
+- public-report.test.ts: PASS — 20
+- build-report.test.ts: PASS — 13
+- hardening-review.test.ts: PASS — 54
+- golden-score.test.ts: PASS — 16
+- boundaries.test.ts: PASS — 631
+- deploy tests: PASS — 47
+
+Full gates:
+- pnpm typecheck: PASS
+- pnpm lint: PASS
+- pnpm test:run: PASS — 74 files / 3,012 tests
+- pnpm build: PASS
+- documentation links: 0 broken
+- required anchors: resolved
+- odd-backtick scan: 0
+
+FILES IN THE STEP 3 COMMIT
+Exactly 10 files:
+
+Modified:
+- docs/DATA_MODEL.md
+- docs/M11_PERSISTENCE_IMPLEMENTATION.md
+- docs/MILESTONES.md
+- docs/ROADMAP.md
+- src/server/assessment/public-report.ts
+- src/server/presentation/model.ts
+- tests/boundaries.test.ts
+
+Added:
+- src/server/evidence/index.ts
+- src/server/evidence/policy.ts
+- tests/unit/server/evidence-policy.test.ts
+
+COMMIT
+Full SHA:
+667b0a28dd9bd67516dce008c6e2ecd385fcf56c
+
+Subject:
+refactor: centralize evidence policy for persistence
+
+Push:
+- origin/main fast-forwarded from 1f25c6b to 667b0a2
+- no force push
+- no tag operation
+
+POST-PUSH
+- local main == origin/main
+- working tree clean
+- pp-start-2026-09-24 still points to 987f54c
+- tag count unchanged
+- no scanner/check/scoring file changed
+- no dependency changed
+- deploy/** unchanged
+- no production access
+- Step 4 not started
+
+FAILURES / CHANGES DURING REVIEW
+1. Initial persistence array handling broke browser/storage admissibility symmetry
+   in both directions:
+   - ["x".repeat(300)] survived browser output but disappeared from storage.
+   - [""] was rejected by the browser but retained by persistence.
+   The fix made both projections use the same renderEvidenceValue() admissibility
+   decision.
+
+2. Structured array retention was revised so the final string element may be
+   truncated to the remaining 200-character textual budget, matching the
+   browser's existing cap while preserving structured array form.
+
+3. A first test expectation incorrectly assumed ["", ""] should be dropped.
+   Existing browser behavior renders it as ", ", so the test was corrected to
+   reflect actual behavior instead of changing production semantics to satisfy
+   an invented expectation.
+
+4. An early boundary-test design intentionally failed as soon as
+   src/server/persistence/** appeared. That would have broken Step 4 before the
+   Step 7 finding writer existed. The trap was removed. The concrete assertion
+   that the writer must call persistableEvidence() is now a Step 7 obligation.
+
+5. Removing that trap temporarily left an unbalanced brace in
+   tests/boundaries.test.ts. Full gates caught it and it was repaired before
+   commit.
+
+6. The golden-report maintenance comment was softened so Step 3 requires byte
+   identity but future deliberate report changes can update the golden only with
+   explicit review and documentation.
+
+7. EXPOSURE.SECURITY_TXT was initially described as having 10 allowlisted keys.
+   Inspection showed 9 allowlisted keys; its widest current runtime branch
+   retains exactly 8, leaving zero headroom under the shared cap. This is now
+   pinned by test.
+
+8. docs/DATA_MODEL.md still said functional implementation had not started after
+   real Step 3 source code existed. Its banner was corrected to describe the
+   schema specifically: approved but not implemented.
+
+9. No production state changed during Step 3.
+
+PERSONAL PROJECT VALUE
+This step can support evidence for:
+- Critical thinking: a subtle two-way browser/storage inconsistency was found and
+  fixed before commit.
+- Organization: security policy was centralized before database implementation.
+- Testing: deterministic output, negative cases, boundaries and structural
+  invariants were explicitly tested.
+- Technical decision-making: browser presentation and persistence representation
+  now deliberately differ in representation while sharing the same admissibility
+  policy.
+- Academic integrity / process transparency: the PP baseline remained unchanged
+  and the post-baseline development history is explicit.
+
+ACADEMIC-INTEGRITY NOTE
+This is a factual evidence summary, not a Personal Project reflection. Any
+reflection/report paragraph based on it should be written by the student in their
+own words.

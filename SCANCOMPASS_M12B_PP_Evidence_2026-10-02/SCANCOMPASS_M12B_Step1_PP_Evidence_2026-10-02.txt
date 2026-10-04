@@ -1,0 +1,181 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 2 October 2026
+
+MILESTONE
+M12B-1 — Account/session persistence schema
+
+FINAL STATUS
+CLOSED
+
+FINAL REVIEWED COMMIT
+00d8cbde89da9b59f557dba0c503df382c0868da
+
+PARENT
+bce2c3eeee4665ad1aed8250310dd97b9bd0216c
+
+OWNER DECISIONS USED
+D1 — first-party email + password.
+D4 — mailbox ownership proven before account + initial credential creation.
+D5 — PII-cleared tombstone; durable account UUID retained.
+
+SCOPE
+Persistence/schema foundation only. No account API, login/signup route, session resolution, session
+cookie handling, password hashing runtime, account-email runtime, domain authorization, payment, PDF,
+CI, dashboard, or scanner/worker behavior was implemented.
+
+PRODUCTION
+Untouched. Migration 0002 is NOT applied to production.
+
+IMPLEMENTED
+Five new PostgreSQL tables:
+- accounts
+- account_credentials
+- sessions
+- account_signup_challenges
+- account_email_challenges
+
+Documented total after migration 0002: 12 tables.
+
+Migration:
+db/migrations/0002_m12b_accounts_sessions.sql
+
+Schema contract:
+m12b-0002
+
+Schema aggregate:
+persistenceSchema
+
+ACCOUNT INVARIANTS
+- ACTIVE or DISABLED requires email, email_canonical and email_verified_at.
+- DELETED requires those three identity values to be NULL.
+- email_canonical remains unique for live identities.
+- application role has no DELETE privilege on accounts; erasure uses the tombstone path.
+
+CREDENTIAL INVARIANTS
+- one PASSWORD credential per account
+- nonce exactly 16 bytes
+- derived_key exactly 32 bytes
+- KDF recipe stored separately
+- no plaintext password
+
+SESSION INVARIANTS
+- opaque server-side sessions
+- digest-only token_hash
+- token_hash UNIQUE and exactly 32 bytes
+- account_id FK CASCADE + index
+- expires_at index
+- last_used_at present
+- no revoked_at
+- no IP/User-Agent/device PII
+
+SIGNUP CHALLENGE INVARIANTS
+- exists before an account
+- no account_id
+- email_canonical deliberately NOT UNIQUE
+- token_hash digest-only, UNIQUE, exactly 32 bytes
+- email_canonical and expires_at indexed
+
+ACCOUNT EMAIL CHALLENGE INVARIANTS
+- account_id FK CASCADE + index
+- purposes VERIFY_EMAIL / RESET_PASSWORD only
+- token_hash digest-only, UNIQUE, exactly 32 bytes
+- expires_at index
+- attempt_count present
+- consumed_at nullable
+
+FINAL NEW-TABLE CHECK CONSTRAINT COUNT
+10 total:
+- accounts: 3
+- account_credentials: 3
+- sessions: 1
+- account_signup_challenges: 1
+- account_email_challenges: 2
+
+LEAST-PRIVILEGE GRANTS
+accounts: SELECT, INSERT, UPDATE; NO DELETE
+account_credentials: SELECT, INSERT, UPDATE, DELETE
+sessions: SELECT, INSERT, UPDATE, DELETE
+account_signup_challenges: SELECT, INSERT, UPDATE, DELETE
+account_email_challenges: SELECT, INSERT, UPDATE, DELETE
+
+No GRANT ALL, no ON ALL TABLES, no privilege on schema_migrations, no new sequence grant.
+
+HISTORICAL MIGRATION IMMUTABILITY
+Independently reviewed: all four historical artifact contents are byte-identical between the parent
+commit and the final correction commit.
+
+Permanent SHA-256 pins:
+0000_m11_persistence.sql
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+0001_report_deliveries_fk_indexes.sql
+155537e40e81aac800d3d1ca86bef4c89f330552cca1e86a4facc134b1f2d94c
+
+meta/0000_snapshot.json
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+meta/0001_snapshot.json
+add40d3b8a647a685eaee8bb0b748320e6e43eb9c238c015b2a5b4e09e689d4d
+
+REVIEW CORRECTIONS
+1. Database now enforces D4 by refusing unverified ACTIVE/DISABLED accounts.
+2. Three new SHA-256 token digest columns now enforce 32-byte width.
+3. Boundary test now checks the accepted future path src/server/account (singular).
+4. All four pre-M12B migration/snapshot artifacts are permanently hash-pinned.
+5. Current-truth schema/contract/grant comments were reconciled.
+
+REAL-POSTGRESQL ACCEPTANCE
+Committed project evidence reports:
+- disposable PostgreSQL 18.6
+- 6 integration files
+- 158 passed
+- 0 skipped
+
+The reviewed harness covers:
+- upgrade from 0001 to corrected 0002
+- exact 12-table catalogue
+- exact index/FK/CHECK sets
+- old ledger checksums and applied_at preserved
+- corrected 0002 recorded once
+- idempotent rerun
+- injected failure after 0002 DDL rolls back all new tables and ledger row
+- exact grants
+- DELETE accounts denied
+- DDL denied
+- schema_migrations access denied
+- FK cascades
+- unverified live accounts refused
+- invalid token widths refused; 32 bytes accepted
+
+LOCAL GATES RECORDED IN COMMITTED EVIDENCE
+- git diff --check clean
+- typecheck 0
+- lint 0
+- targeted: 6 files / 1316 cases
+- full suite: 145 files / 5599 passed / 152 skipped
+- integration: 6 files / 158 passed / 0 skipped
+- build clean
+- API routes remain 7
+
+These execution results are recorded in committed project evidence and were not independently
+re-executed by ChatGPT during GitHub review.
+
+BOUNDARY PROOF
+- no authentication dependency
+- Node engine still >=24
+- no src/server/account runtime yet
+- no src/server/session runtime yet
+- no session-cookie transport yet
+- no account/session API route
+- scanner/worker protocols have no account/session field
+- scans_tier_check remains FREE-only
+- no domains/payment/entitlement tables
+
+M12A IMMUTABILITY
+m12a-complete-2026-10-01 remains unchanged.
+
+FINAL REVIEW VERDICT
+M12B-1 CLOSED.
+
+NEXT STEP
+M12B-2 — pure session token primitives, cookie serialization and Actor type.

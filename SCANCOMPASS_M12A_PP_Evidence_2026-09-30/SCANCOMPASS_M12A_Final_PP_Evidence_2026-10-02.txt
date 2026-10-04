@@ -1,0 +1,203 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 2 October 2026
+
+MILESTONE
+M12A — Scanner worker isolation
+
+FINAL STATUS
+CLOSED
+
+IMMUTABLE ACCEPTANCE TAG
+m12a-complete-2026-10-01
+
+Annotated tag object:
+ad3c7bb767443e2d699636cbe94e1a4195705252
+
+Tag target:
+65ba34fde9aa5948106e4afb0540921cebb99400
+
+The tag was not moved during post-tag review.
+
+POST-TAG REVIEW COMMIT
+689c02c2bee0c8b8873e6f2a397dd88dc3c34756
+
+This commit is documentation-only and intentionally leaves the immutable M12A acceptance tag on the
+live-acceptance closure commit.
+
+FINAL PRODUCTION ACCEPTANCE STATE
+Recorded at closure:
+- SCAN_PRODUCTION_ENABLED=1
+- readyForProduction=true
+- productionScanningEnabled=true
+- blockerCount=0
+- persistence_readiness=READY
+- scanner_worker_readiness=READY
+- nginx active/enabled
+- scancompass-scanner-egress.service active/enabled
+- nftables scanner egress policy present
+- app/scanner/db healthy
+- scanner port 8787 not host-published
+- database port 5432 not host-published
+- app bound only to 127.0.0.1:3000
+- retention and backup timers active
+- EMAIL_DELIVERY_ENABLED=0
+
+LIVE ACCEPTANCE
+Exactly one owner-controlled production assessment was run against scancompass.com.
+
+Safe result fields:
+- HTTP 200
+- state COMPLETED
+- resultSource LIVE
+- persisted true
+- durationMs 568
+- final score 89
+- grade B
+- management capability present, length 43; value never printed or committed
+
+WORKER CORRELATION
+The same executionId appeared in the application and worker logs.
+
+Worker logging audit:
+- zero hostname occurrences
+- zero hostname fields
+- zero target strings
+- zero User-Agent/contact/abuse material
+- only code-owned worker events, executionId, state and duration
+
+NETWORK PROOF DURING LIVE SCAN
+The nftables policy remained active.
+The live assessment moved only the tcp/80 and tcp/443 allow counter.
+No destination-deny or forbidden-port counter moved because of the assessment.
+
+DURABILITY DELTA
+One live assessment produced:
+- scans +1
+- scan_reports +1
+- scan_findings +42
+- report_management_tokens +1
+- report_shares +0
+- report_deliveries +0
+- schema_migrations +0
+
+No orphan records were found.
+Schema contract remained m11-0000.
+No migration ran.
+
+RESOURCE STATE
+After the live assessment:
+- app OOMKilled=false, RestartCount=0
+- scanner OOMKilled=false, RestartCount=0
+- db OOMKilled=false, RestartCount=0
+- scanner memory observed ~65.8 MiB of a 1 GiB limit
+
+FINAL OPEN-GATE REBOOT
+With public scanning enabled, the boot interlock was re-proven.
+
+Journal order:
+21:41:11.698158  docker.service Started
+21:41:11.926171  scanner egress policy active
+21:41:11.930771  egress service Finished
+21:41:12.044013  nginx.service Started
+
+Nginx entered active state only after successful policy activation.
+No queued, replayed or automatically retried assessment appeared after reboot.
+
+BOOT-ORDER INTERLOCK
+Installed production drop-in:
+/etc/systemd/system/nginx.service.d/scancompass-egress.conf
+
+SHA-256:
+a983dd4d236cbd2275c9dd41180cfdc681f039212b03aec262ec3dc83efb1222
+
+Directives:
+[Unit]
+Requires=scancompass-scanner-egress.service
+After=scancompass-scanner-egress.service
+
+Production failure injection proved:
+- malformed policy validation failed
+- previous live nft policy remained intact
+- required egress unit failed
+- nginx remained inactive
+- successful restore reapplied the real policy before nginx returned
+
+HOST EGRESS POLICY
+The scanner's forwarded traffic is restricted by host nftables to public destinations on tcp/80 and
+tcp/443, generated from the same committed address-policy authority used by the application.
+
+The policy does NOT claim to confine host-originated traffic, root, or arbitrary privileged
+containers. IPv6 remains disabled on scanner_egress, so no live IPv6 packet-coverage claim is made.
+
+FINAL REPOSITORY GATE
+Run on the post-review corrected tree:
+- git diff --check clean
+- typecheck: 0 diagnostics
+- lint: 0 warnings, 0 errors
+- full tests: 143 files, 5,550 passed, 128 skipped, 0 failed
+- deploy structural tests: 10 files, 329 passed
+- boot-order interlock suite: 14 passed
+- app build: success, 0 warnings/errors, exactly 7 public API routes
+- worker build: 157 inputs, 1,289,566 bytes
+- worker SHA-256:
+  0d862432d0c56041174f221046508ff03bcf986013764aa7b43d8bb819540e1d
+
+POST-TAG OWNER REVIEW CORRECTIONS
+1. Public worker-unavailable response
+Incorrect documentation said SCAN_UNAVAILABLE.
+Correct contract:
+WORKER_UNAVAILABLE -> UNAVAILABLE -> SCAN_DISABLED 503.
+No runtime code changed.
+
+2. Worker reachability wording
+Correct scope:
+- no host-published worker port
+- no nginx worker route
+- only app shares scan_internal among Compose services
+- Docker host/root remain outside the peer-isolation boundary and can route to container addresses
+
+SECURITY CLEANUP
+Recorded from the closure run:
+- temporary /etc/sudoers.d/scancompass-m12a-temporary: removed
+- temporary Scancompass public key in /root/.ssh/authorized_keys: removed
+- unrelated root authorized key preserved
+- /etc/site-security/app.env.m12a11.bak: removed
+- /run M12A failure-test overrides: absent
+- /tmp M12A scratch material: removed
+- acceptance probe container: removed
+- ordinary scanadmin SSH still works
+- sudo -n no longer grants root
+
+One procedural gap is documented honestly:
+visudo -c was not run after privilege removal because the privilege required to perform the check had
+already been removed. sudo continued parsing the sudoers tree and returned the expected
+password-required result rather than a parse error.
+
+SSH HARDENING OBSERVATION
+The closure cleanup found:
+- the temporary root public key had been present and was removed
+- effective sshd policy is permitrootlogin no
+- the base sshd_config still contains a literal PermitRootLogin yes, overridden by the Scancompass
+  hardening drop-in
+
+No sshd configuration was changed during M12A cleanup. This is a future hardening-maintenance
+observation, not an M12A acceptance blocker, because the effective policy remains root login disabled.
+
+DOCUMENTATION RECONCILIATION
+Current-truth documentation was reconciled across architecture, data model, network security,
+operations, launch controls, security/abuse model and milestones. Historical Phase-1/M11 material
+was preserved and labeled as historical rather than rewritten.
+
+M11 TAG
+m11-complete-2026-09-28 remained unchanged.
+
+NEXT-SCOPE BOUNDARY
+Account, session and domain-authorisation work was not started before M12A closure.
+
+PP / ATL VALUE
+M12A demonstrates organization, critical thinking, problem solving, risk management, reflection,
+communication, and systems thinking across Node.js, Docker, systemd, nftables, nginx, PostgreSQL
+and production deployment.
+
+FINAL VERDICT
+M12A scanner worker isolation is complete and live in production.

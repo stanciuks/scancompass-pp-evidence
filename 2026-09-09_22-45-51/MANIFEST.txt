@@ -1,0 +1,15 @@
+SCANCOMPASS Personal Project evidence backup
+
+Backup created: Wed Sep  9 22:45:52 CEST 2026
+Repository: /Users/augustasstancikas/Projects/site-security
+Repository HEAD: 987f54cf7ccd76007611e1a1b0356d2e03013194
+origin/main: 987f54cf7ccd76007611e1a1b0356d2e03013194
+
+Files:
+- Claude Code session transcript
+- Complete Git repository history bundle
+
+Important:
+- This backup was created after M10.
+- File timestamps must not be presented as historical project timestamps.
+- Git commit timestamps remain the authoritative historical chronology.

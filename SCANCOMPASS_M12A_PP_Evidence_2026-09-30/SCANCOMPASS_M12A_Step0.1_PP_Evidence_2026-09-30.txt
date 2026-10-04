@@ -1,0 +1,51 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-0.1 — Corrected worker-isolation design
+STATUS: COMPLETE (read-only design revision)
+
+PURPOSE
+Turn the source audit into a concrete implementation design and resolve the major trust-boundary
+questions before code changes began.
+
+MAIN DESIGN AREAS
+- Worker command/result protocol and protocol versioning.
+- Scanner identity ownership across the process boundary.
+- App↔worker cancellation semantics.
+- Worker restart behaviour without job retry/resumption.
+- Worker-local concurrency without introducing a queue.
+- Resource ceilings to be measured rather than guessed.
+- Compose/network separation.
+- Host-level egress-hardening acceptance criteria.
+- Documentation changes required after the design is actually proven.
+
+IMPORTANT: THIS VERSION WAS LATER CORRECTED
+Step 0.1 contained several assumptions that Step 0.2 explicitly corrected. The evidence value
+of this step is therefore not "the design was perfect"; it is that the design was reviewed
+critically before implementation and corrected when repository evidence contradicted it.
+
+CORRECTIONS LATER IDENTIFIED
+- Host capacity had been read from stale prose instead of the current measured Compose record.
+- A proposed production identity fallback would have violated the existing fail-closed invariant.
+- Restart reasoning incorrectly implied a restarted worker could retry in-flight work.
+- The proposed egress deny list was only a sample and did not match the full address-policy contract.
+
+WHY THIS MATTERS FOR THE PERSONAL PROJECT
+This is useful reflection evidence: the project changed direction because review found
+specific flaws. The strongest PP use is to explain one correction, what evidence exposed it,
+and how the design improved as a result.
+
+USEFUL ATL CONNECTIONS
+- Reflection: revising an earlier decision instead of defending it.
+- Critical thinking: testing a design against invariants and source evidence.
+- Self-management: stopping implementation until unresolved design questions were settled.

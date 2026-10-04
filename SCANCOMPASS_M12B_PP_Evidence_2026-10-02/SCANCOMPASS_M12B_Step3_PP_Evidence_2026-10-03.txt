@@ -1,0 +1,315 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 3 October 2026
+
+MILESTONE
+M12B-3 — Password credentials, Argon2id selection and durable lockout
+
+FINAL STATUS
+CLOSED
+
+IMPLEMENTATION COMMIT
+42770ea24cf88dfd57599fea37c0732515eab6a2
+
+DOCUMENTATION CONSISTENCY COMMIT
+11bdbd2da5b9aba2ba0c1245d0e1d0301fc258be
+
+IMPLEMENTATION PARENT
+3fe4c4c7e458bcbe7843208ba7bfc83707352efe
+
+SCOPE
+M12B-3 implemented the password/credential security foundation only.
+
+No login, signup, logout, password-reset route, session creation, session resolution, account-email
+runtime, domain authorization, EXTENDED scanning, payment, PDF, CI, dashboard, production migration or
+production deployment was introduced.
+
+PASSWORD POLICY
+- minimum: 15 Unicode code points
+- maximum: 128 Unicode code points
+- NFC normalization
+- 1024 UTF-16-unit raw input bound before normalization/KDF
+- lone surrogates refused
+- no uppercase/lowercase/digit/symbol composition rules
+- no silent truncation
+- spaces, Unicode and password-manager generated values allowed
+- current new/reset-password policy is NOT reapplied when verifying an already-stored credential
+
+LOCAL COMMON-PASSWORD BLOCKLIST
+Runtime performs no network password-reputation lookup.
+
+Source:
+SecLists
+Passwords/Common-Credentials/xato-net-10-million-passwords-1000000.txt
+
+Pinned upstream commit:
+56da8d991239cc52b0da594db53457504a757670
+
+Licence:
+MIT
+
+Pinned upstream SHA-256:
+424a3e03a17df0a2bc2b3ca749d81b04e79d59cb7aeec8876a5a3f308d0caf51
+
+Generated bounded blocklist:
+10,000 unique entries relevant to the 15–128-code-point policy range.
+
+Generated body SHA-256:
+c23b1706ccefb0ce4bf95ee630d270deef5dba47777212d762cd67337f8d2698
+
+Project-specific whole-password values are also blocked.
+Substring rejection is not used.
+
+KDF IMPLEMENTATION
+Node-core async crypto.argon2() with Argon2id.
+
+No Argon2 npm dependency.
+No bcrypt dependency.
+No authentication framework dependency.
+
+Runtime floor:
+engines.node >=24.7
+
+Production runtime image build includes an explicit guard that refuses a Node runtime without
+crypto.argon2.
+
+KDF RECIPE
+Current recipe:
+argon2id-v1-m19456-t2-p1-l32-nfc
+
+The recipe is self-describing and records:
+- algorithm
+- recipe version
+- memory
+- passes
+- parallelism
+- tag length
+- normalization contract
+
+The parser accepts only reviewed profiles. Database-controlled arbitrary integers are never passed
+directly into Argon2.
+
+SUPPORTED ARGON2ID PROFILES
+Exactly the five reviewed OWASP-equivalent profiles:
+- m=47104 KiB, t=1, p=1
+- m=19456 KiB, t=2, p=1
+- m=12288 KiB, t=3, p=1
+- m=9216 KiB, t=4, p=1
+- m=7168 KiB, t=5, p=1
+
+All use a 32-byte tag.
+
+SELECTED PROFILE
+m=19456 KiB
+t=2
+p=1
+tagLength=32
+nonce=16 random bytes
+
+KDF CONCURRENCY
+Selected process-local password-KDF concurrency:
+2
+
+The limiter:
+- is non-queueing
+- uses tryAcquire semantics
+- returns BUSY immediately when saturated
+- releases in finally
+- is separate from scan concurrency
+- is used by hashing, real verification and dummy verification
+
+NATIVE-AMD64 BENCHMARK ENVIRONMENT
+Host:
+GitHub Codespace, native x86_64
+Intel Xeon Platinum 8370C
+2 logical host CPUs
+approximately 7.76 GiB RAM
+0 host swap
+
+Benchmark container:
+- native x86_64 / linux-amd64
+- 1.0 CPU CFS quota
+- 1 GiB memory limit
+- zero additional swap
+- pids limit 256
+- NODE_OPTIONS=--max-old-space-size=768
+- network disabled
+- Node v24.21.0
+
+The benchmark used the same async deriveArgon2id primitive and supported-profile table as production
+credential code.
+
+All five profiles were measured at concurrency 1, 2 and 4: 15 result rows total.
+
+SELECTED PROFILE AT CONCURRENCY 2
+p50: 91.36 ms
+p95: 107.81 ms
+peak RSS for selected row: 131.5 MiB
+event-loop delay p95: 49.02 ms
+timer lateness p95: 38.98 ms
+errors: 0
+
+Process-wide maximum RSS across the entire 15-row run:
+239.6 MiB
+
+The measured concurrency-2 result met the predefined thresholds.
+
+BUSY / NO-QUEUE ACCEPTANCE
+Burst:
+64 concurrent dummy-verification calls
+
+Result:
+- 2 performed KDF work
+- 62 returned BUSY
+- maximum in-flight = 2
+- in-flight at completion = 0
+- in-flight 300 ms later = 0
+- no deferred queue existed
+
+DUMMY VERIFICATION
+Unknown identifiers use a dummy verification path with:
+- same input bound
+- same NFC normalization
+- current Argon2 profile
+- same KDF limiter
+- same derivation primitive
+- same tag width
+- no account/database/session dependency
+- always neutral NO_MATCH result
+
+DURABLE LOCKOUT
+Constants:
+- threshold: 10 failures
+- observation window: 15 minutes
+- lockout duration: 15 minutes
+
+Behavior:
+- first failure starts a window
+- failures inside the window increment
+- threshold sets locked_until
+- failures while locked do not extend the lock
+- lock expires without operator action
+- first failure after expiry starts a clean window
+- successful authentication/reset can clear all three lockout fields
+
+CONCURRENCY SAFETY
+Failed-attempt updates use:
+SELECT ... FOR UPDATE
+
+inside a transaction on the account row.
+
+The PostgreSQL acceptance test drove concurrent failures and proved no lost increments.
+
+A mutation test removing the row lock caused lost increments, demonstrating that the concurrency test
+is capable of detecting the race.
+
+POSTGRESQL 18.6 ACCEPTANCE
+Committed project evidence records:
+- 7 integration files
+- 170 passed
+- 0 skipped
+
+Acceptance covers:
+- exact nonce/key/KDF round trip
+- correct password
+- wrong password
+- malformed/unsupported KDF fail closed
+- old reviewed profile verifies and requests rehash
+- second PASSWORD credential refused
+- transactional credential replacement
+- durable failure counter/window
+- concurrency-safe lockout increments
+- lock expiry
+- success-clear
+- application grant sufficiency
+- application DELETE accounts still denied
+- zero session rows created
+
+BOUNDARIES
+M12B-3 preserves:
+- account layer server-only and HTTP-free
+- no Request/Response/Headers/cookie APIs
+- no Next/React dependency in account layer
+- no scanner/worker dependency
+- no email-provider dependency
+- no session-cookie secret reveal
+- no argon2Sync anywhere in src
+- async crypto.argon2 called from one reviewed production module
+- no account/session API route
+- seven public API routes unchanged
+- no session-table runtime consumer
+- no D3 session-lifetime constants yet
+- benchmark/generator unreachable from production src graph
+- password blocklist absent from client bundles
+
+TEST / BUILD EVIDENCE
+Committed evidence records:
+- git diff --check clean
+- typecheck: 0
+- lint: 0
+- targeted M12B-3/boundary suite: 1233 passed
+- build clean
+- public API route count: 7
+- PostgreSQL integration: 170 passed / 0 skipped
+
+Full suite qualification:
+With default 5-second Vitest timeout, one pre-existing retention CLI test times out on the 2-vCPU
+Codespace. The same failure reproduced on the untouched M12B-2 parent.
+
+With --testTimeout=30000:
+- 154 files
+- 5789 passed
+- 163 skipped
+- 0 failed
+
+The unrelated retention test was not modified.
+
+DOCUMENTATION REVIEW CORRECTION
+Commit 11bdbd2da5b9aba2ba0c1245d0e1d0301fc258be changed documentation/evidence only.
+
+It reconciled:
+1. Node Argon2 stability wording:
+   - explicitly Stability 1.2 / Release candidate when introduced in v24.7.0
+   - current v24.21.0 method entry displays no method-level stability marker
+   - the project does not infer a current method-level classification from that absence
+
+2. scrypt:
+   - no runtime scrypt fallback exists in M12B-3
+   - it is only a future contingency
+   - there is therefore no active scrypt maxmem path to test
+
+3. scheduling:
+   - benchmark evidence no longer attributes measured contention to an assumed libuv mechanism
+   - only measured effects are stated
+
+4. CPU envelope:
+   - host has 2 vCPU
+   - application benchmark correctly used the production app container envelope of 1.0 CPU, 1 GiB,
+     zero additional swap
+
+No benchmark number changed in this correction.
+No implementation/test/script/package/Docker/database/deploy file changed.
+
+OWNER DECISIONS
+D2 — password KDF:
+SETTLED by M12B-3.
+
+D3 — session lifetime:
+STILL OPEN and must be settled before M12B-4 fixes session expiry constants.
+
+PRODUCTION
+Untouched.
+Migration 0002 remains unapplied to production.
+
+M12A IMMUTABILITY
+m12a-complete-2026-10-01 remains:
+annotated tag object:
+ad3c7bb767443e2d699636cbe94e1a4195705252
+
+target:
+65ba34fde9aa5948106e4afb0540921cebb99400
+
+FINAL REVIEW VERDICT
+M12B-3 CLOSED.
+
+NEXT
+Settle D3, then begin M12B-4 request-authorization/session-resolution boundary.

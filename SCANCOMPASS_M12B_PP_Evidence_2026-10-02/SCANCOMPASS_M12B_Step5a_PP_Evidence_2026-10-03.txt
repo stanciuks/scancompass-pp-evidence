@@ -1,0 +1,262 @@
+SCANCOMPASS — M12B STEP 5a PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-10-03
+Project: SCANCOMPASS
+Milestone: M12B — Account and Session Foundation
+Activity: Account email, password recovery and independent correction review
+Classification: Confidential project development evidence
+
+This is a factual evidence summary, not a Personal Project reflection.
+
+REVIEW VERDICT
+APPROVED IN SOURCE at:
+b449f570632480c927fce3b7110c0fb301737d71
+
+The remaining blocking findings from the preceding M12B-5a review are closed.
+This is a source-review approval, not production deployment approval or a claim
+that the complete M12B acceptance programme has been executed.
+
+M12B-6 is the next step: full disposable-PostgreSQL acceptance.
+M12B-6, production migration/deployment, production account-email acceptance and
+public-signup opening are not completed by this review.
+
+EVIDENCE PROVENANCE
+1. Live GitHub reads of the current main ref, commit metadata, comparison with the
+   preceding correction, affected source/tests, and pinned milestone/design docs.
+2. Earlier implementation/correction review records available in this conversation.
+3. The supplied Pasted text(20261003-191239).txt execution report describes the
+   FIRST correction, 09b8af0..., not the new b449f570... follow-up. Its test totals
+   were not treated as the new commit's results.
+4. The b449f570... full-suite/build/PostgreSQL totals below come from its committed
+   docs/MILESTONES.md entry. They are implementation-recorded results, not full
+   repository gates rerun by the reviewer.
+5. Seventeen independently executed, isolated body-reader probes described below.
+
+COMMIT CHAIN
+Original M12B-5a implementation:
+775bf296c26a942d2aa7ab8ba5abff65d99d13ce
+feat(m12b): add account email and password recovery
+
+First correction:
+09b8af0f0b181d457bf86e2a4fe25e80fb9f5061
+fix(m12b): close password recovery review gaps
+
+Second correction / final reviewed source:
+b449f570632480c927fce3b7110c0fb301737d71
+fix(m12b): finish recovery cancellation and regression guards
+
+Second correction's sole parent:
+09b8af0f0b181d457bf86e2a4fe25e80fb9f5061
+
+Second correction's Git tree:
+dc00e6aa528a4514b76b0e6dda43c9d27760c8bf
+
+GitHub compare: ahead 1, behind 0, total 1 commit.
+Remote main was checked at the start and end of this review and pointed to the
+second correction both times.
+
+SECOND CORRECTION — EXACT CHANGED-FILE SET
+All six files were modified; no file was added, removed or renamed:
+- docs/M12B_ACCOUNT_SESSION_DESIGN.md
+- docs/MILESTONES.md
+- src/server/transport/bounded-body.ts
+- tests/boundaries.test.ts
+- tests/integration/persistence-account-reset.test.ts
+- tests/unit/server/bounded-body.test.ts
+
+The only runtime source file changed in the second correction is bounded-body.ts.
+The previously accepted account/reset/signup transactions, flag configuration,
+fragment forms, routes, policy values and provider behavior were not changed by
+this follow-up. No migration, snapshot, schema, schema-contract, grant, dependency,
+package-manager, deployment or environment-example file changed in this commit.
+
+IMPLEMENTATION CONTEXT
+M12B-5a adds account-email delivery independent of report-email enablement,
+production wiring for signup verification delivery, and password-reset request
+and completion using the existing account_email_challenges schema.
+
+The reviewed flows preserve:
+- separate report-email, account-email and public-signup gates;
+- digest-only challenge storage and fragment/body capability transport;
+- neutral request responses and no automatic login after signup/reset;
+- reset credential replacement, durable lockout clearing, all-account-session
+  revocation and account-email-challenge invalidation in one transaction;
+- no automatic retry after an uncertain email-provider outcome;
+- account-first reset locking and fresh authorization time after lock waits;
+- repeat-safe signup/reset fragment initialization;
+- the anonymous scan path's separation from account/session/email execution.
+
+FIRST-REVIEW FINDINGS ALREADY CLOSED BEFORE THIS FOLLOW-UP
+1. Fresh clock at final authorization after hashing and lock acquisition.
+2. Account-first locking to prevent the two-different-reset-links deadlock.
+3. Ordinary strict semantics for ACCOUNT_EMAIL_ENABLED, without changing the
+   report-email legacy helper or raw-untrimmed-1 signup rule.
+4. Repeat-safe fragment initialization in both signup and reset forms.
+5. Streaming byte-count enforcement replacing post-buffer String.length checks.
+
+SECOND-REVIEW FINDING A — MID-READ ABORT AND CLEANUP
+Previously the bounded reader checked the signal only before reading. A request
+aborted during a pending read could remain pending and later return success.
+
+The corrected reader:
+- subscribes to request.signal;
+- calls reader.cancel() on abort so the pending read settles;
+- re-checks the signal after listener attachment;
+- checks the abort state before another read and before accepting EOF;
+- returns UNREADABLE rather than accepting cancellation-generated EOF;
+- requests cancellation without awaiting indefinitely pending producer cleanup;
+- observes cancellation rejection without leaving an unhandled rejection;
+- guards getReader(), returning UNREADABLE for an already-locked body;
+- does not cancel or release somebody else's reader;
+- removes its listener and releases the reader it acquired;
+- retains actual-byte counting and the inclusive 2,048-byte accepted-body ceiling.
+
+The bound applies to retained/accepted input, not to the physical size of a chunk
+already supplied by the transport. Detecting overflow can require receiving the
+chunk that crosses the ceiling.
+
+SECOND-REVIEW FINDING B — ACTUAL ACCOUNT-ASSOCIATION WINDOW
+The earlier test deleted the account before calling reset completion. It did not
+exercise the preliminary-read-to-account-lock window.
+
+The new required regression:
+1. Creates accounts A and B and a challenge initially belonging to A.
+2. Holds A's account-row lock on a blocker connection.
+3. Starts completion and observes a lock-waiting backend.
+4. Reassigns the unlocked challenge row to B while completion is blocked.
+5. Releases the blocker and requires CHALLENGE_INVALID.
+6. Asserts unchanged credentials, sessions and checked lockout state for A/B,
+   and that the moved challenge is neither consumed nor deleted.
+
+The production association guard was already present and remains unchanged.
+A new structural assertion specifically requires challenge.accountId !== account.id
+before mutation. Additional structural assertions require writes to use the locked
+account.id rather than trusting an unlocked preliminary value.
+
+This review inspected the committed PostgreSQL regression but did not independently
+execute it against PostgreSQL. Its successful execution and mutation detection are
+recorded by the implementation in the milestone document.
+
+SECOND-REVIEW FINDING C — UTF-8 EVIDENCE
+Replacement decoding is preserved as compatibility, not represented as validation.
+An invalid UTF-8 byte inside a JSON string can become U+FFFD while JSON remains
+parseable. The committed tests distinguish body decoding, schema admission, email
+parsing and password-policy decisions. They explicitly record that the reset
+confirmation schema and password policy can accept U+FFFD in a password.
+
+No fatal-decoding switch or password-policy change was introduced.
+
+INDEPENDENT REVIEWER EXECUTION
+Environment: Node v22.16.0 in the review container.
+This is NOT the application's supported Node 24 acceptance environment.
+
+Source copied from the pinned b449f570... commit and verified against its Git
+blob SHA before execution:
+92c0cd432a508431bb88e94c49be1c04a378d066
+
+Source length: 13,187 bytes.
+TypeScript was transpiled for execution. Only the import-time server-only guard
+and its import were removed from the executable probe copy. The helper's runtime
+logic was not otherwise changed.
+
+Results: 17 passed, 0 failed.
+These are independent helper-level probes, not the repository Vitest suite and
+not production, PostgreSQL, browser or full endpoint acceptance.
+
+01. PASS: mid-read abort, producer cancellation resolve
+02. PASS: overflow, producer cancellation resolve
+03. PASS: mid-read abort, producer cancellation reject
+04. PASS: overflow, producer cancellation reject
+05. PASS: mid-read abort, producer cancellation pending
+06. PASS: overflow, producer cancellation pending
+07. PASS: foreign reader is preserved and remains usable
+08. PASS: abort BEFORE listener attachment (actual registration gap)
+09. PASS: already-aborted request never reads
+10. PASS: declared overflow never reads
+11. PASS: false short declaration cannot bypass actual limit
+12. PASS: exactly 2048 bytes accepted; reader reusable
+13. PASS: multibyte raw-byte limit
+14. PASS: UTF-8 replacement inside password preserves parseable JSON
+15. PASS: abort after stream close but before await continuation is refused
+16. PASS: listener add/remove balanced and lock released on success, overflow, error, abort
+17. PASS: no unhandled cancellation rejections
+
+The independent registration-window probe aborted BEFORE attaching the listener,
+which directly exercised the post-registration signal re-check.
+
+IMPLEMENTATION-RECORDED FINAL GATES AT b449f570...
+Source: docs/MILESTONES.md, M12B-5a follow-up entry.
+
+- git diff --check: clean.
+- pnpm typecheck: exit 0.
+- pnpm lint: exit 0.
+- Full hermetic suite at the normal timeout:
+  177 files / 6,576 passed / 261 skipped / 0 failed.
+- Production build: passed; exactly 14 /api/ routes.
+- Guarded disposable PostgreSQL 18.6:
+  10 files / 271 passed / 0 skipped; reset file contains 26 cases.
+
+The committed follow-up entry does not provide a separate focused-suite total.
+No focused total from an earlier commit is substituted here.
+
+IMPLEMENTATION-RECORDED MUTATION RESULTS
+- Ignore mid-read abort: 10 failures.
+- Leave the owned reader locked: 6 failures.
+- Remove challenge/account association check: 1 targeted PostgreSQL failure
+  and a failure of the new structural assertion.
+The milestone entry records that all mutations were reverted.
+These mutations were not independently rerun by the reviewer.
+
+NON-BLOCKING TEST-QUALITY NOTES FOR M12B-6
+These do not reopen the corrected M12B-5a runtime findings.
+
+1. The additional account-disappearance test releases its blocker before issuing
+   DELETE and accepts either RESET or CHALLENGE_INVALID. Its title and some inline
+   wording still imply a forced deletion-before-locked-read ordering that it does
+   not establish. Treat it as a permitted-outcomes race test, not proof that
+   deletion in that precise window always produces refusal. The required, separate
+   challenge-reassociation test does establish its intended window.
+
+2. The committed abort-registration test calls the real addEventListener before
+   aborting, so the installed listener can catch the event without relying on the
+   subsequent signal re-check. Improve it to abort before attachment when extending
+   M12B-6 regressions. The independent reviewer's actual pre-attachment probe passes
+   with the current runtime code.
+
+3. Keep barriers/blockers and pending transactions failure-safe in the expanded
+   acceptance harness. The older same-link/different-link tests still lack an
+   encompassing finally around their held barrier, and the new association test
+   releases its blocker in finally but awaits completion outside it. This affects
+   failure diagnostics/test isolation, not the demonstrated healthy-path runtime
+   fix; do not claim every failed test is already guaranteed to settle all work.
+
+M12A ACCEPTANCE TAG — INDEPENDENTLY VERIFIED
+Tag: m12a-complete-2026-10-01
+Annotated tag object:
+ad3c7bb767443e2d699636cbe94e1a4195705252
+Peeled target:
+65ba34fde9aa5948106e4afb0540921cebb99400
+
+Both match the recorded pre-correction values. Other tags were not re-verified in
+this review and are not given an independent unchanged verdict here.
+
+PRODUCTION AND LOCAL-WORKTREE LIMITS
+The committed implementation record states production was not accessed or changed,
+and migration 0002 remains unapplied to production. The reviewer did not contact
+production or send live email.
+
+A GitHub source review cannot establish that no off-repository operational action
+occurred. It also cannot inspect the user's local Mac worktree or independently
+verify local disposable-container cleanup. No new local-worktree report for the
+b449f570... commit was supplied in the attached first-correction transcript.
+
+APPROVED HANDOFF
+M12B-5a: APPROVED IN SOURCE at b449f570... .
+M12B-6: next; full disposable acceptance, including the restore-resurrection drill.
+Production migration/deployment: later M12B-7, not authorized by this review.
+Production account-email acceptance: later M12B-7A.
+Public signup opening and final M12B closure: later M12B-8.
+M12C: not started by this review.
+
+No further blocking M12B-5a source correction is requested.
+Any student Personal Project reflection or learning evaluation should be written
+separately in the student's own words.

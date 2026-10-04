@@ -1,0 +1,222 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence record date: 1 October 2026
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-10 — Host-level scanner egress hardening
+STATUS: COMPLETE
+
+IMPLEMENTATION COMMIT
+- e711a2035e7aa446c121dc78d8ee0f3ff1ac7ab6
+
+OWNER-REVIEW CORRECTION COMMIT
+- c5dc83859ad70e8b571135f8154899912d63b980
+
+PURPOSE
+Add a second network-security layer below the scanner application: a host nftables policy
+that limits forwarded scanner-container traffic to the destination classes and ports the
+scanner is supposed to reach. The host policy is generated from the same committed address
+authority used by the application so it cannot quietly drift into a second hand-maintained list.
+
+DISPOSABLE ENVIRONMENT
+- Docker Engine 29.5.2
+- Docker Compose 5.5.1
+- Ubuntu 24.04.4 Docker VM
+- linux/aarch64
+- 4 vCPU
+- 5.77 GiB RAM
+- 0 swap
+- iptables-nft / nftables backend
+
+The policy was proven in the disposable Linux VM only. Production remained untouched.
+
+DNS BOUNDARY
+Docker's container-visible resolver was 127.0.0.11.
+
+Measured host-forward behavior showed:
+- normal scanner HTTPS crossed the host forward path;
+- Docker DNS generated zero forwarded scanner-subnet packets;
+- DNS-over-TCP to 127.0.0.11 was verified with a real RFC 1035 query/response;
+- direct TCP/53 to a public resolver was blocked by the scanner port policy.
+
+Therefore no host DNS exception was required.
+
+ONE AUTHORITY / TWO CONSUMERS
+Registry snapshot:
+- iana-2025-10-09
+
+The host generator consumes the same address-policy authority used by classifyAddress(), including
+the committed IANA registry and shared structural/metadata prefix sources.
+
+FIRST-PASS SECURITY DEFECTS FOUND BY REVIEW
+The first M12A-10 implementation passed its own acceptance but was rejected on review.
+
+Five issues were found:
+1. Longest-prefix IANA exceptions were swallowed by broad deny prefixes.
+2. An outbound established/related conntrack rule could preserve unauthorized pre-existing flows.
+3. E2 proved only a TCP/53 handshake, not a real DNS-over-TCP exchange.
+4. Docker-shipped worker-bundle identity had not been re-proven after worker-reachable source changed.
+5. Embedded-IPv4 documentation disagreed with executable source.
+
+LONGEST-PREFIX CORRECTION
+The generator now computes the actual denied address set.
+
+It:
+- builds boundaries from relevant registry/structural/metadata prefixes;
+- divides address space into uniform segments;
+- asks classifyAddress() itself to classify representative points;
+- fails generation if a supposedly uniform segment disagrees;
+- merges adjacent denied segments;
+- emits CIDRs or nftables interval ranges.
+
+Example:
+- 192.0.0.0–192.0.0.8 denied
+- 192.0.0.9 allowed
+- 192.0.0.10 allowed
+- 192.0.0.11–192.0.0.255 denied
+
+Nested globally reachable IPv6 exceptions under broader non-reachable blocks are also preserved.
+
+PORT / CONNTRACK CORRECTION
+Final outbound scanner chains now:
+1. deny prohibited destinations;
+2. allow TCP 80/443;
+3. drop everything else.
+
+The unrestricted outbound `ct state established,related accept` rule was removed.
+
+A live E24 test held a public TCP/4242 flow open while the policy was activated:
+- old rule shape: same connection continued after activation;
+- corrected rule shape: post-activation traffic stopped and the deny-port counter advanced.
+
+DNS-OVER-TCP CORRECTION
+A dedicated acceptance probe sends a real length-prefixed RFC 1035 DNS query and verifies:
+- transaction ID echo;
+- QR bit;
+- RCODE;
+- answer count;
+- parsed answer records.
+
+Docker's 127.0.0.11 resolver successfully answered while scanner-forward firewall counters stayed unchanged.
+
+ADDRESS / IPv6 MODEL
+Prefix-expressible application deny classes are represented at the host layer.
+
+Parser-only classes remain application-layer:
+- DENY_UNPARSEABLE
+- DENY_UNCERTAIN
+- DENY_SCOPED_ADDRESS
+
+IPv6 remains fail-closed around the 2000::/3 global-unicast allocation.
+
+Correct embedded-IPv4 source truth:
+- IPv4-mapped addresses adopt the inner IPv4 classification in application code;
+- the host blocks that carrier wholesale, so this is a deliberate stricter host rule;
+- NAT64, 6to4, Teredo and IPv4-compatible transition forms are already denied by application code.
+
+IPv6 was proven unavailable on scanner_egress in the disposable environment rather than silently skipped.
+
+OPERATOR-OWNED POLICY
+Generated policy:
+- deploy/firewall/scanner-egress-policy.nft
+
+Apply wrapper:
+- deploy/firewall/apply-scanner-egress.sh
+
+Rollback:
+- deploy/firewall/remove-scanner-egress.sh
+
+Boot unit:
+- deploy/systemd/scancompass-scanner-egress.service
+
+The nftables table is separate from Docker-managed chains.
+
+DISPOSABLE ACCEPTANCE
+The corrected policy was proven through:
+- E1–E23 from the original matrix;
+- E24 pre-established forbidden flow;
+- E25 globally reachable registry exceptions.
+
+The corrected matrix was repeated:
+1. after corrected installation;
+2. after Docker network recreation;
+3. after reboot.
+
+Key positive cases:
+- UDP DNS works
+- real TCP DNS works
+- public TCP/80 works
+- public TCP/443 works
+- RDAP HTTPS works
+- app remains reachable on scan_internal
+
+Key negative cases:
+- all prefix-expressible deny classes blocked
+- forbidden public ports blocked
+- DB unavailable to scanner
+- transition/embedded IPv6 cases fail closed
+- pre-existing forbidden flow cannot survive policy activation
+
+NETWORK-RECREATION DURABILITY
+After recreating all Docker networks:
+- scanner_egress remained 10.83.6.0/29;
+- Docker bridge identifier changed;
+- the Scancompass nft table remained present;
+- IPv4 enforcement remained correct because it is subnet-scoped;
+- the complete corrected matrix passed again.
+
+REBOOT DURABILITY
+The systemd design itself required iteration.
+
+Two failed designs were preserved as evidence:
+- an over-length placeholder interface name caused nft validation failure;
+- PartOf/ExecStop coupling caused the firewall table to be removed shortly after installation.
+
+The final unit:
+- uses a valid placeholder;
+- validates interface-name length;
+- waits boundedly for the bridge;
+- uses After/Wants for Docker;
+- has no PartOf;
+- has no Requires coupling;
+- has no ExecStop removal path.
+
+The policy returned after reboot without manual repair and the corrected acceptance matrix passed again.
+
+ROLLBACK
+Rollback was shown to:
+- remove only the Scancompass nft table;
+- leave Docker firewall rules unchanged;
+- be idempotent.
+
+A forbidden-port control changed:
+blocked -> connected after removal -> blocked after reapply.
+
+WORKER BUNDLE IDENTITY
+Final worker bundle:
+SHA-256:
+0d862432d0c56041174f221046508ff03bcf986013764aa7b43d8bb819540e1d
+
+Size:
+1,289,566 bytes
+
+A fresh scanner Docker image was built and the bundled worker extracted.
+Local and Docker-shipped bundle hash, size and bytes matched exactly.
+
+KNOWN RESIDUALS
+- production does not have this policy yet; M12A-11 owns deployment;
+- the policy constrains forwarded scanner-container traffic, not Docker host/root;
+- host/root can still originate traffic or attach containers;
+- parser-only classes remain application-layer;
+- scanner_egress IPv6 is currently disabled;
+- production firewall backend and subnet/route compatibility must be measured again.
+
+PRODUCTION SAFETY
+No M12A-10 firewall, systemd, Docker or deployment change was applied to production.
+
+PP / ATL VALUE
+Strong evidence for critical thinking, testing, reflection and systems thinking:
+a first implementation that appeared to pass was challenged, multiple real security defects were
+found, corrected, re-tested through recreation/reboot, and the failed intermediate designs were
+preserved rather than hidden.

@@ -1,0 +1,46 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+M12A EVIDENCE INDEX — CONSOLIDATED 30 SEPTEMBER 2026
+
+FILES IN THIS PACKAGE
+1. SCANCOMPASS_M12A_Step0_PP_Evidence_2026-09-30.txt
+2. SCANCOMPASS_M12A_Step0.1_PP_Evidence_2026-09-30.txt
+3. SCANCOMPASS_M12A_Step0.2_PP_Evidence_2026-09-30.txt
+4. SCANCOMPASS_M12A_Step1_PP_Evidence_2026-09-30.txt
+5. SCANCOMPASS_M12A_Step2_PP_Evidence_2026-09-30.txt
+6. SCANCOMPASS_M12A_Step3_PP_Evidence_2026-09-30.txt
+7. SCANCOMPASS_M12A_Step4_PP_Evidence_2026-09-30.txt
+
+EVIDENCE STATUS
+Steps 0–4 were already completed before this package was created. These files consolidate
+contemporaneous Git/test/transcript evidence and are explicitly labelled as a 30 September
+consolidation.
+
+FROM M12A-5 ONWARD
+Create the PP evidence file immediately when each step closes, following the M11 workflow:
+implementation -> verification -> commit/push -> owner review -> PP evidence record.
+
+DO NOT USE THESE FILES AS A SUBSTITUTE FOR REFLECTION
+For ManageBac / the Process Journal, select meaningful evidence and explain:
+- what problem or decision existed;
+- what you personally learned;
+- what changed because of the evidence;
+- which ATL skill the example demonstrates;
+- how it helped the learning goal and/or the product.
+
+NEXT PP ADMIN TASKS
+- curate approximately five strong Process Journal entries for Audit #1;
+- verify/refine 4–5 research-informed product success criteria;
+- maintain MLA-9 Works Cited/source-evaluation records;
+- continue contemporaneous M12A evidence from Step 5 onward.

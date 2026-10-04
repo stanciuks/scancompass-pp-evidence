@@ -1,0 +1,311 @@
+SCANCOMPASS — M11 STEP 11 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-27
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Retention and denylist purge
+
+This is factual development evidence, not Personal Project reflection prose.
+
+STATUS
+M11 Steps 0–11 complete. Steps 12–15 remain.
+
+FINAL MERGED PR
+PR #4 — M11 Step 11: retention and denylist purge
+State: MERGED / CLOSED
+Merged at: 2026-09-27T12:56:14Z
+Final approved PR head: caa08d71460d569cf89e30282c0625e20810089f
+Base main before merge: a6b8a3697ebba6e19802141c77cf6b465d956d40
+Final squash commit: e38944f00b2dcb9ee93baa6832666ec332b4f3a4
+Subject: feat: add retention and denylist purge
+
+INDEPENDENT GITHUB VERIFICATION
+- PR #4 is merged and closed.
+- main points to e38944f00b2dcb9ee93baa6832666ec332b4f3a4.
+- The squash commit has exactly one parent: a6b8a3697ebba6e19802141c77cf6b465d956d40.
+- GitHub compare reports exactly one commit between Step 10 and Step 11.
+- The squash contains 27 changed files.
+- 0 db/ files changed.
+- 0 deploy/ files changed.
+- The Step 11 review branch no longer exists remotely.
+
+PERSONAL PROJECT BASELINE
+Tag: pp-start-2026-09-24
+Annotated tag object: 071c33b3af5f2bb94c81f7fd7738a3dbab4ef40f
+Tag target remains: 987f54cf7ccd76007611e1a1b0356d2e03013194
+The PP baseline tag was not moved.
+
+STEP 11 PURPOSE
+Step 11 is the first SCANCOMPASS source step that implements durable deletion.
+It adds:
+1. routine expiry cleanup based on the stored scans.expires_at value;
+2. operator-only denylist/opt-out purge for durable scans already stored.
+No public retention, purge, admin, or DELETE route was added.
+
+PARENT-ONLY DELETION
+The only direct deletion target is scancompass.scans.
+The five child tables are removed through ON DELETE CASCADE:
+- scan_findings
+- scan_reports
+- report_management_tokens
+- report_shares
+- report_deliveries
+
+This matches the least-privilege grant model: the application role has DELETE on scans and no direct child-table DELETE privilege.
+
+SHARE GROWTH INVARIANT
+MAX_SHARES_PER_SCAN = 5 counts all share rows for a scan, including active, expired, and revoked rows.
+Step 11 therefore never independently deletes expired/revoked report_shares while their parent scan remains alive. Doing so would free slots and weaken the existing lifetime row bound.
+
+RETENTION ELIGIBILITY
+Normal expiry uses the row's stored scans.expires_at and the inclusive predicate:
+expires_at <= capturedNow
+It does not recalculate eligibility from created_at plus current configuration. This preserves Step 9 share extensions and avoids retroactively reinterpreting rows if policy values later change.
+
+RUNTIME BOUNDS
+RETENTION_BATCH_SIZE = 200
+MAX_RETENTION_BATCHES_PER_RUN = 10
+Maximum parent scans per invocation = 2,000.
+
+The first candidate exposed test overrides without enforcing the production envelope. Review found that values such as batchSize=1,000,000 or maxBatches=1,000 could bypass the intended safety bound; maxBatches=0 could even return a successful-looking no-op.
+
+Final production functions validate before any DB statement:
+- finite integer
+- batchSize 1..200
+- maxBatches 1..10
+Invalid values return INCOMPLETE / LOCAL_ERROR, deletedScans=0, batches=0, with zero DB calls. Values are refused, not silently clamped.
+
+PERFORMANCE CLAIM
+The 200-parent batch is a bounded starting value selected from cascade-amplification analysis. It is intended to fit the existing 2,000 ms statement_timeout, but real-PostgreSQL acceptance has not run and must confirm that. If 200 is too large, the approved correction is to reduce RETENTION_BATCH_SIZE, not widen the timeout merely to preserve the batch size.
+
+ROUTINE EXPIRY LOCKING
+Expiry uses FOR UPDATE SKIP LOCKED.
+This lets routine cleanup yield to user-facing share operations. If a share transaction already owns the scan-row lock, expiry skips that row and a later run sees the resulting expiry state. If expiry deletes first, the later share operation observes SCAN_ABSENT.
+
+EXPIRY DOES NOT CLAIM GLOBAL COMPLETION
+Because SKIP LOCKED can skip eligible rows, a short or zero expiry batch does not prove that the database contains no expired rows. The expiry result therefore reports only invocation facts:
+- deletedScans
+- batches
+- batchLimitReached
+It deliberately has no global completed/mayHaveMore claim.
+
+OPT-OUT PURGE LOCKING
+The denylist purge deliberately uses blocking FOR UPDATE without SKIP LOCKED.
+It completes only after a blocking batch finds zero matching rows. If it meets a held lock it waits; if the wait exceeds statement_timeout it returns INCOMPLETE / QUERY_TIMEOUT and is safe to retry. This avoids falsely telling an operator that an opt-out purge completed while a locked matching row remained.
+
+DENYLIST-DRIVEN PURGE
+The purge is not a generic arbitrary-host deletion tool. Before opening persistence it reads the active SCAN_DENYLIST_FILE and requires the exact configured rule pair:
+{ scope, canonicalHostname }
+Approved scopes:
+- EXACT_HOST
+- DOMAIN_AND_SUBDOMAINS
+An EXACT_HOST rule does not authorize the broader DOMAIN_AND_SUBDOMAINS purge for the same hostname.
+
+RUNTIME SCOPE REVIEW FINDING
+PurgeScope is compile-time only. An early predicate treated any runtime value other than EXACT_HOST as the broader subdomain scope. Review identified this as unsafe. Final code checks the two approved values at runtime before any statement; anything else returns CONFIG_INVALID with zero DB calls.
+
+HOST MATCHING
+EXACT_HOST: hostname = canonicalHost
+DOMAIN_AND_SUBDOMAINS: hostname = canonicalHost OR hostname LIKE '%.canonicalHost'
+Matching is label-safe and does not broaden to registrable-domain, effective website hostname, or mail assessment domain semantics.
+
+OPT-OUT ORDERING
+Documented operator order:
+1. add denylist rule;
+2. restart app;
+3. verify the target is refused;
+4. purge the exact active rule;
+5. retry INCOMPLETE runs;
+6. stop only on COMPLETED.
+The denylist/restart comes first so a fresh durable row cannot be created between purge and activation of the opt-out. Restart also clears the process-local result cache.
+
+IN-FLIGHT READ LIMIT
+After purge commit, future share resolution and management verification refuse and new share creation cannot operate on the removed scan. A request that obtained the frozen report before deletion linearised may still finish its response. The durable guarantee begins at purge commit; the system cannot retract bytes already read/in flight.
+
+ONE-SHOT CLI
+scripts/retention.ts
+Commands:
+node scripts/retention.ts expire
+node scripts/retention.ts purge-host --scope <SCOPE> --confirm-purge <hostname>
+Properties:
+- no default purge scope
+- --confirm-purge required
+- no interactive prompt
+- no application timer
+- no boot sweep
+- no public route
+- one process invocation then exit
+
+PRODUCTION PACKAGING STATUS
+The source CLI exists, but no production runner/scheduler is installed. The current Next standalone runtime image contains no repository source or scripts/. Step 15 owns production packaging, scheduler/systemd timer, and environment wiring.
+
+DIRECT-NODE IMPORT GRAPH
+Step 11 found that the CLI import graph initially failed under direct Node because Node does not provide the project's @/ alias resolver and the relevant ESM path required explicit relative extensions. A bounded set of specifier-only fixes brought the graph into the same explicit-.ts convention used by the migration CLI. One mechanical specifier-only change touched src/scanner/net/hostname.ts; scanner logic did not change. A test spawns the real CLI under Node to prove the runtime graph resolves.
+
+DATABASE ROLE
+Retention uses DATABASE_URL / the application role, never DATABASE_MIGRATION_URL. It performs no DDL and no migration-ledger work. No new credential or grant was added.
+
+CIRCUIT BREAKER DECISION
+Retention uses a short-lived pg.Client and no shared request-path circuit breaker. A one-shot maintenance process has no useful breaker history, and retention failure must not affect share/resolve request health. Scheduler cadence is the retry/backpressure mechanism.
+
+CONFIGURATION REVIEW FINDING
+The first connection implementation collapsed NOT_CONFIGURED and invalid configuration into one result. Final mapping:
+- no DATABASE_URL -> NOT_CONFIGURED
+- present but invalid persistence configuration -> CONFIG_INVALID
+- valid config -> connection attempt
+Tests cover malformed URL and invalid numeric persistence settings without leaking configured values.
+
+CONNECT FAILURE TAXONOMY
+Final behavior:
+- ETIMEDOUT -> CONNECT_TIMEOUT
+- exact uncoded pg 'timeout expired' -> CONNECT_TIMEOUT
+- ENOTFOUND / EAI_AGAIN -> CONNECT_FAILED
+- ECONNREFUSED / reset / TLS / authentication -> CONNECT_FAILED
+Raw driver messages are not printed.
+
+QUERY TIMEOUT ORDERING
+An intermediate implementation used a fixed 10,000 ms client query_timeout. Review found that valid statement_timeout configuration can be up to 30,000 ms, so the client could fire first.
+Final rule:
+PURGE_QUERY_TIMEOUT_MARGIN_MS = 5,000
+query_timeout = configured statement_timeout + 5,000 ms
+Thus the client timeout remains strictly above every accepted server statement_timeout.
+
+QUERY FAILURE TAXONOMY
+- PostgreSQL 57014 -> QUERY_TIMEOUT
+- ETIMEDOUT -> QUERY_TIMEOUT
+- exact uncoded pg 'Query read timeout' -> QUERY_TIMEOUT
+- ECONNRESET / EPIPE -> QUERY_FAILED
+- ordinary query errors -> QUERY_FAILED
+Coded errors are not reclassified merely because their message text resembles a timeout.
+
+CLI EXIT SEMANTICS REVIEW FINDING
+An early implementation printed expire INCOMPLETE reason=NOT_CONFIGURED but exited 0. That could let a future scheduler record a successful maintenance run that did no work.
+Final rule:
+Zero exit only for expire OK, purge-host COMPLETED, or explicit --help. Every incomplete/refused/failure state exits non-zero.
+
+REAL-POSTGRES FIXTURE REVIEW FINDINGS
+The first guarded retention integration fixture hand-wrote an invalid scans INSERT and used the wrong management-token column name. It also claimed five-child cascade coverage while only seeding three child tables.
+Final fixture seeds through real production paths:
+- persistAssessment
+- createShare
+- verifyManagementCapability
+- resolveShare
+This produces schema-valid scan/findings/report/capability/share data and a valid frozen artifact. One report_deliveries row is hand-seeded only because Step 12 owns the future delivery writer and Step 11 needs to exercise the existing FK cascade.
+
+FIVE-CHILD CASCADE ACCEPTANCE
+The final guarded fixture asserts all five child tables contain rows before parent deletion, then all five are absent afterwards. It also tests that direct child deletion is refused for the app role while the parent cascade must still succeed.
+
+REAL AUTHORIZATION PATH ACCEPTANCE
+Before purge, the guarded suite invokes the production Step 9 management verifier and share resolver and expects success. After purge, it invokes the same production paths and expects their ordinary neutral refusal. A separate assertion verifies the capability rows themselves are gone.
+
+REAL-POSTGRES GUARDED STATUS
+writer: 35
+migrations: 30
+retention: 22
+readiness: 15
+TOTAL: 102
+EXECUTED: 0
+STATUS: PENDING
+Current docs now consistently describe four guarded suites, not the older three-suite / 80-test state.
+
+PERSISTENCE BENCHMARK
+PENDING. No accepted p50/p95 write benchmark exists yet.
+
+REPORT_DELIVERIES INDEX FINDING
+report_deliveries currently lacks independent secondary indexes on:
+- share_id
+- created_by_management_id
+The existing unique index starts with scan_id, so parent-scan cascade is not blocked. The secondary indexes may matter once deliveries are actually written and cascades originate from share or management-token rows.
+Owner decision: no speculative Step 11 migration. Step 12 must review both indexes before its email writer is accepted.
+
+STEP 14 HARD DEPLOYMENT GATE
+reports_per_ip remains required before Step 9/10 report endpoints are deployed:
+10 requests/minute, burst 5, nodelay.
+Step 11 changed 0 deploy/ files.
+
+PUBLIC REPORT GOLDEN
+Unchanged:
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+MIGRATION ARTIFACTS
+No Step 11 schema change, migration, or grant change.
+Recorded hashes remain:
+SQL: 2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+Snapshot: 8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+Journal: 24186ee4e92b0dc52ecd0fb7f230342f66ddd18300957d7619490dbdddaac896
+
+FINAL TEST EVIDENCE
+112 test files
+4,404 passed
+102 skipped
+Focused counts:
+- boundaries: 919
+- retention-purge: 51
+- retention-expire: 47
+- retention-connection: 29
+- retention-cli: 24
+- retention-sql: 13
+The final PR commit after the full gates was documentation-only, so the full suite was not redundantly rerun.
+
+REVIEW HISTORY
+Initial candidate:
+938ffac288204e758fea770e4fc275fb22d175c1
+
+First correction:
+82470236b9114f1dc8f6070ad427574c9089bba1
+
+Second correction:
+3a832012db71c1ff3a31a55907e42289ec0e6c51
+
+Final docs/evidence correction:
+caa08d71460d569cf89e30282c0625e20810089f
+
+Important defects found and corrected during review included:
+- invalid real-PG fixture
+- wrong management-token column in fixture
+- vacuous cascade coverage for two child tables
+- inferred rather than actual verifier/resolver behavior after purge
+- incomplete CLI exit status 0
+- invalid DB config collapsed into NOT_CONFIGURED
+- DNS failure mislabeled as timeout
+- unrestricted destructive batch overrides
+- maxBatches=0 successful-looking no-op
+- invalid runtime purge scope defaulting to broader deletion
+- fixed query timeout potentially firing before valid server timeout
+- ECONNRESET mislabeled QUERY_TIMEOUT
+- stale current-status acceptance totals
+- source CLI existence contradicted by docs
+- unexecuted real-PG performance claim overstated as already proven
+
+Final independent review:
+REVIEW APPROVED — no further changes requested.
+GitHub formal APPROVE could not be recorded because the connected reviewer identity is the same account that authored the PR; GitHub returned 422 'Review Can not approve your own pull request'. Approval was recorded as a review comment.
+
+PRODUCTION IMPACT
+None reported during Step 11 implementation/review/merge. According to the contemporaneous execution record: no production access, no PostgreSQL contact/provisioning, no migration execution, and no durable row deletion occurred. GitHub independently verifies repository/PR/history scope but cannot prove off-repository operational actions did not occur.
+
+LOCAL WORKTREE / BRANCH STATUS
+Claude Code reported after merge:
+- local main = e38944f00b2dcb9ee93baa6832666ec332b4f3a4
+- origin/main = e38944f00b2dcb9ee93baa6832666ec332b4f3a4
+- git status --short: ?? .claude/
+- 0 staged changes
+- 0 tracked modifications
+- review branch deleted locally and remotely
+GitHub independently confirms remote main and remote branch deletion. GitHub cannot inspect the local Mac worktree.
+
+STEP 12 STATUS
+NOT STARTED.
+Independent GitHub verification confirms the boundary rule still prohibits actual email implementation markers such as nodemailer, postmark, sendReportEmail, and EmailProvider. recipient_hmac is intentionally not used as a Step 12 marker because that schema column has existed since Step 4.
+
+CURRENT M11 STATUS
+Complete: Steps 0–11
+Remaining:
+Step 12 — email path, shipped disabled by default
+Step 13 — legal/runbook/env documentation
+Step 14 — M11 edge additions including reports_per_ip
+Step 15 — production provisioning/deployment, restore rehearsal, migrations, real-PostgreSQL acceptance, benchmark and live validation
+
+M11 completion count: 12 of 16 steps complete.
+
+PERSONAL PROJECT NOTE
+This file records factual development evidence only. Any Personal Project reflection, ATL reflection, success-criteria judgment or personal evaluation should be written by the student in their own words and according to supervisor/school instructions.

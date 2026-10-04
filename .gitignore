@@ -1,0 +1,22 @@
+.DS_Store
+
+# Secrets / runtime configuration
+.env
+.env.*
+**/.env
+**/.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.agekey
+id_rsa*
+id_ed25519*
+
+# Intentionally private local-only material
+private/
+secrets/
+
+# Raw development-session / repository archives
+*.jsonl
+*.bundle

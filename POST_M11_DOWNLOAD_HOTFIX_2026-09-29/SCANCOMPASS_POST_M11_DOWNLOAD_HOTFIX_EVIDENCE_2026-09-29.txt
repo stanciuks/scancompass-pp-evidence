@@ -1,0 +1,338 @@
+SCANCOMPASS — POST-M11 SHARED-REPORT DOWNLOAD HOTFIX EVIDENCE
+Date closed: 2026-09-29
+Scope: post-M11 production hotfix and acceptance evidence
+
+1. HISTORICAL BOUNDARY
+
+M11 closure tag (unchanged):
+  m11-complete-2026-09-28
+  annotated object: bcf2113bfe3bd0bbbd532848ff816c73fc16dab7
+  dereferenced commit: 6e74ee3c48225136c38903be7ddce0ae0aa3227f
+  closure tree: 6f23052ac16ccfd643703bdd927c204a19579a2e
+
+Production when M11 closed:
+  commit: 3b455ae129a3638bb3ab3894837a92031d47e325
+  tree:   b8a102fb0194583985a8c6edf725f26f9195546e
+
+This hotfix happened AFTER M11 closure.
+
+2. LIVE DEFECT FOUND AFTER CLOSURE
+
+A newly created share link opened successfully, but "Download this report" failed.
+
+Pre-fix browser evidence:
+  POST /api/reports/download
+  status: 404
+  Content-Type: application/x-www-form-urlencoded
+  form field named token: present
+  observed token length: 43
+  Origin: null
+
+The bearer capability value is intentionally not recorded.
+
+Root cause:
+  The share document used Referrer-Policy: no-referrer.
+  The download is a native same-origin form POST.
+  The browser therefore emitted Origin: null.
+  The strict same-origin check correctly refused that opaque/null origin.
+  The capability transport itself was not the defect.
+
+3. SOURCE HOTFIX — PR #13
+
+PR #13:
+  fix: stop the share shell nulling its own Origin, breaking report download
+
+Approved PR head:
+  b9a7a02f84a0716c8ad886741d1b6edbba223945
+
+Approved tree:
+  264320d27ea92b5e211db6d9b488a3c42bfbadfe
+
+Squash merge:
+  commit: f0dc975303b8d81ca7cf04e8ea93a6e87d4f1e1e
+  tree:   264320d27ea92b5e211db6d9b488a3c42bfbadfe
+  parent: 6e74ee3c48225136c38903be7ddce0ae0aa3227f
+  merged: 2026-09-28T21:43:04Z
+
+Behavior after fix:
+  share document /r and /r/: Referrer-Policy: same-origin
+  ordinary pages: strict-origin-when-cross-origin
+  report API responses: no-referrer
+  canonical share URL: https://<host>/r#<capability>
+  canonical visible route: /r
+  /r/ remains 308 -> /r
+
+Security properties preserved:
+  isSameOrigin() not relaxed
+  Origin: null still refused
+  DownloadControl unchanged
+  no hidden capability input
+  no blob/object URL
+  no download ticket
+  no capability in query/path/header/cookie/storage
+
+Post-merge gates:
+  focused share/download/origin tests: 300/300
+  boundaries + launch independence: 1010/1010
+  deploy: 197/197
+  full hermetic: 4839 passed / 128 skipped
+  golden/evidence: 64/64
+  next build: PASS
+
+Golden:
+  7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+4. PRODUCTION DEPLOYMENT
+
+Production hotfix source:
+  f0dc975303b8d81ca7cf04e8ea93a6e87d4f1e1e
+  tree 264320d27ea92b5e211db6d9b488a3c42bfbadfe
+
+Deployment scope:
+  app-only
+
+Old app image:
+  sha256:ec2376a262f0645414728600e9354e58f6f53daf0f0ee43bbbfbf97ac6cdb226
+
+New accepted app image:
+  sha256:541633f4d0af46ce673c34e80e5b9aaed7e1eecda24f925c083384f4c8c7d163
+
+Database container before/after:
+  059d5b2f34b8174bf5bb22903912c6ef0d859412f4063ad60fa72f78790daf3b
+
+Hard deployment facts:
+  database container unchanged
+  no migration ran
+  PostgreSQL not recreated
+  pgdata untouched
+  no host 5432 listener
+  app remained 127.0.0.1:3000 only
+  retention timer active
+  backup timer active
+  email remained disabled
+
+Source transfer:
+  exact source transferred by verified Git bundle
+  no GitHub credential placed on VPS
+  no persistent Git remote left
+  temporary bundle removed
+  final production checkout remote count: 0
+
+Scan gate:
+  1 -> 0 before deployment
+  external proof: 503 SCAN_DISABLED
+  0 -> 1 only after closed-gate acceptance
+
+Final startup:
+  readyForProduction=true
+  productionScanningEnabled=true
+  blockerCount=0
+  persistence_readiness=READY / OK
+  health={"status":"ok"}
+
+5. CLOSED-GATE LIVE ACCEPTANCE
+
+GET /r
+  200
+  Referrer-Policy: same-origin
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex, nofollow
+
+GET /r/
+  308
+  Location: /r
+
+Follow /r/
+  200
+  redirects: 1
+
+GET /
+  200
+  Referrer-Policy: strict-origin-when-cross-origin
+
+Malformed POST /api/reports/resolve with body {}
+  400 INVALID_REQUEST
+  Referrer-Policy: no-referrer
+
+Scan gate re-check before reopening:
+  503 SCAN_DISABLED
+
+6. REAL-BROWSER ACCEPTANCE
+
+Successful request:
+  URL: https://scancompass.com/api/reports/download
+  method: POST
+  Origin: https://scancompass.com
+  status: 200 OK
+  browser referrer policy: same-origin
+
+Content-Disposition:
+  attachment; filename="scancompass-scancompass.com-2026-09-28.html";
+  filename*=UTF-8''scancompass-scancompass.com-2026-09-28.html
+
+The HTML attachment downloaded and opened correctly.
+The temporary test share was subsequently revoked.
+
+7. DOWNLOADED ARTIFACT
+
+File:
+  scancompass-scancompass.com-2026-09-28.html
+
+Bytes:
+  58658
+
+SHA-256:
+  f6ec81e0cd792960563e32f92d89858b1534bf1ef8037a3bcb96ee5f6cedc19d
+
+Artifact checks:
+  <script> tags: 0
+  /r# or /r/# share URL present: NO
+  literal managementToken label present: NO
+  literal shareToken label present: NO
+  standalone 43-character base64url-shaped strings: 0
+
+8. OPERATOR INCIDENT
+
+During the first deployment attempt, a fail-closed block started in the wrong
+shell context. Its Git precondition failed and closed SSH; remaining pasted
+commands continued in the local Mac shell.
+
+The intended closed-gate check therefore ran before the production gate was
+actually closed and performed one real owner-controlled scan of scancompass.com.
+
+Accidental scan ID:
+  9017d969-e701-497e-9682-7ed32db8207f
+
+The successful response printed its one-time management capability into the
+operator terminal transcript. The capability value is NOT reproduced here.
+
+Immediate mitigation:
+  exact accidental scan UUID selected
+  exactly one scan row verified
+  report_shares revocation update: 0 rows
+  report_management_tokens revocation update: 1 row
+  transaction committed
+  final live_management = 0
+  final live_shares = 0
+  assessment row not deleted
+
+This was not an application-log leakage event; it was terminal-output exposure.
+
+Procedure correction:
+  establish interactive SSH separately
+  wait for visible remote prompt
+  verify hostname/pwd/repo context before external effects
+  never mix local and remote phases in one paste
+  wrap fail-closed privileged blocks in a subshell
+  ordinary production operation uses interactive sudo
+  sudo -n/stdin automation only when separately configured and verified
+
+9. DOCUMENTATION RECONCILIATION — PR #14
+
+PR #14:
+  docs: record the post-M11 download hotfix and its live acceptance
+
+Squash merge:
+  commit: 12616a0088dcf1fe1085cf19224db062b1a78215
+  tree:   233fbfa89751d8ddb3cc2611ab02fe6a1307dc05
+  parent: f0dc975303b8d81ca7cf04e8ea93a6e87d4f1e1e
+  merged: 2026-09-29T05:44:25Z
+
+Changed files: docs-only (7 files).
+
+Repository main after PR #14:
+  12616a0088dcf1fe1085cf19224db062b1a78215
+  tree 233fbfa89751d8ddb3cc2611ab02fe6a1307dc05
+
+Production intentionally remains:
+  f0dc975303b8d81ca7cf04e8ea93a6e87d4f1e1e
+  tree 264320d27ea92b5e211db6d9b488a3c42bfbadfe
+
+The main-vs-production difference is documentation-only.
+
+PR #14 gates:
+  documentation/evidence + deploy: 297/297
+  boundaries + launch independence: 1010/1010
+  full hermetic: 4839 passed / 128 skipped
+  golden/evidence: 64/64
+  next build: PASS
+
+10. FINAL CLEANUP
+
+Temporary production rollback tag:
+  site-security-app:pre-download-hotfix-20260928
+
+Before removal it was verified to reference:
+  sha256:ec2376a262f0645414728600e9354e58f6f53daf0f0ee43bbbfbf97ac6cdb226
+
+Cleanup result:
+  rollback tag removed
+  old image deleted when no longer referenced
+  running hotfix image unchanged
+  health remained OK
+  database container untouched
+
+Temporary branches deleted locally and remotely:
+  hotfix/m11-shared-report-download-origin-null
+  docs/post-m11-download-hotfix-reconciliation
+
+Final GitHub verification:
+  main 12616a0088dcf1fe1085cf19224db062b1a78215
+  tree 233fbfa89751d8ddb3cc2611ab02fe6a1307dc05
+  hotfix branch: absent
+  docs reconciliation branch: absent
+  review/m11-step12-email-delivery: intentionally retained
+
+M11 closure tag final verification:
+  annotated object bcf2113bfe3bd0bbbd532848ff816c73fc16dab7
+  -> 6e74ee3c48225136c38903be7ddce0ae0aa3227f
+  unchanged
+
+11. FINAL RESULT
+
+POST-M11 SHARED-REPORT DOWNLOAD HOTFIX: CLOSED
+
+Production:
+  f0dc975303b8d81ca7cf04e8ea93a6e87d4f1e1e
+  tree 264320d27ea92b5e211db6d9b488a3c42bfbadfe
+
+Repository main:
+  12616a0088dcf1fe1085cf19224db062b1a78215
+  tree 233fbfa89751d8ddb3cc2611ab02fe6a1307dc05
+
+Shared report download:
+  live-accepted in a real browser
+  POST /api/reports/download
+  Origin https://scancompass.com
+  HTTP 200
+  attachment saved and opened
+
+Scanner:
+  enabled
+  readyForProduction=true
+  blockerCount=0
+
+Persistence:
+  READY / OK
+  database container unchanged
+
+Temporary test share:
+  revoked
+
+Accidental-scan exposed management capability:
+  revoked
+  no live management/share capability remained for that accidental scan
+
+M11 closure history:
+  immutable and unchanged
+
+Next:
+  M12 Step 0 — scanner-worker isolation audit/reconciliation
+
+SECRET-HYGIENE STATEMENT
+
+This evidence intentionally contains no management/share capability value,
+trusted-proxy token, database credential, B2 credential, age private key,
+email-provider credential, recipient-HMAC secret, or environment-file contents.
+
+----- END POST-M11 DOWNLOAD HOTFIX EVIDENCE -----

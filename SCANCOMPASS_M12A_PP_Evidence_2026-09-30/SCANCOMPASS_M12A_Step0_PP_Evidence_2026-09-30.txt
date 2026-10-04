@@ -1,0 +1,53 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence consolidation date: 30 September 2026
+
+IMPORTANT ACADEMIC-INTEGRITY NOTE
+This file was consolidated on 30 September 2026 from contemporaneous project records:
+Git history, implementation/test transcripts, source-code state, and milestone review notes.
+It is NOT presented as a journal entry written on the original implementation date.
+Its purpose is to preserve verifiable technical evidence that can later be selected,
+explained, and reflected on in the student's own Process Journal / final report.
+
+Project: Scancompass
+Milestone: M12A — Scanner worker isolation
+
+STEP: M12A-0 — Source audit and isolation-boundary investigation
+STATUS: COMPLETE (read-only design/audit step)
+
+PURPOSE
+Establish the real current architecture before extracting scanner execution into a separate
+worker process. The step deliberately treated repository source as authoritative for current
+behaviour and recorded documentation drift rather than silently trusting old prose.
+
+WHAT THIS STEP ESTABLISHED
+- M12A would separate hostile-network parsing/scanning from the web application process.
+- The web tier would remain responsible for admission, denylist/cooldown/duplicate suppression,
+  scoring, report composition, persistence, cache and later account/domain-authorisation work.
+- The worker would receive only the narrow information necessary to execute a free scan.
+- No queue, persistent job store, automatic retry or resumption would be introduced.
+- Scanner identity, cancellation, runtime resources, networking and egress would each need an
+  explicit trust-boundary design rather than being assumed to follow automatically from
+  "putting it in another container".
+- Documentation drift was tracked separately so historical reasoning would not be rewritten.
+
+EVIDENCE / REVIEW CHARACTER
+This step was intentionally read-only:
+- no source files created or changed;
+- no production contact;
+- no environment/secret reads;
+- no Docker/firewall/network changes;
+- no tag movement.
+
+WHY THIS MATTERS FOR THE PERSONAL PROJECT
+This is evidence of planning and critical thinking rather than product construction.
+It shows that before making a high-risk architectural change, the existing system was audited,
+assumptions were identified, and the implementation was split into independently verifiable steps.
+
+USEFUL ATL CONNECTIONS
+- Critical thinking: checking claims against source instead of accepting documentation blindly.
+- Organization: dividing a large security change into gated substeps.
+- Information literacy: distinguishing authoritative current source from stale documentation.
+
+PROCESS-JOURNAL USE
+Do not paste this whole file into ManageBac. A strong journal entry can select one concrete
+example of an assumption that was checked and explain why verifying it changed the plan.

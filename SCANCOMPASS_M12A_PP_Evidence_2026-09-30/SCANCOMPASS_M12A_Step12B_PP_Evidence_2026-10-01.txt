@@ -1,0 +1,126 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 1 October 2026
+
+Milestone: M12A — Scanner worker isolation
+Substep: M12A-12B — Production boot-order interlock acceptance
+Status: CLOSED
+
+FINAL REVIEWED EVIDENCE HEAD
+ae2ad10ea18535ce0f50ab2c9e77a58af9c33f89
+
+Implementation/evidence chain:
+99db3669b1465883ecb0776b9c133bd533cdc6a8  M12A-12A reviewed interlock design
+e6c92f0f02efc1afbf0fa3563eb491217ccf90b6  production acceptance evidence
+ae2ad10ea18535ce0f50ab2c9e77a58af9c33f89  corrected historical fingerprint labeling
+
+PURPOSE
+Install the reviewed nginx→scanner-egress systemd interlock on the real production host, prove its
+success and failure semantics using the real production apply script, reboot, prove the enforced
+startup order, and re-run the complete egress acceptance matrix while public scanning remained
+disabled.
+
+INSTALLED ARTIFACT
+Repository:
+deploy/systemd/nginx.service.d/scancompass-egress.conf
+
+Production destination:
+/etc/systemd/system/nginx.service.d/scancompass-egress.conf
+
+SHA-256:
+a983dd4d236cbd2275c9dd41180cfdc681f039212b03aec262ec3dc83efb1222
+
+Owner/mode:
+root:root / 0644
+
+Required systemd directives:
+[Unit]
+Requires=scancompass-scanner-egress.service
+After=scancompass-scanner-egress.service
+
+REAL PRODUCTION SYSTEMD GRAPH
+Verified against the actual nginx vendor unit:
+- nginx Requires scancompass-scanner-egress.service
+- nginx After scancompass-scanner-egress.service
+- scanner-egress service After docker.service
+- scanner-egress service Before nginx.service
+- scanner-egress service RequiredBy nginx.service
+- systemd-analyze verify exit 0
+- no ordering cycle
+
+REAL FAIL-CLOSED PROOF
+The real production apply script was exercised with an ephemeral malformed policy under /run.
+The egress unit was stopped; nginx stopped through dependency propagation while the nft table
+remained present. A subsequent nginx start pulled in the required egress service; nft validation
+rejected the malformed policy, the egress service failed, nginx remained inactive, and the previous
+live nft policy remained intact.
+
+HISTORICAL POLICY FINGERPRINT
+Recorded value:
+1b2879eace2d5ef22386337a87fc6152
+
+It was produced as the first 32 hexadecimal characters of the SHA-256 of a counter-stripped nft
+policy dump, using sha256sum followed by cut -c1-32. It is therefore a truncated SHA-256, not a
+complete digest. The same truncated value was observed at each comparison point and the carved
+192.0.0.0-192.0.0.8 range remained present.
+
+CONTROLLED PRODUCTION REBOOT
+Measured boot order:
+Docker active: 13,400,910 us since boot
+Egress policy active: 13,791,590 us since boot
+Nginx active: 13,989,565 us since boot
+
+Therefore:
+- egress after Docker: +390 ms
+- nginx after egress: +197 ms
+
+Journal:
+17:15:42.787115 Docker started
+17:15:42.798330 egress service starting
+17:15:43.175293 policy active
+17:15:43.177789 egress service finished
+17:15:43.187560 nginx starting
+17:15:43.375782 nginx started
+
+This resolves the M12A-11 boot race.
+
+POST-REBOOT HEALTH
+- nginx active/enabled
+- egress unit active/enabled
+- nft table present
+- app/scanner/db healthy
+- scanner 8787 unpublished
+- database 5432 unpublished
+- app loopback-only
+- SCAN_PRODUCTION_ENABLED=0
+- /api/scan 503 SCAN_DISABLED
+- homepage 200
+- /api/health 200
+- persistence READY
+- scanner worker readiness READY
+- timers active
+- database data intact
+
+E1–E25
+The complete corrected production egress matrix was re-run with the interlock installed.
+All cases passed.
+
+E24 runtime proof also passed. Restarting the egress unit now intentionally restarts nginx through
+the dependency; measured edge outage during the reapply was 136 ms.
+
+FINAL STATE
+- production scanning remained CLOSED
+- no live assessment was performed
+- no migration
+- no email sent
+- no secret rotated
+- temporary sudo grant still present for final M12A closure
+- no M12 completion tag yet
+
+RESULT
+The M12A-11 boot-order blocker is resolved.
+No blocker remains for the nginx/egress ordering question.
+The final M12A-12 live-reopen phase may now proceed subject to its own acceptance gate.
+
+PP / ATL VALUE
+This substep demonstrates systems thinking, risk management, failure-path testing, operational
+measurement, and evidence precision.

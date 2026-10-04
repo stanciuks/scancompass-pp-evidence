@@ -1,0 +1,223 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 2 October 2026
+
+MILESTONE
+M12B-0 — Account/session foundation audit and design
+
+FINAL STATUS
+CLOSED
+
+FINAL REVIEWED COMMIT
+b3ac5b09fdbc552c80abc6ef3a3a181681b34e4f
+
+PARENT
+4c005f669917c29a764c5ec0ca4f80e5635e61df
+
+SCOPE
+Documentation/design only.
+
+No production runtime, source code, database migration, dependency, route, scanner, worker or
+deployment configuration was changed during M12B-0.
+
+FINAL DESIGN SUMMARY
+
+1. Anonymous free scanning remains independent
+- no account is required for the existing free scan
+- accounts are not a launch control
+- account subsystem failure must not disable /api/scan
+
+2. Session model
+- opaque server-side sessions
+- 32-byte CSPRNG token
+- digest-only PostgreSQL storage
+- __Host- cookie
+- Secure, HttpOnly, SameSite=Lax, Path=/
+- no Domain
+- non-persistent browser cookie
+- server-side absolute and idle expiry
+- coarse last_used_at refresh
+- logout/logout-all delete rows
+- no revoked_at session field
+
+3. Session trust boundary
+- transport layer alone reads/writes cookies
+- pure session layer receives token strings and touches PostgreSQL
+- composition layer maps session resolution to Actor
+- scanner/worker never receives account/session identity
+
+4. Request authorization
+Class 1 — authenticated mutation:
+- valid account session
+- non-safe HTTP method
+- exact configured Origin
+
+Class 2 — capability-authorized account mutation:
+- non-safe method
+- exact configured Origin
+- valid challengeId + bearer token
+- no pre-existing session required
+
+Signup completion and password-reset completion are Class 2 operations.
+
+5. Registration security
+No account and no password credential exists before mailbox ownership is proven.
+
+Pending signup state is stored only in account_signup_challenges.
+Only after the emailed capability succeeds are the account and initial credential created in one
+transaction.
+
+6. Challenge carrier
+Verification/reset links use fragments:
+
+/account/verify#<challengeId>.<token>
+/account/reset#<challengeId>.<token>
+
+The fragment:
+- is not transmitted on the initial GET
+- is removed from the address bar before POST
+- is not persisted in localStorage/sessionStorage/DOM attributes
+- returns to the server only in a same-origin POST body
+- is never logged or echoed
+
+Server verification:
+- lookup by challenge UUID
+- canonicalize token
+- SHA-256 supplied token
+- constant-time compare against stored digest
+- atomically increment attempt_count on mismatch
+- delete/invalidate on exhaustion
+- neutral refusal for malformed/unknown/wrong/exhausted challenges
+
+7. Pending-signup anti-squatting
+Multiple live signup challenges for one canonical address are permitted, but bounded.
+
+The final design requires:
+- exact live per-address cap
+- per-address rate limit
+- trusted-IP rate limit
+- global auth/signup bound
+- concurrency-safe count+insert in the supported single-instance deployment
+- successful account creation deletes ALL pending signup challenges for that canonical email
+
+8. Account email / signup gates
+Three independent feature flags:
+
+EMAIL_DELIVERY_ENABLED
+- existing M11 report-email feature
+- stays 0 throughout M12B
+
+ACCOUNT_EMAIL_ENABLED
+- account verification/reset mail only
+- default 0
+
+ACCOUNT_SIGNUP_ENABLED
+- public registration only
+- default 0
+
+None is a thirteenth free-scan launch control.
+
+9. Production rollout order
+M12B-7:
+- deploy schema/runtime
+- ACCOUNT_SIGNUP_ENABLED=0
+- ACCOUNT_EMAIL_ENABLED=0
+- EMAIL_DELIVERY_ENABLED=0
+
+M12B-7A:
+- enable ACCOUNT_EMAIL_ENABLED only
+- prove real verification/reset email end to end
+- signup remains closed
+- report email remains disabled
+
+M12B-8:
+- after M12B-7A passes, open ACCOUNT_SIGNUP_ENABLED
+- run live account/session acceptance
+
+10. Database design
+M12B proposes five new tables:
+- accounts
+- account_credentials
+- sessions
+- account_signup_challenges
+- account_email_challenges
+
+Existing documented baseline: 7 tables
+Proposed post-M12B total: 12 tables
+
+11. Credential storage
+Password credentials:
+- kdf descriptor
+- 16-byte random nonce
+- 32-byte derived key
+- no plaintext password
+- no ambiguous concatenated secret blob
+
+Node-core Argon2id is recommended subject to M12B-3 production-architecture benchmark and acceptance.
+
+12. Password policy gate
+M12B-3 must settle:
+- minimum length
+- maximum at least 64 characters
+- Unicode/whitespace support
+- no composition rules
+- no silent truncation
+- breached/common-password policy
+- bounded KDF input / DoS handling
+
+13. Lockout model
+Durable state supports:
+- failed-attempt count
+- observation window start
+- temporary locked-until timestamp
+
+Policy requires:
+- bounded observation window
+- temporary lockout
+- successful login/reset clears lockout state
+- password recovery remains available during login lockout
+- anti-lockout-abuse acceptance testing
+
+14. Restore safety
+Before a restored application is exposed:
+- delete all sessions
+- delete all account_email_challenges
+- delete all account_signup_challenges
+
+15. Account deletion
+Recommended model:
+- tombstone durable account UUID
+- clear account PII
+- delete credentials, sessions and challenges
+- retain future domain-authorization attestations against the tombstoned id if D5 is accepted
+
+OWNER DECISIONS BLOCKING M12B-1
+D1 — authentication implementation
+Recommended: first-party email + password with opaque server-side sessions.
+
+D4 — verification-before-authentication
+Recommended: mailbox control proven before account/password creation and before login.
+
+D5 — deletion/audit-retention policy
+Recommended: PII-cleared account tombstone with retained legal/domain-authorization attestations.
+
+D2, D3 and final password-policy constants do not change the proposed schema shape and may be settled
+in later implementation gates.
+
+NON-GOALS
+- domain ownership verification implementation
+- EXTENDED scanning
+- payment/entitlement
+- PDF
+- CI
+- dashboard
+- Redis/multi-instance
+- scanner-worker changes
+- MFA/passkeys in M12B
+- changes to anonymous free scanning
+
+M12A IMMUTABILITY
+m12a-complete-2026-10-01 remained unchanged during M12B-0.
+
+FINAL REVIEW VERDICT
+M12B-0 account/session design is closed.
+The next action is to resolve owner decisions D1, D4 and D5 before M12B-1 creates the migration.

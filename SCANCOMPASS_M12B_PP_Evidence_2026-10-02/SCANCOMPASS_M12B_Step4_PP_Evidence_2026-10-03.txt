@@ -1,0 +1,172 @@
+SCANCOMPASS — MYP PERSONAL PROJECT TECHNICAL EVIDENCE
+Evidence date: 3 October 2026
+
+MILESTONE
+M12B-4 — Session resolution and request-authorization boundary
+
+FINAL STATUS
+CLOSED
+
+IMPLEMENTATION COMMIT
+3ffca79ca64979d701b83e45ef45b9b9cacdf0da
+
+REVIEW CORRECTION COMMIT
+69b1d5a24f63c4c669a20ab9f21b55348c45cc5a
+
+IMPLEMENTATION PARENT
+11bdbd2da5b9aba2ba0c1245d0e1d0301fc258be
+
+D3 SESSION POLICY
+- absolute lifetime: 7 days (604800000 ms)
+- idle timeout: 24 hours (86400000 ms)
+- coarse activity refresh: 15 minutes (900000 ms)
+- browser cookie remains non-persistent
+
+Boundary semantics:
+- absolute expiry: now >= expires_at
+- idle expiry: now >= last_used_at + 24h
+- refresh due: now >= last_used_at + 15m
+- activity never extends expires_at
+
+COOKIE TRANSPORT
+The existing __Host-scancompass_session cookie remains:
+- Secure
+- HttpOnly
+- SameSite=Lax
+- Path=/
+- no Domain
+- no Max-Age / Expires on the live cookie
+
+M12B-4 added raw Cookie-header reading.
+The reader does not percent-decode, unquote, canonicalize, digest or query PostgreSQL.
+Duplicate session-cookie names fail closed through a deliberately malformed sentinel.
+
+STRICT ORIGIN CONTROL
+New requireTrustedOrigin() requires:
+- an Origin header
+- a configured public origin
+- exact string equality
+
+It has no missing-Origin fallback and trusts no Host/X-Forwarded/Referer/Sec-Fetch authority.
+The existing anonymous-scan isSameOrigin() behavior remains unchanged and still permits a missing Origin.
+
+SESSION STORE
+New session persistence adapter performs only:
+1. indexed session digest lookup joined to accounts
+2. conditional last_used_at refresh
+
+It does not:
+- insert sessions
+- delete sessions
+- rotate tokens
+- extend expires_at
+- create a database pool
+
+SESSION RESOLUTION
+Typed outcomes:
+- VALID {accountId, sessionId}
+- ABSENT
+- REJECTED: MALFORMED / UNKNOWN / EXPIRED / IDLE / ACCOUNT_NOT_ACTIVE
+
+Deterministic order:
+ABSENT -> MALFORMED -> UNKNOWN -> EXPIRED -> IDLE -> ACCOUNT_NOT_ACTIVE -> VALID
+
+Malformed tokens are rejected before PostgreSQL.
+Rejected sessions are not refreshed.
+Unexpected database errors propagate rather than being converted to anonymous/unknown.
+
+ACTOR COMPOSITION
+authenticatedActorFromRequest():
+- VALID -> ACCOUNT actor, clearCookie=false
+- ABSENT -> ANONYMOUS, clearCookie=false
+- any REJECTED -> ANONYMOUS, clearCookie=true
+
+No rejection reason is exposed.
+The helper does not clear the cookie itself, check Origin, authorize resources, infer tier, or create/revoke sessions.
+
+CLASS-1 / CLASS-2 PRIMITIVES
+M12B-4 proves prerequisites only:
+- future authenticated mutation: exact trusted Origin + ACCOUNT actor
+- future capability mutation: strict Origin check works with no session cookie
+Challenge-capability authorization itself remains later work.
+
+ANONYMOUS FREE-SCAN INDEPENDENCE
+/api/scan is not wired to:
+- account runtime
+- session resolver
+- authenticated actor
+- strict trusted-origin helper
+
+Public API route count remains 7.
+Scanner and worker protocols remain account/session-free.
+
+POSTGRESQL 18.6 ACCEPTANCE
+Final recorded result:
+- M12B-4 session integration file: 30 passed
+- full integration suite: 8 files / 200 passed / 0 skipped
+
+Acceptance proves:
+- exact bytea digest lookup
+- ACTIVE verified -> VALID
+- DISABLED / DELETED -> rejected
+- schema refuses live unverified accounts
+- exact absolute/idle boundaries
+- conditional activity refresh
+- concurrent refresh safety
+- expires_at remains unchanged
+- application grants suffice
+- resolution creates/deletes zero sessions
+- challenge/credential tables untouched
+
+REVIEW CORRECTION
+The initial M12B-4 integration fixture incorrectly weakened accounts_live_identity_check to manufacture
+an impossible live-unverified row.
+
+Correction commit 69b1d5a24f63c4c669a20ab9f21b55348c45cc5a:
+- removed that schema mutation entirely
+- removed verified:false integration fixture behavior
+- keeps the defensive ACTIVE + emailVerifiedAt=null resolver branch in unit testing only
+- proves PostgreSQL refuses the impossible state
+- asserts after the suite that accounts_live_identity_check and accounts_tombstone_identity_check are
+  still present and convalidated=true
+- checks no invalid account identity rows remain
+- checks session-table constraints remain validated
+
+The correction also reconciled stale comments that still described D3 as open or session persistence as future.
+
+FINAL RECORDED VALIDATION
+Correction commit records:
+- git diff --check clean
+- typecheck 0
+- lint 0
+- targeted 7 files / 1386 cases
+- PostgreSQL session file 30 passed
+- PostgreSQL integration 8 files / 200 passed / 0 skipped
+- full suite 159 files / 5957 passed / 192 skipped
+- build clean
+- 7 API routes
+
+These execution counts come from the reviewed commit evidence; they were not independently re-run by ChatGPT.
+
+SCOPE / PRODUCTION
+No session creation/INSERT runtime exists yet.
+No session DELETE/logout runtime exists yet.
+No login, logout, signup or account/session API route exists.
+No migration, schema, contract or grant change was made.
+Production was untouched.
+Migration 0002 remains unapplied to production.
+M12B-5 was not started.
+
+M12A TAG IMMUTABILITY
+Annotated tag object:
+ad3c7bb767443e2d699636cbe94e1a4195705252
+
+Target:
+65ba34fde9aa5948106e4afb0540921cebb99400
+
+FINAL REVIEW VERDICT
+M12B-4 CLOSED.
+
+NEXT
+M12B-5 — session creation/login plus the first account HTTP surface and the verification-gated signup
+flow, while public signup remains closed until later production email acceptance.

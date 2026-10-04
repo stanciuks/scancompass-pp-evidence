@@ -1,0 +1,492 @@
+SCANCOMPASS — M11 STEP 10 PERSONAL PROJECT EVIDENCE NOTE
+Date: 2026-09-27
+Project: SCANCOMPASS
+Milestone: M11 — Persistence & Durable Reports
+Activity: Secure report download
+
+This is factual development evidence, not Personal Project reflection prose.
+
+STATUS
+M11 Steps 0–10 complete.
+M11 Steps 11–15 remain.
+
+MERGED PR
+PR #3 — M11 Step 10: secure report download
+State: MERGED / CLOSED
+Merged at: 2026-09-27T10:39:01Z
+
+Approved PR head before squash:
+2facaa762dae7f5065e2063d54539ebd416fdf59
+
+Base main before merge:
+d0fe0a1c89cb49c0209e164d2c951c8ae2f08cfd
+
+Final main squash commit:
+a6b8a3697ebba6e19802141c77cf6b465d956d40
+
+Subject:
+feat: add secure report download
+
+Independent GitHub verification after merge:
+- main points to a6b8a3697ebba6e19802141c77cf6b465d956d40
+- the squash commit has exactly one parent:
+  d0fe0a1c89cb49c0209e164d2c951c8ae2f08cfd
+- Step 9 -> Step 10 is exactly one main commit
+- exactly 32 files changed
+- 0 db/ files changed
+- 0 deploy/ files changed
+- the Step 10 review branch no longer exists remotely
+
+PERSONAL PROJECT BASELINE
+Tag:
+pp-start-2026-09-24
+
+Annotated tag object:
+071c33b3af5f2bb94c81f7fd7738a3dbab4ef40f
+
+Tag target remains:
+987f54cf7ccd76007611e1a1b0356d2e03013194
+
+The PP baseline tag was not moved.
+
+STEP 10 PURPOSE
+Step 10 adds secure download of an already-authorised frozen shared report.
+
+Flow:
+share capability held in memory
+-> same-origin POST body
+-> existing Step 9 share resolver
+-> verified frozen report artifact
+-> self-contained HTML attachment
+
+PUBLIC ENDPOINT
+POST /api/reports/download
+
+No GET download endpoint exists.
+
+Request encoding:
+application/x-www-form-urlencoded
+
+Body:
+token=<share capability>
+
+The download endpoint reuses resolveShareCapability(token), so Step 10 adds:
+- no second token parser
+- no new SQL
+- no new database transaction
+- no scan_findings presentation read
+- no database write
+- no viewer analytics write
+
+The database connection is released before rendering.
+
+NATIVE DOWNLOAD / TOKEN HANDLING
+The resolved /r page already holds the share token only in a non-rendered useRef.
+
+The download uses a native same-origin form POST.
+
+It does NOT use:
+- fetch + Blob
+- blob:
+- URL.createObjectURL
+- <a download>
+- a download ticket
+- a token in a URL/path/query
+- localStorage
+- sessionStorage
+- cookies
+
+The form has no token-bearing hidden input.
+
+The browser formdata event adds the token directly to the submission FormData at submit time.
+
+TEST-RUNTIME LIMITATION
+jsdom 25 does not implement the real FormDataEvent/formdata lifecycle and requestSubmit()
+cannot be used as a real browser submission.
+
+The tests therefore verify the component seam without claiming browser E2E execution:
+- form markup contains no token
+- a controlled requestSubmit stub dispatches formdata synchronously
+- submission FormData receives the token
+- requestSubmit is called once
+- listener is removed afterwards
+- token remains absent from DOM/storage/cookie/URL
+
+No browser E2E framework was added for Step 10.
+
+STATIC REPORT FILE
+New source surface includes:
+src/server/report-file/
+
+Important modules:
+- ReportFile.tsx
+- render.tsx
+- styles.ts
+- csp.ts
+- display-safe.ts
+- filename.ts
+- index.ts
+
+The existing interactive AssessmentReport is not directly rendered into the download.
+
+The downloadable file is a dedicated server-side static React document with a compile-time
+constant stylesheet.
+
+REACT RENDERING DISCOVERY
+The first implementation used renderToStaticMarkup from react-dom/server.
+
+Unit tests passed, but the real Next production build rejected that import path.
+
+Final implementation uses:
+prerender from react-dom/static
+
+The prelude stream is completely drained before the file is measured or returned.
+
+A dedicated test compares the report produced through the normal renderer with Next's compiled
+static Node React implementation.
+
+A boundary rule now bans react-dom/server so the same production-only failure is caught earlier.
+
+HTML SECURITY
+React owns text and attribute escaping.
+
+There is no hand-written general HTML escaper for report-derived data.
+
+No dangerouslySetInnerHTML is used.
+
+The saved document deliberately contains no:
+- script
+- external stylesheet
+- img
+- iframe
+- object
+- embed
+- base
+- form
+- resource-bearing href/src
+- event-handler attribute
+- CSS @import
+- CSS url(...)
+- @font-face
+- data URI
+
+Observed URLs are rendered as text.
+
+IN-FILE CSP
+The saved report carries its own CSP metadata:
+
+default-src 'none'
+style-src 'unsafe-inline'
+img-src 'none'
+font-src 'none'
+object-src 'none'
+base-uri 'none'
+form-action 'none'
+
+HOSTILE-CONTENT TESTING
+Hostile report data is checked structurally with parse5.
+
+The tests do not simply ban strings such as javascript:, data:, url( or <script>, because those
+strings may legitimately appear as report evidence.
+
+Instead the parsed document is checked for:
+- forbidden elements
+- event-handler attributes
+- fetching/navigation attributes
+- external CSS/resource references
+
+Hostile payload text must remain visible as text rather than being silently deleted.
+
+DANGEROUS INVISIBLE CHARACTERS
+Dangerous invisible characters are displayed visibly in U+XXXX-style notation.
+
+Covered classes include:
+- unsafe C0 controls
+- C1 controls
+- bidi embeddings/overrides
+- bidi isolates
+- lone surrogate code units
+
+TAB and LF are preserved.
+
+CARRIAGE RETURN REVIEW FINDING
+Independent review found that U+000D carriage return was initially left out of the unsafe C0 set.
+
+HTML parsing normalises CR/CRLF line endings, so preserving raw CR could silently mutate observed
+evidence.
+
+Final behavior:
+- TAB survives
+- LF survives
+- CR becomes visible U+000D notation
+- CRLF becomes visible U+000D notation followed by the preserved LF
+
+SURROGATE BUG FOUND DURING IMPLEMENTATION
+An early lone-surrogate regex also matched part of valid surrogate pairs and mangled normal emoji.
+
+It was replaced with a Unicode-aware surrogate-category match.
+
+Regression tests preserve valid astral Unicode while still identifying genuinely unpaired
+surrogates.
+
+PRESENTATION SEMANTIC PARITY
+Independent review found that the first static renderer changed or dropped some M10 meanings.
+
+A shared pure module:
+src/lib/report-presentation.ts
+
+now owns selected presentation rules used by both:
+- the live AssessmentReport
+- the downloaded ReportFile
+
+It does not score or classify findings.
+
+Shared rules include:
+- whether a severity cap genuinely affected the published score
+- user-facing displayStatus wording
+- whether a priority action should display multiple contributing categories
+
+DISPLAY STATUS
+The initial static file exposed internal tokens such as:
+OPTIONAL_RESOURCE_NOT_PUBLISHED
+NOT_APPLICABLE_TO_OBSERVED_SCOPE
+
+The final file uses the reviewed reader-facing wording:
+NOT PUBLISHED
+NOT APPLICABLE
+OBSERVED
+
+SEVERITY CAP REVIEW FINDINGS
+First defect:
+the renderer treated the presence of score.cap as proof the score had actually been limited.
+
+That was false because an applicable severity cap can exist while the weighted score is already
+below the cap ceiling.
+
+Second defect:
+the new shared rule used JavaScript Math.round.
+
+ScanCompass's scoring methodology deliberately uses round-half-down:
+
+- Math.round(-value)
+
+Example:
+pre-cap 74.5
+cap ceiling 74
+published score 74
+
+Without the cap, round-half-down(74.5) is also 74.
+
+Therefore the cap did not change the published score and must not be described as limiting it.
+
+Final presentation code mirrors the product's round-half-down display semantics without importing
+or changing the frozen scoring engine.
+
+Tests include:
+- 74.5 -> no cap explanation
+- 74.500001 -> cap explanation
+- ordinary non-half values
+- unpublished score
+- null final score
+- null pre-cap score
+- dense comparison from 1 to 100 in tenths, including every half
+- scoring source still uses the mirrored rule
+
+FILENAME / CONTENT-DISPOSITION SAFETY
+Filename format:
+
+scancompass-<safe-hostname>-<YYYY-MM-DD>.html
+
+Hostname slug is built from:
+[a-z0-9.-]
+
+Header-breaking characters cannot be copied directly into the filename.
+
+Hostile cases cover CR/LF, quotes, semicolons, backslashes, path-like input, controls,
+non-ASCII text, emoji, bidi characters, empty names and very long names.
+
+Malformed dates are omitted rather than converted into garbage punctuation.
+
+Successful response includes:
+Content-Type: text/html; charset=utf-8
+Content-Disposition: attachment
+Cache-Control: no-store, no-cache, must-revalidate
+Referrer-Policy: no-referrer
+X-Robots-Tag: noindex, nofollow
+X-Content-Type-Options: nosniff
+
+OUTPUT SIZE
+MAX_REPORT_FILE_BYTES:
+4 MiB
+
+Recorded final rich fixture:
+63,885 bytes
+
+Recorded escape-heavy fixture:
+963,722 bytes
+
+The full rendered UTF-8 document is measured after rendering.
+
+Over-cap output is treated as a service/render failure, not as an invalid token.
+
+FAILURE PAGES
+400, 404 and 413 use one byte-identical neutral HTML body.
+
+503 uses a separate fixed service-unavailable page.
+
+Failure pages contain no report data, hostname, token, share id or authorization-specific reason.
+
+FAILURE-PAGE CSP REVIEW FINDING
+The first error page used inline CSS that would still be blocked by the stricter existing /api/*
+HTTP CSP.
+
+The API CSP was not weakened.
+
+The dead inline style was removed and the error page uses browser-default styling.
+
+LOGGING
+There is no successful-download event.
+
+A per-download log would be viewer analytics, which M11 deliberately does not keep.
+
+REVIEW HISTORY
+Initial candidate:
+ca9c55bc310a3cfd4601a935e39aeba080fbb848
+
+First correction:
+2d4f357cf908c0812d4812bb752ff3fdb8f084c2
+
+Second correction:
+519a8a43321821fdb2987bec3612040fba03ce63
+
+Final docs-only evidence correction:
+2facaa762dae7f5065e2063d54539ebd416fdf59
+
+Final independent review:
+REVIEW APPROVED — no further changes requested.
+
+GitHub formal APPROVE could not be recorded because the authenticated reviewer identity was the
+same GitHub account that authored the PR. Approval was recorded as a review comment before merge.
+
+FINAL TEST EVIDENCE
+Final source candidate:
+
+106 test files
+4,202 passed
+80 skipped
+
+Focused counts:
+- boundaries: 882
+- report-file-hostile: 71
+- report-file-filename: 49
+- report-file-render: 39
+- report-file-display-safe: 32
+- report-cap-parity: 27
+- download-route: 20
+- download-control: 8
+- report-file-next-runtime: 2
+
+The final PR commit after these gates changed documentation only, so the full suite was not
+rerun redundantly.
+
+PUBLIC REPORT GOLDEN
+Unchanged:
+
+7c0f92c0e394c3e35981b343f895716a2764bf85027c48a36a89213fb336cf79
+
+MIGRATION ARTIFACTS
+No Step 10 schema change.
+No migration generated.
+
+Recorded hashes remain:
+
+SQL:
+2bf0a9e84ac8f5a97f1d5c040783bdbd9c6d5767deed227f261c09dd956bf1cc
+
+Snapshot:
+8f2ddafb5b3a41bb8260a32c65e95120f3a97978b56a7fd3928812c4e009355e
+
+Journal:
+24186ee4e92b0dc52ecd0fb7f230342f66ddd18300957d7619490dbdddaac896
+
+REAL POSTGRESQL ACCEPTANCE
+PENDING
+
+Guarded suites:
+writer: 35
+migrations: 30
+readiness: 15
+
+Total:
+80
+
+Executed:
+0
+
+Step 10 adds no real-PostgreSQL tests because it adds no new SQL/query path.
+
+PERSISTENCE BENCHMARK
+PENDING
+
+No accepted p50/p95 write benchmark yet.
+
+STEP 14 HARD DEPLOYMENT GATE
+Before any Step 9/10 report endpoint is deployed, Step 14 must add:
+
+reports_per_ip
+10 requests/minute
+burst 5
+nodelay
+
+The download endpoint is included under /api/reports/*.
+
+STEP 11 STATUS
+NOT STARTED.
+
+Independent GitHub verification after merge found:
+- no purgeExpired source match
+- no purge_expired source match
+- no retentionSweep source match
+- the boundary test still explicitly asserts Step 11 and later-step implementations are absent
+
+PRODUCTION IMPACT
+None reported during Step 10 implementation/review/merge.
+
+No production deployment, production database access, PostgreSQL provisioning, migration execution
+or real-PostgreSQL test execution occurred according to the contemporaneous execution record.
+
+GitHub independently verifies repository/PR/history scope but cannot prove that an off-repository
+operational action did not occur.
+
+LOCAL WORKTREE STATUS
+Claude Code reported after merge:
+- local main = a6b8a3697ebba6e19802141c77cf6b465d956d40
+- origin/main = a6b8a3697ebba6e19802141c77cf6b465d956d40
+- review branch deleted locally and remotely
+- git status --short: ?? .claude/
+- 0 staged changes
+- 0 tracked modifications
+
+GitHub independently confirms:
+- remote main = a6b8a3697ebba6e19802141c77cf6b465d956d40
+- remote Step 10 review branch absent
+
+GitHub cannot independently inspect the local Mac worktree.
+
+CURRENT M11 STATUS
+Complete:
+Steps 0–10
+
+Remaining:
+Step 11 — retention/purge
+Step 12 — email disabled-by-default
+Step 13 — legal/runbook/env documentation
+Step 14 — edge additions including reports_per_ip
+Step 15 — deployment, restore rehearsal, migrations, real-PostgreSQL acceptance, benchmark and live validation
+
+PERSONAL PROJECT NOTE
+This file records factual development evidence only.
+
+Any Personal Project reflection, analysis of learning, ATL reflection, success-criteria judgment
+or personal evaluation should be written by the student in their own words and according to
+supervisor/school instructions.
