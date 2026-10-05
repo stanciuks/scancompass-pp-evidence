@@ -1,0 +1,170 @@
+SCANCOMPASS — RETENTION FAILURE DIAGNOSIS
+Finding out whether an intermittent failure was a flake or a defect
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+DIAGNOSIS ONLY. NO CODE WAS COMMITTED BY THIS DIAGNOSTIC, and it deliberately
+made NO PRODUCT FIX. It exists to decide what the three failures in PR #20's
+acceptance actually were. Production, the VPS and Stripe were not contacted.
+[S1,S2]
+
+The fix that followed is recorded separately in
+SCANCOMPASS_RETENTION_BATCH_BOUND_FIX_PP_Evidence_2026-10-05.txt.
+
+This is a factual technical record, not a student reflection. Reflection
+prompts are carried unanswered in section 7.
+
+1. THE QUESTION
+
+PR #20's twenty acceptance runs gave 17 PASS and 3 FAIL. All three failures
+were the same assertion in the retention suite — the test that the batch bound
+also applies to the denylist purge — in a module PR #20 does not touch. The
+runner's report truncated the difference, so WHICH FIELD DIFFERED WAS NOT
+CAPTURED, and 36 reproduction attempts outside the runner had all passed.
+
+Two outcomes were possible, and they lead to opposite actions:
+
+  - an environment flake, in which case the test is noisy and the acceptance
+    record needs no product work;
+  - a real product defect that only shows under acceptance conditions, in which
+    case the deletion machinery is wrong.
+
+It was NOT waived as a flake while that question was open.
+
+2. ISOLATION: 60 ALTERNATING FULL ACCEPTANCE RUNS
+
+The first thing to settle was whether PR #20 had caused it. The diagnostic ran
+SIXTY full acceptance runs, ALTERNATING between PR #19's head and PR #20's
+head, so that drift in the host, the container or the clock could not fall
+disproportionately on one branch.
+
+  PR #19   30 runs   2 target failures
+  PR #20   30 runs   2 target failures
+
+THE SAME RATE ON BOTH BRANCHES. PR #20 DID NOT INTRODUCE IT. The defect, if it
+was one, predated the lockout work — which also retired the suspicion recorded
+in PR #20's evidence that the thirteen new concurrency tests might be changing
+the timing.
+
+3. THE CAPTURED FAILURE
+
+With the received value actually captured rather than truncated, the failure
+stopped looking like a timeout:
+
+  A BATCH WITH A LIMIT OF 2 DELETED 3 ROWS.
+  ANOTHER RUN DELETED ALL 5.
+
+That cannot be reconciled with the test's expectation under any timing
+hypothesis. A purge of five rows with a batch size of 2 and a limit of two
+batches must report four deleted in two batches; instead it reported a
+different count, or completed early because a single batch had taken
+everything.
+
+4. THE TIMEOUT HYPOTHESIS, DISPROVED
+
+The leading hypothesis on record was that a busy instance exceeded the
+2-second statement timeout. It was disproved rather than abandoned: there was
+NO TIMEOUT ERROR, no blocking transaction, no leftover transaction and no
+fixture failure, and BATCH LATENCY WAS MILLISECONDS AGAINST A TWO-SECOND BOUND.
+
+This matters methodologically. The plausible, comfortable explanation —
+"the machine was busy" — was the wrong one, and the only way to know was to
+capture the value the assertion actually received.
+
+5. ROOT CAUSE: A LIMIT THAT BOUNDED THE WRONG THING
+
+Both retention operations were a single statement of this shape:
+
+  DELETE FROM scans
+   WHERE id IN (SELECT id FROM scans
+                 WHERE <predicate>
+                 ORDER BY <order>
+                 LIMIT n
+                   FOR UPDATE [SKIP LOCKED])
+
+The code and its comments assumed the limit bounded the statement. IT BOUNDS
+EACH EXECUTION OF THE SUB-SELECT, NOT THE DELETE.
+
+The database may plan this as a NESTED LOOP SEMI JOIN, with the outer side
+scanning every row of the table and the inner sub-select RE-EXECUTED ONCE PER
+OUTER ROW. On each re-execution the sorted candidate list is rewound, and the
+row-locking step SKIPS ANY TUPLE THIS STATEMENT HAS ALREADY DELETED — the
+database treats a tuple modified by the current command as not found and moves
+on. So the limit returns the next n SURVIVING candidates every time. An outer
+row is deleted if it is among them when it is visited. When the physical row
+order happens to match the ordering clause, every row qualifies at its turn and
+THE STATEMENT DELETES EVERYTHING; otherwise it deletes somewhere between n and
+all of them. That is precisely 3-of-5 and 5-of-5.
+
+The planner correlation was identified too: the failing runs coincided with
+statistics describing the table as empty or near-empty. Statistics that record
+pages but zero tuples give a density of zero, so the planner estimates one row
+and the nested loop wins — which is exactly what an automatic analyse leaves
+behind after a mass delete that has not yet been vacuumed. The retention
+suite's own per-test cleanup produces that state whenever the automatic analyse
+happens to run between tests. THAT TIMING DEPENDENCE EXPLAINS BOTH THE RATE —
+about 2 in 30 — AND WHY 36 ISOLATED ATTEMPTS NEVER SHOWED IT.
+
+BOTH SQL SHAPES WERE AFFECTED: the expiry sweep and the denylist purge.
+
+6. WHAT WAS AND WAS NOT WRONG
+
+This distinction is the most important line in the diagnosis, and it was
+established rather than assumed:
+
+  ONLY QUALIFYING ROWS WERE EVER DELETED. The inner side only ever yields rows
+  matching the predicate, so no row outside the intended scope could be
+  removed. THE DEFECT WAS THE WORK AND RESOURCE BOUND — how much one batch may
+  do — NOT THE DELETION SCOPE.
+
+A PURE-SQL REPRODUCTION with no application code involved reproduced the
+over-delete for both shapes, which is what turned a correlation into a
+mechanism.
+
+A materialised common table expression was shown to bound the statement
+correctly, BUT WAS NOT CHOSEN as the final approach; that decision belongs to
+the fix and is recorded there.
+
+THE TEST WAS CORRECT AND CAUGHT A REAL PRODUCT DEFECT. The temptation it
+survived was to relax an assertion that failed 2 times in 30 while 36 isolated
+attempts passed.
+
+7. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The sixty alternating runs, the value capture, the planner correlation and the
+pure-SQL reproduction were produced by Claude, an AI coding assistant. THIS
+DIAGNOSTIC COMMITTED NO CODE AND MADE NO PRODUCT FIX. Its raw logs are not kept
+in any repository; the fix that followed re-derives the mechanism
+independently and deterministically rather than relying on them.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words.
+
+  1. Why run sixty tests alternating between two versions instead of thirty on
+     the suspect one?
+  2. The comfortable explanation was that the machine was busy. What would have
+     happened if that had been accepted?
+  3. The limit was in the query the whole time. What does it mean that it
+     bounded something other than what the author thought?
+  4. The deletion was always correct about WHICH rows; only about HOW MANY. Why
+     is that distinction worth stating carefully in a record like this?
+
+8. SOURCE LOCATORS
+
+[S1] docs/evidence/RETENTION_BATCH_BOUND_FIX_2026-10-05.md section 2, on branch
+     claude/retention-batch-bound-exact at
+     8c6d8aeb2d6a6e4907ff0ea2546f7ba5ff218894 — which records this diagnostic's
+     chronology and figures as it reported them.
+[S2] docs/evidence/LOGIN_LOCKOUT_CONCURRENCY_FIX_2026-10-05.md section 8.4 —
+     the three failures as first recorded, open and not waived.
+[S3] src/server/persistence/purge/database.ts at PR #20's head
+     3749a9301ad9d4ac0ab729936bc3c72604e6ada8 — the two statements described in
+     section 5, before correction.
+[S4] tests/integration/persistence-retention.test.ts — the two unchanged tests
+     that caught the defect.
+
+No credential, token, capability value, password, email address, database URL,
+host identifier, provider key or raw log appears in this note.
+
+END OF EVIDENCE

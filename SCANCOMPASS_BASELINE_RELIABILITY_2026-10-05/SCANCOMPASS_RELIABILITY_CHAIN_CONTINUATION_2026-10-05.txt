@@ -1,0 +1,104 @@
+SCANCOMPASS — RELIABILITY CHAIN CONTINUATION
+From one failed assertion to two product fixes and a clean acceptance
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+CONTINUATION INDEX. Every pull request below is a DRAFT; NONE IS MERGED and
+NONE IS DEPLOYED. The three are STACKED: #20 on #19, #21 on #20. Production,
+the VPS and Stripe were not contacted at any point.
+
+PURPOSE OF THIS FILE
+The earlier note SCANCOMPASS_LOGIN_LOCKOUT_RACE_FINDING_2026-10-05.txt says the
+login lockout race was DISCOVERED and its fix PENDING. THAT WAS CORRECT WHEN
+WRITTEN AND IS NOT AMENDED. This file records what happened next, so the
+earlier status is understood as a point in a chain rather than as the current
+state.
+
+THE CHAIN
+
+  1. DISCOVERED
+     PR #19's ten repeated acceptance runs exposed a real defect in run 7:
+     concurrent wrong passwords lost a durable failure increment, observed as
+     "expected 6, actual 5". PR #19 deliberately did NOT fix it.
+     -> SCANCOMPASS_BASELINE_RELIABILITY_PP_Evidence_2026-10-05.txt
+     -> SCANCOMPASS_LOGIN_LOCKOUT_RACE_FINDING_2026-10-05.txt
+
+  2. CORRECTED IN PR #20
+     The login route captured the time before the slow hashing step; the row
+     lock serialised the writes but the timestamps arrived out of order, and a
+     negative elapsed time made the policy restart the observation window. The
+     clock is now read UNDER the row lock, by the store that owns the write.
+     Reproduced first on the old code: 14 failures in 20 for the original test,
+     and 5 of 5 for a forced interleaving. Thirteen new concurrency tests; the
+     lockout sections passed 20 of 20.
+     -> SCANCOMPASS_LOGIN_LOCKOUT_FIX_PP_Evidence_2026-10-05.txt
+
+  3. RETENTION FAILURES INVESTIGATED
+     PR #20's own twenty acceptance runs were 17 PASS and 3 FAIL, and ALL THREE
+     FAILURES WERE RETENTION, NOT THE LOCKOUT CORRECTION. The cause was unknown
+     at the time and was recorded as open, not waived as a flake.
+     -> SCANCOMPASS_LOGIN_LOCKOUT_FIX_PP_Evidence_2026-10-05.txt section 7
+
+  4. A REAL RETENTION DEFECT FOUND
+     Sixty full acceptance runs alternating between PR #19 and PR #20 gave the
+     same failure rate on both, so PR #20 had not introduced it. With the
+     received value captured, a batch limited to 2 was found to have deleted 3
+     rows, and another run deleted all 5. The timeout hypothesis was disproved
+     by measurement. Root cause: a LIMIT inside a sub-select bounds each
+     execution of that sub-select, not the DELETE around it, and a
+     nested-loop plan re-executes it. ONLY QUALIFYING ROWS WERE EVER DELETED —
+     the defect was the work bound, not the deletion scope. The diagnostic
+     committed no code and made no product fix.
+     -> SCANCOMPASS_RETENTION_FLAKE_DIAGNOSIS_2026-10-05.txt
+
+  5. CORRECTED IN PR #21
+     Each batch became one transaction: a top-level candidate SELECT whose
+     LIMIT is final, the ids materialised in application memory, then a DELETE
+     naming exactly those ids and repeating the predicate, with fail-closed
+     invariant checks that roll the batch back rather than report a short
+     count. The expiry sweep keeps its non-blocking lock; the purge keeps its
+     blocking one. No schema, migration or grant change.
+     -> SCANCOMPASS_RETENTION_BATCH_BOUND_FIX_PP_Evidence_2026-10-05.txt
+
+  6. 30 / 30 COMBINED ACCEPTANCE
+     Thirty consecutive acceptance runs on the committed runner at PR #21's fix
+     commit: 30 PASS, 0 FAIL. Readiness 30 of 30; retention 45 of 45 in every
+     run, including the test that had failed 3 of 20; the lockout sections 19
+     of 19 in every run; the restore drill 30 of 30; cleanup verified 30 of 30.
+     The record states plainly that the thirty runs are NOT the primary proof —
+     the deterministic forced-plan regression is.
+
+WHAT THIS CHAIN ILLUSTRATES, FACTUALLY
+
+  - a defect found by repetition, not by review, and deliberately not fixed in
+    the change that found it;
+  - a fix whose reproduction and tests are most of the work;
+  - three failures that were reported as failures while their cause was
+    unknown, rather than explained away;
+  - a second, unrelated product defect found because those failures were not
+    waived;
+  - two separate, independently reviewed, still-unmerged corrections.
+
+STATUS AT THE TIME OF WRITING
+
+  PR #19  claude/nifty-hopper-9ohwmt          draft, open, unmerged
+  PR #20  claude/login-lockout-fresh-clock    draft, open, unmerged
+  PR #21  claude/retention-batch-bound-exact  draft, open, unmerged
+
+Nothing in this chain has been merged to the main branch, and nothing has been
+deployed. Public signup and account email remain closed in production and no
+account exists, so the lockout defect corrected in PR #20 had no live exposure.
+
+AI ASSISTANCE
+Every step above — the repeated runs, the diagnoses, both corrections, the test
+suites and all five evidence notes — was produced by Claude, an AI coding
+assistant, in ephemeral cloud containers, and independently reviewed. The
+instruction not to fix the lockout race inside PR #19 came from the owner.
+
+NO FABRICATED REFLECTION
+No reflection is written in this file or in any note it indexes. Each note
+carries its prompts unanswered, to be written separately in the student's own
+words.
+
+END OF EVIDENCE

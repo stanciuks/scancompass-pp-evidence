@@ -1,0 +1,278 @@
+SCANCOMPASS — RETENTION EXACT-BATCH FIX
+Making the batch bound exact under any query plan
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+SOURCE FIX IMPLEMENTED AND INDEPENDENTLY REVIEWED. DRAFT PR #21. NOT MERGED.
+NOT DEPLOYED. Production, the VPS and Stripe were not contacted. No migration,
+schema, grant, retention policy value, batch size or public result changed.
+[S1,S2]
+
+This corrects the defect established in
+SCANCOMPASS_RETENTION_FLAKE_DIAGNOSIS_2026-10-05.txt. See
+SCANCOMPASS_RELIABILITY_CHAIN_CONTINUATION_2026-10-05.txt for the full chain.
+
+This is a factual technical record, not a student reflection. Reflection
+prompts are carried unanswered in section 9.
+
+1. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Branch: claude/retention-batch-bound-exact
+Base: claude/login-lockout-fresh-clock at
+      3749a9301ad9d4ac0ab729936bc3c72604e6ada8 (PR #20 head — STACKED; neither
+      PR #19's nor PR #20's branch was modified)
+Fix commit: ec9830572f03ed09996cb594a02b4082eebe525d
+Head: 8c6d8aeb2d6a6e4907ff0ea2546f7ba5ff218894
+Pull request: #21, DRAFT, OPEN
+Opened: 2026-10-05 21:12:27 UTC
+Diff: 6 files changed, 1515 insertions, 91 deletions
+
+Environment: Node v24.21.0, pnpm 11.21.0, Docker 29.6.2, PostgreSQL 18.6
+(Debian 18.6-1.pgdg13+2). The image again came from a mirror after the public
+registry rate-limited the pull; its manifest digest is byte-identical to the
+one PRs #19 and #20 recorded, and the runner was not modified.
+
+2. THE OLD, PLANNER-DEPENDENT STATEMENT
+
+Both batch operations were ONE statement:
+
+  DELETE FROM scans
+   WHERE id IN (SELECT id FROM scans
+                 WHERE <predicate>
+                 ORDER BY <order>
+                 LIMIT n
+                   FOR UPDATE [SKIP LOCKED])
+
+The limit bounds each EXECUTION OF THE SUB-SELECT, not the delete. Under a
+nested-loop plan the sub-select is re-executed per outer row, the row-locking
+step skips tuples this statement has already deleted, and the limit therefore
+yields the next n SURVIVING candidates each time — so the statement can delete
+far more than n. The mechanism and its statistics trigger are in the diagnosis
+note.
+
+AN AUDIT OF EVERY STATEMENT AND CALLER IN THE RETENTION MODULE established that
+these TWO SHAPES ARE THE ONLY AFFECTED STATEMENTS. The other ten
+select-for-update sites in the codebase are all top-level, awaited selects
+inside a transaction, none embedded in a data-modifying statement; and the only
+other variable limit is a read with no lock and no delete.
+
+3. THE DETERMINISTIC RED PHASE
+
+The defect was made to fail ON DEMAND before the fix was written, so the
+regression could not be a coincidence.
+
+PURE SQL, FORCED PLAN: on a scratch table analysed while empty, with the
+planner's alternatives disabled for that session only, both the expiry shape
+and the purge shape DELETED 5 ROWS FOR A LIMIT OF 2. An intermediate attempt is
+recorded honestly: with only three of the five planner settings disabled, the
+database chose a different plan that deleted 2, so all five settings are used
+and the reason is stated.
+
+THROUGH THE PRODUCT'S OWN QUERY BUILDER, on the real schema: the new test block
+recreates the triggering statistics state, applies the five session settings on
+the APPLICATION ROLE'S OWN CONNECTION — nothing server-wide, no schema and no
+grant change — seeds rows so that physical order and ordering clause agree, and
+then ASSERTS THE PLAN ITSELF before asserting behaviour. Two permanent
+REPRODUCTION tests rebuild the pre-fix statements from the exact query-builder
+calls of the base commit and run them inside a rolled-back transaction:
+
+  the pre-fix expiry statement, limit 2    DELETED 5
+  the pre-fix denylist statement, limit 2  DELETED 5
+
+These pass before AND after the fix, so the suite permanently proves the hazard
+is real and that the rest of the block runs under it.
+
+THE WHOLE NEW SUITE AGAINST THE OLD CODE: with the old module temporarily
+restored and then put back, the result was 20 FAILED, 25 PASSED of 45.
+
+4. THE CORRECTED SHAPE
+
+Each batch is now ONE TRANSACTION OF TWO QUERY-BUILDER STATEMENTS:
+
+  BEGIN
+  SELECT candidate ids
+    WHERE <predicate> ORDER BY <order> LIMIT n FOR UPDATE [SKIP LOCKED]
+      -> materialised as a concrete list in application memory, length <= n
+  DELETE WHERE id IN (<those exact ids>) AND <the same predicate>
+      -- sent only when the list is non-empty
+  COMMIT
+
+  - the candidate select is a TOP-LEVEL statement, so its limit is FINAL.
+    Nothing re-executable reaches the delete, which names a parameter list and
+    therefore cannot affect more than the selected rows under ANY PLAN;
+  - THE EXPIRY SWEEP KEEPS ITS NON-BLOCKING LOCK so concurrent sweeps divide
+    the work, and THE DENYLIST PURGE KEEPS ITS BLOCKING LOCK so it waits rather
+    than silently skipping. Both are pinned by unit tests for every scope;
+  - CANDIDATE SELECTION AND DELETION HAPPEN IN THE SAME TRANSACTION, so the row
+    locks taken by the select are held until the commit;
+  - AT MOST BATCH-SIZE IDS ENTER THE DELETE, asserted on every recorded
+    statement;
+  - AN EMPTY SELECTION ISSUES NO DELETE AT ALL and returns zero;
+  - THE DELETE REPEATS THE PREDICATE. Under the held locks that is redundant —
+    which is the point: if the locking reasoning were ever wrong, a row that
+    stopped matching would be LEFT ALONE rather than deleted;
+  - INVARIANT CHECKS THAT FAIL CLOSED. More ids than the limit, a repeated id,
+    or a delete row count that disagrees with the number of locked candidates
+    (or is missing) raises a dedicated error carrying NO IDS, HOSTNAMES OR
+    COUNTS. Throwing inside the transaction ROLLS IT BACK, and the orchestrator
+    reports the run as incomplete with the batch UNCOUNTED. A short count would
+    be the worst outcome, because the sweep reads a short batch as "done for
+    now" and the purge reads zero as "completed";
+  - NO RAW SQL. The query builder is used throughout. A materialised common
+    table expression would also stop the re-execution, but only as raw SQL, and
+    the transaction gives the code a candidate list it can COUNT AND CHECK;
+  - the public interfaces, the batch size of 200, the limit of 10 batches per
+    run, the result types and the operator command are unchanged. The
+    application role keeps exactly the privileges it already had. NO SCHEMA,
+    MIGRATION OR GRANT CHANGE.
+
+THE TWO EXISTING TESTS THAT CAUGHT THE DEFECT ARE UNCHANGED. No test was
+skipped, deleted or weakened.
+
+5. TESTS
+
+TWENTY-TWO new PostgreSQL tests, ALL RUN UNDER THE FORCED RESCANNING PLAN, plus
+35 unit tests on the statement shapes.
+
+Covered: the two permanent reproductions; an empty batch for all three
+operations, proving NO DELETE IS SENT; exactly batch-size; batch size one over
+three rows; multiple batches ending in a partial one; the id count entering
+every recorded delete; and decoy rows just outside each predicate — one
+millisecond past expiry, a far-future row, a similarly-named host and a
+look-alike subdomain — all SURVIVING, which is what proves the scope was never
+the problem.
+
+REAL CONCURRENCY PROOFS, with waits OBSERVED in the database's activity view
+rather than assumed:
+
+  - TWO EXPIRY WORKERS DIVIDE THE WORK: worker 1 is held after locking two ids,
+    worker 2 is NOT BLOCKED and takes the next two, the held ids are still
+    present while held, and worker 1 then deletes exactly its two;
+  - THE PURGE WAITS AND NEVER SKIPS: a second batch is observed waiting on a
+    lock, and after release each batch deletes its own rows;
+  - A TIMEOUT ROLLS BACK: a batch cancelled by the statement timeout reports
+    incomplete with zero deleted, sends no delete, issues a rollback — AND THE
+    SAME CONNECTION THEN COMPLETES A NORMAL BATCH, so the connection remains
+    usable;
+  - a delete count disagreeing with the locked candidates fails closed, the
+    genuine candidate is STILL PRESENT because the transaction rolled back, and
+    the next run is normal;
+  - a candidate list longer than the limit is refused BEFORE ANY DELETE;
+  - an empty selection claims no more than the old statement's snapshot did.
+
+Results: the retention suite 45 PASSED (23 existing plus 22 new), repeated
+20 TIMES, 20 OF 20 PASSED, then 5 more after a refinement to the statistics
+setup, 5 of 5.
+
+6. GATES AND THIRTY ACCEPTANCE RUNS
+
+  git diff --check   clean
+  pnpm typecheck     exit 0
+  pnpm lint          exit 0
+  pnpm test:run      exit 0 — 185 files passed, 1 skipped; 6,886 tests passed,
+                     361 skipped
+  pnpm build         exit 0
+
+One build failure was hit and fixed before the gates were re-run: a
+heterogeneous test table needed an explicit type.
+
+THIRTY acceptance runs on the committed runner, sequentially, with no local
+patch:
+
+  WHOLE-RUN VERDICT          30 PASS, 0 FAIL (exit 0 every time)
+  PostgreSQL readiness       30 / 30 stable
+  Retention                  30 / 30 — the suite passed 45 of 45 in EVERY run,
+                             including the test PR #20 recorded failing 3 of 20
+  Login lockout (B and B2)   19 of 19 in EVERY run
+  Restore drill              30 / 30, with clean dump and restore exit codes
+  Cleanup                    30 / 30 owned resources removed and verified
+                             absent; zero containers and zero volumes after
+                             every run
+
+THE RECORD IS EXPLICIT THAT THIRTY CLEAN RUNS ARE NOT THE PRIMARY PROOF.
+Against the defect's measured rate of about 2 in 30, thirty clean runs would
+have roughly a 1-in-8 chance of occurring even if the defect were still
+present. THE DETERMINISTIC FORCED-PLAN REGRESSION — 20 failures on the old code,
+all passing on the new — IS THE PROOF. The thirty runs show the fix regresses
+nothing else.
+
+7. A DEVELOPMENT INCIDENT, RECORDED BRIEFLY
+
+While this evidence document was being assembled after the valid thirty-run
+batch, AN UNQUOTED SHELL HEREDOC CAUSED BACKTICK COMMAND SUBSTITUTION, so the
+shell executed spans of the document's own text as commands. This started one
+extra acceptance runner and several other local commands.
+
+  - the extra runner was INTERRUPTED CLEANLY by its supported signal and
+    stopped while still in the hermetic phase; IT NEVER REACHED ANY DATABASE
+    ACCEPTANCE WORK;
+  - its owned container and volumes were removed by its own cleanup, leaving
+    zero containers and zero volumes, and its log directory was deleted;
+  - the other commands failed harmlessly or were killed;
+  - NO REPOSITORY, REMOTE, PRODUCTION, VPS OR STRIPE STATE WAS CHANGED;
+  - THAT RUN IS EXCLUDED FROM THE THIRTY-RUN EVIDENCE.
+
+It is recorded so the session's record is complete.
+
+8. REMAINING ISSUES
+
+  - the statistics state that triggers the bad plan can still occur in the test
+    database. With the fix it no longer matters, because the bound no longer
+    depends on the plan — and the new block forces that plan on every run;
+  - a batch now holds its row locks across two statements rather than one, so a
+    competing operation can wait up to two statement bounds instead of one. In
+    practice milliseconds;
+  - the new invariant error is reported under the existing coarse failure
+    reason rather than a new one, deliberately, to keep the public taxonomy
+    unchanged. An operator sees "rerun", and the rerun is safe because the
+    failed batch rolled back;
+  - PRODUCTION RETENTION HAS NEVER RUN AGAINST A POPULATED DATABASE WITH THIS
+    CODE. The bound and its locking are proven on disposable PostgreSQL 18.6
+    only;
+  - the diagnostic's raw logs are not kept in any repository; this work
+    re-derives the mechanism independently;
+  - the residual items carried from PR #20 are unchanged.
+
+9. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The reproduction, the correction, the 22 integration and 35 unit tests, the
+thirty acceptance runs and this record were produced by Claude, an AI coding
+assistant, in an ephemeral cloud container. The work was independently
+reviewed. The shell incident in section 7 was the assistant's own operator
+error and is recorded as such. No pull request was merged and no production
+system was contacted.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words.
+
+  1. The fix makes two database round trips where there was one. What was
+     bought, and what was paid?
+  2. Why does the corrected delete repeat a condition that the locks already
+     guarantee?
+  3. Why is failing the whole batch better than deleting fewer rows than
+     expected?
+  4. Thirty clean runs were explicitly called weak evidence. Why was the test
+     that fails on demand the stronger proof?
+
+10. SOURCE LOCATORS
+
+[S1] Branch claude/retention-batch-bound-exact at
+     8c6d8aeb2d6a6e4907ff0ea2546f7ba5ff218894, fix commit
+     ec9830572f03ed09996cb594a02b4082eebe525d, stacked on
+     3749a9301ad9d4ac0ab729936bc3c72604e6ada8; GitHub pull request
+     stanciuks/site-security#21, draft, open, unmerged.
+[S2] docs/evidence/RETENTION_BATCH_BOUND_FIX_2026-10-05.md at that commit.
+[S3] src/server/persistence/purge/database.ts at that commit — the two-statement
+     transaction, the candidate deletion helper and the invariant error; and the
+     same file at 3749a93, the planner-dependent statement it replaces.
+[S4] tests/integration/persistence-retention.test.ts — the 22-test block
+     including the two permanent reproductions, and the two unchanged tests that
+     caught the defect; tests/unit/server/retention-sql.test.ts — the 35
+     statement-shape and invariant tests.
+
+No credential, token, capability value, password, email address, database URL,
+host identifier, provider key or raw log appears in this note.
+
+END OF EVIDENCE
