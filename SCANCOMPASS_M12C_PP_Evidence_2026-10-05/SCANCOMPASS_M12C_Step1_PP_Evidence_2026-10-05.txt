@@ -1,0 +1,428 @@
+SCANCOMPASS — M12C STEP 1 PERSONAL PROJECT EVIDENCE
+Domain ownership / authorisation foundation (DNS TXT, migration 0003)
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M12C SOURCE IMPLEMENTED AND INDEPENDENTLY CORRECTED. DRAFT PR #17. NOT MERGED.
+NOT DEPLOYED. Migration 0003 has never been applied anywhere but disposable
+databases. The feature gate DOMAIN_VERIFICATION_ENABLED defaults CLOSED.
+Production, the VPS, SSH and production secrets were not contacted. [S1,S2,S6]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 11.
+
+1. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Branch: claude/inspiring-brahmagupta-89ozc0
+Branch point: 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca (main)
+Head: 52310d31e23a97c9222b80fe8c47cae3629b4015
+Pull request: #17, DRAFT, OPEN, base main
+Opened: 2026-10-04 23:02:47 UTC
+Diff: 50 files changed, 8276 insertions, 60 deletions
+
+The branch name is the one the cloud harness designated for the session; the
+task specification had suggested `m12c-domain-ownership`, but the harness
+forbids pushing to any other branch. Recorded because the name does not
+describe the work. [S1,S2]
+
+Environment: Node v24.21.0 (the container default v22.22.0 is below the
+repository's `>=24.7`), pnpm 11.21.0, Docker server 29.6.2, PostgreSQL image
+`postgres:18.6` giving server PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2).
+
+2. PURPOSE
+
+Let an account prove it controls a domain, and record that proof as an
+authorisation other milestones can query, without giving the account-bearing
+web process any new ability to connect to a host a caller names. [S4]
+
+3. THE TWO CENTRAL DESIGN DECISIONS
+
+3.1 DNS TXT ONLY. HTTPS well-known-file verification was DEFERRED, not
+forgotten, and the reasoning is recorded rather than assumed:
+
+  - fetching https://<claimed host>/.well-known/... means connecting to a
+    caller-named, possibly hostile host and parsing its TLS and HTTP bytes.
+    M12A's whole result was that the process holding the database credentials,
+    session state and account data does NOT do that. Doing it in the web tier
+    would recreate exactly the condition M12A was built to end;
+  - doing it in the scanner worker instead would need a second worker
+    endpoint, command and result schema, a protocol-version change, a
+    fixed-path redirect policy, result bounding and re-acceptance of the
+    deployed isolation — a larger change than this milestone warrants, for a
+    WEAKER proof (control of one web server) than DNS gives (control of the
+    zone);
+  - same-site redirects are ambiguous: a redirect from example.com to
+    uploads.example.com would let anyone who can host a file anywhere on the
+    site claim the apex. Getting that policy right is product work.
+
+The TXT query runs in the web tier through ONE new module, which is the only
+file outside the scanner's network layer permitted to import Node's DNS
+promises API. It may call only `resolveTxt`: no address resolution, no socket,
+no `fetch`, no resolver override. The query name is composed inside the module
+from a compiled-in label and a canonical domain. There is no SSRF primitive,
+because no caller-chosen address, port, path or protocol is ever used — the
+application asks its own container-configured recursive resolver, which
+re-serialises the answer. The residual risk (the DNS client parsing a
+resolver-produced message whose TXT payload the claimant chose) is stated as a
+known limitation rather than hidden. Reusing the scanner's general
+multi-record resolver was rejected: it would hand account code a general DNS
+capability. [S4]
+
+3.2 EXACT-HOST SEMANTICS. An authorisation is for ONE exact canonical
+hostname and nothing else.
+
+  - verifying foo.example.com grants NOTHING on example.com;
+  - verifying example.com grants NOTHING on www.example.com or any delegated
+    host;
+  - a name that IS a public suffix is refused, both ICANN (co.uk) and
+    private-section (github.io); a tenant under a private suffix
+    (alice.github.io) is an ordinary exact host;
+  - IDN U-labels become A-labels, so the punycode form IS the identity;
+  - scheme, port, path, query, fragment, credentials, percent-encoding and
+    whitespace are REFUSED, not stripped. Stripping would silently fold many
+    spellings into one identity; refusing keeps "what you typed is what you
+    claim";
+  - IP literals, localhost, single-label and special-use names are refused;
+  - hosts longer than 233 octets are refused, because the TXT owner name must
+    itself fit in 253.
+
+The canonical value is a branded type produced in exactly one module, and the
+authorisation check re-canonicalises its argument and refuses anything not
+already exactly canonical, so an alias can never become a separate security
+identity. Whether a registrable-domain proof should ever cover subdomains is
+an explicitly deferred policy question; the narrow answer is the safe default.
+[S3,S4]
+
+4. CHALLENGE AND AUTHORISATION MODEL
+
+  Challenge material     32 bytes CSPRNG, unpadded base64url
+  Storage                SHA-256 digest only; the plaintext exists once, in
+                         the HTTP response that issues it
+  TXT record             a fixed verification label under the canonical host;
+                         only an exact full-string match counts — no prefix,
+                         substring, whitespace or case tolerance
+  Account binding        one row per (account, domain); a token account A
+                         published can never satisfy account B's row
+  One live challenge     re-issuing replaces the row atomically, so the
+                         previous token stops working immediately
+  Challenge expiry       7 days; an expired row is refused and deleted
+  Attempts               at most 20 DNS checks per challenge, counted by an
+                         atomic conditional UPDATE BEFORE the lookup; plus a
+                         separate per-client traffic bound so domain traffic
+                         cannot exhaust the login budget
+  Replay                 a successful check DELETES the challenge in the same
+                         transaction that writes the authorisation
+  Attestation            the check must carry an explicit attestation; control
+                         (the DNS proof) and authorisation (the attestation)
+                         stay separate
+  Authorisation validity 90 days from verification, not extended by use
+  Revocation             deletes both rows; idempotent
+  Account state          every decision re-reads that the account is active and
+                         its address verified, so a stale row never authorises
+  Per-account bound      at most 20 distinct domains
+  Feature gate           DOMAIN_VERIFICATION_ENABLED, strict "1" only, default
+                         CLOSED; not a launch control
+
+5. MIGRATION 0003
+
+Two tables, `domain_challenges` and `domain_authorizations`, both keyed by
+(account_id, domain), both cascading from accounts. Deliberately absent: a
+surrogate id (nothing references these rows), a revoked_at column (revocation
+deletes, following the sessions precedent), client IP or user agent (new
+personal data with no consumer), and any payment or entitlement field.
+
+Schema contract moved m12b-0002 to m12c-0003. Required table privileges rose
+from 37 to 45. The committed grant template gained exactly two statements —
+SELECT, INSERT, UPDATE, DELETE on each new table. No GRANT ALL, no ON ALL
+TABLES, no sequence, nothing on the migration ledger, no CREATE, no default
+privileges. Build output went from 14 to 18 /api/ routes plus one new page.
+
+FINAL migration file: db/migrations/0003_m12c_domain_authorizations.sql
+FINAL SHA-256:
+  37c562ad7d7982afefb501a11667ae207b0684f11903f12935db2552349a3a54
+
+This is the checksum AFTER the correction pass of section 7. The first
+generated version hashed b94ac834...7bf15 and was regenerated; 0003 had never
+been applied anywhere but disposable databases, and 0000-0002 are
+byte-identical with their hash pins unchanged and passing. [S3,S5]
+
+6. FAILURES DURING IMPLEMENTATION, AND THE CORRECTIONS
+
+Recorded in the order they happened, not reconstructed afterwards.
+
+6.1 A silently broken regular expression, caught by reading the generated SQL.
+The canonical-domain CHECK came out as '^[a-z0-9-]+(.[a-z0-9-]+)+$'. The
+source had written \. inside a JavaScript tagged template literal, whose
+COOKED string turns \. into ., so the backslash never reached the SQL and the
+constraint would have accepted ANY character as a label separator. Diagnosed
+as template-literal escape processing, not a tooling bug. The source now
+writes \\., the generated files were deleted and regenerated, and a regression
+guard asserts the escaped form appears exactly twice.
+
+6.2 First full test run after implementation: 33 failed. One was a known
+baseline failure; the other 32 were pinned invariants tripped by the new
+surface. Each was READ rather than bulk-updated, and two of them were treated
+as design signals and answered by changing the CODE, not the test:
+  - a test asserting that session-cookie clearing has exactly one owner caught
+    a new domain transport helper that had become a second clearing site. It
+    was removed; a 401 from a domain route now leaves the cookie for the
+    session routes to clear;
+  - a test asserting that only the session route reveals a token caught the
+    challenge route calling the reveal function itself. The single disclosure
+    moved into a transport response constructor, matching how the account
+    layer keeps secret disclosure out of route files.
+One real documentation gap was found: the new feature flag was undocumented in
+the environment example. It was documented, default 0.
+
+6.3 Two new unit-test expectations were themselves wrong and were corrected
+rather than the code: an IPv6 literal was expected to be refused as an invalid
+hostname when the implementation refuses it earlier as not a bare hostname;
+and a secret-leak check matched the error CODE "TOKEN_MISMATCH", so it was
+tightened to look for secret-bearing keys and token-shaped values rather than
+loosened away.
+
+6.4 First run of the new PostgreSQL suite: 2 failed of 37.
+  - a constraint inventory returned 25 rows instead of 12, because
+    PostgreSQL 18 catalogues NOT NULL as a constraint. A test-precision issue;
+    the query was narrowed.
+  - a GRANT ... TO PUBLIC issued by the application role did NOT fail as
+    expected. PostgreSQL instead succeeds with a "no privileges were granted"
+    warning when a role without grant option issues a GRANT. The ASSUMPTION
+    was wrong; the security property is the outcome, so the test now issues
+    the grant and then proves nothing was actually granted.
+
+6.5 Acceptance runner, run 1: FAIL. The restore drill asserted "the migration
+ledger came back intact, with no 0003" — a genuine M12B pin that M12C makes
+false. It was rewritten to an exact four-version ledger equality and renamed;
+because the runner pins that test's full name as a critical identity, the
+runner's list was updated in the same change. Run 2: PASS, exit 0.
+
+6.6 A self-review finding after the runner: the idempotent "already verified"
+paths re-read the authorisation without re-checking account state. Not
+exploitable through the routes, because session resolution already refuses
+non-active accounts — but a service should not rely on its caller. Both paths
+now require an active, verified account.
+
+7. INDEPENDENT REVIEW CORRECTION PASS
+
+An independent review accepted the architecture and returned THREE BLOCKERS
+and one concurrency audit item. Before any correction, a temporary
+reproduction suite asserting the correct behaviour was run against
+PostgreSQL 18.6 with the pre-correction code: ALL 5 TESTS FAILED, as expected.
+That is the before-evidence. [S5]
+
+7.1 BLOCKER — stale challenge / authorisation time.
+
+Observed before correction: a challenge issued to expire 300 ms in the future,
+with the DNS double returning only after it had really expired, produced
+outcome VERIFIED and one authorisation row. AN EXPIRED CHALLENGE CREATED AN
+AUTHORISATION.
+
+Cause: the verify route captured the time ONCE and passed that value through
+the DNS lookup (up to a 6-second resolver deadline) and into the consuming
+transaction, which may also wait for a row lock. The reservation checked
+expiry before the lookup; the consuming transaction did not re-check it at
+all, and dated the authorisation and its 90-day validity from the stale
+pre-DNS instant. The earlier evidence had claimed a re-check; it did not
+re-check expiry. This is the same class of defect as an earlier password-reset
+review finding, and the correction follows the pattern accepted there.
+
+Correction — FRESH CLOCK AFTER THE LOCK: time became a clock FUNCTION in a
+dependency seam, defaulting to the real clock. No route constructs a time
+value any more, and a boundary test pins that. Consumption now locks the
+account row, locks the challenge row FOR UPDATE, THEN reads the clock, then
+requires the challenge to still exist, still carry the matched digest and
+still satisfy its expiry strictly. The verification timestamp is that
+post-lock time and the 90-day expiry is computed inside the transaction.
+Issuance and attempt reservation read the clock after their locks too.
+PostgreSQL's own now() was deliberately NOT used: it is the transaction-start
+time and is just as stale after a lock wait. The public authorisation check no
+longer has a time parameter at all, so a later milestone's caller CANNOT pass
+a stale instant — a date in that position is now a compile-time error.
+
+Eight requirements were added as tests, including two that use a real FOR
+UPDATE blocker observed through the database's own blocking-process view, with
+the clock flipped only after the block is seen; the exact expiry instant
+refused; one millisecond before expiry accepted; and the stored validity
+window proven to be exactly 90 days.
+
+7.2 BLOCKER — the PUBLIC / least-privilege proof was insufficient.
+
+Observed before correction: granting PUBLIC a COLUMN-level SELECT left the
+committed proof returning zero rows. It WOULD HAVE REPORTED PUBLIC CLEAN. The
+proof used a catalogue view that lists table-level grants only — and the
+earlier production review had already recorded this exact lesson, which the
+new suite repeated in the weaker form.
+
+Correction: the posture is now proven by EFFECTIVE privilege, against
+PostgreSQL 18.6 — all eight table privileges checked for the application role
+on both new tables (exactly the intended four present), schema USAGE true and
+CREATE false, PUBLIC schema USAGE and CREATE false, zero PUBLIC rows in both
+the table-privilege and COLUMN-privilege views, no privilege of any kind on
+the migration ledger, and no default ACL entries. Eleven NEGATIVE CONTROLS
+were each applied on a disposable database, shown to be detected, then revoked
+and shown clean again — including a PUBLIC column grant, a PUBLIC schema
+grant, an altered default-privileges setting, and a privilege INHERITED
+THROUGH ROLE MEMBERSHIP, which is invisible to a direct-grant listing and
+visible to the effective check.
+
+7.3 BLOCKER — the "canonical" CHECK was overstated.
+
+Observed before correction: the constraints were named "..._domain_canonical_
+check" and documented as making a non-canonical alias unstorable, but the
+regex accepted "-foo.example.com", "foo-.example.com" and a 64-character
+label. All three were accepted by a constraint whose name claimed otherwise.
+No SQL check can honestly know the public suffix list.
+
+Correction — a corrected STORAGE-SHAPE model, with the division of
+responsibility made explicit rather than implied:
+  - a new regex enforcing letter-digit-hyphen labels of 1 to 63 characters
+    with no leading or trailing hyphen and at least two labels, plus a
+    233-octet length bound;
+  - the constraints RENAMED to "..._domain_shape_check" and documented as
+    STORAGE SHAPE ONLY. Semantic validation — public suffix list including the
+    private section, special-use names, IDNA — stays in the application
+    parser. No SQL copy of the suffix list was attempted;
+  - sixteen structural rejections and the edge acceptances were tested, plus a
+    test proving that co.uk, github.io, foo.internal, printer.local, site.test
+    and an unknown TLD are STORABLE SHAPES THAT THE PARSER REFUSES — which is
+    the division of responsibility stated as a test rather than a comment;
+  - migration 0003 was regenerated, giving the final checksum in section 5;
+  - the earlier text in the project's own evidence that called the CHECK
+    "canonical" is explicitly marked as superseded rather than quietly edited.
+
+7.4 AUDIT ITEM — revoke / write lock order. Per the review instruction, code
+was NOT changed to satisfy prose; the behaviour was analysed and then proven.
+The store's comment claimed every writing transaction takes the account row
+first; attempt reservation and revocation do not. The lock orders were written
+out — issue: account then challenge; consume: account, challenge FOR UPDATE,
+authorisation; reserve: challenge only; revoke: challenge then authorisation;
+tombstone: account, challenge, authorisation — and every pair takes shared
+rows in the same relative order, so no wait cycle exists. The COMMENT was
+rewritten to state that table exactly.
+
+Seven schedules were then tested DETERMINISTICALLY, with no sleeps used for
+ordering: lock waits were observed through the database's own activity and
+blocking-process views, with a gate for "holding its locks". They cover a
+consume holding its locks while a revoke blocks; a consume waiting on the
+account row while a revoke commits; an issue waiting while a revoke commits; a
+tombstone holding the challenge row while a revoke blocks; two revokes blocked
+on each other; and a reservation and a consume each waiting behind a
+tombstone. The intended semantics were stated and proven: once a revoke
+commits, no proof that began before it can create an authorisation, while a
+later independently committing "Add" may create a new PENDING CHALLENGE — not
+authority.
+
+7.5 Failures during the correction pass itself, recorded rather than omitted:
+two integration tests failed on the author's own arithmetic (a "233-octet"
+fixture was actually 232 octets) and the FIXTURES were fixed, not the check;
+two unit tests failed because a store mock still returned the old shapes; and
+two schema tests failed on the deliberate migration change and were updated
+with the new hash and a STRICTER assertion.
+
+8. RESULTS AFTER THE CORRECTION PASS (PostgreSQL 18.6)
+
+  git diff --check     clean
+  pnpm typecheck       pass
+  pnpm lint            pass, 0 warnings
+  pnpm test:run        190 files / 7,415 tests — 7,011 passed, 2 failed,
+                       402 skipped. The 2 failures are pre-existing baseline
+                       and environment failures, re-reproduced on a clean
+                       worktree of untouched main in the same pass
+  pnpm build           pass, 18 /api/ routes
+  M12C unit tests      171 (domain primitives 91, service 23, routes 55,
+                       panel 2)
+  M12C boundary block  12 assertions, within a boundary file of 1,383
+  M12C PostgreSQL      77 PASSED, up from 37 before the correction pass
+  All guarded suites   383 passed, 32 skipped (direct invocation)
+  Acceptance runner    PASS, exit 0 — hermetic 1,839 across 13 files, account
+                       acceptance 34, restart child 3, restore drill 30,
+                       all-guarded 412 across 14 files, owned resources
+                       verified absent
+
+The suite covers, among other things: upgrading a live 0002 database so that
+0003 alone applies; the exact ledger order with historical checksums AND their
+recorded timestamps unchanged; a re-run applying nothing; migration-role
+ownership; the full workflow; replay idempotence; a stale proof while the
+challenge is re-issued or revoked mid-lookup; the exact 90-day edge; attempt
+exhaustion; parent/subdomain non-implication; concurrent issuance resolving to
+one live token; six concurrent verifications held at a gate resolving to ONE
+authorisation; a disabled account; account A/B isolation through the service
+AND through the real route handlers; the operator tombstone procedure extended
+and a tombstone that omits the new statements proven to authorise nothing; a
+simulated restore that resurrects a revoked authorisation and the invalidation
+that removes it; and a dead connection pool yielding the explicit UNAVAILABLE
+outcome rather than a false negative.
+
+9. KNOWN LIMITATIONS, STATED RATHER THAN HIDDEN
+
+  1. HTTPS well-known-file verification is not implemented (section 3.1).
+  2. DNS answers are parsed in the web process. No claimant-chosen address is
+     contacted, but the TXT payload is claimant-chosen bytes; moving the query
+     into the scanner worker remains an open option.
+  3. Resolver caching means a just-published record can take the zone's
+     negative-cache period to become visible. There is no application cache.
+  4. No sweeper: expired challenges are deleted when touched, expired
+     authorisations remain as inert rows until revoked or renewed.
+  5. The rate limiter and lookup permits are per process.
+  6. The restore proof for the new tables is a simulated row re-insert, not a
+     dump-and-restore drill.
+  7. Attestation is minimal and its wording has not been legally reviewed.
+  8. There is no live DNS re-confirmation before use; the authorisation check
+     is a database read.
+  9. Exact-host semantics only; the subdomain question is undecided.
+ 10. Production has not been touched; 0003 is unapplied; the gate is closed.
+
+10. AI AND TOOLING TRANSPARENCY
+
+All implementation, test and documentation work recorded here was performed by
+Claude, an AI coding assistant, running in an ephemeral cloud container under
+an autonomous task specification written by the project owner. Decisions marked
+"autonomous" in the repository evidence are choices the assistant made under
+that specification's conservative-decision rule: prefer narrower authority, a
+smaller attack surface, a smaller schema and API surface, and reuse of already
+reviewed primitives. The independent review that produced the three blockers in
+section 7 was supplied by the owner. Nothing here is the student's reflection
+and nothing is written in the student's voice.
+
+11. STUDENT REFLECTION PROMPTS — NOT WRITTEN REFLECTION
+
+Carried forward UNANSWERED, to be written later in the student's own words.
+
+  1. Why was DNS chosen over asking the claimed website for a file, and what
+     does that choice say about which process is allowed to talk to strangers?
+  2. Why does proving control of example.com deliberately grant nothing over
+     www.example.com?
+  3. The stale-time blocker and the earlier password-reset finding are the same
+     mistake in two places. What makes that mistake easy to make?
+  4. Why was a test that reported "PUBLIC is clean" worse than having no test
+     at all?
+  5. Why was the database constraint renamed instead of being made stronger?
+
+12. SOURCE LOCATORS
+
+[S1] Branch claude/inspiring-brahmagupta-89ozc0 at
+     52310d31e23a97c9222b80fe8c47cae3629b4015, branched from
+     66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca.
+[S2] GitHub pull request stanciuks/site-security#17, draft, open, unmerged.
+[S3] db/migrations/0003_m12c_domain_authorizations.sql and its journal and
+     snapshot, plus deploy/postgres/02-application-grants.sql.example, at that
+     commit.
+[S4] src/server/domain/** at that commit — the canonical-domain parser, the
+     bounded TXT module, the service, the authorisation check and the gate;
+     plus the domain route handlers under src/app/api/account/domains/.
+[S5] docs/evidence/M12C_DOMAIN_OWNERSHIP_FOUNDATION_2026-10-05.md at that
+     commit, in particular its section 10, the independent review correction
+     pass.
+[S6] tests/integration/persistence-domain-authorization.test.ts and the M12C
+     block of tests/boundaries.test.ts at that commit.
+
+No credential, challenge token, capability value, password, email address,
+database URL, host identifier or provider key appears in this evidence note.
+No real domain was verified and no third-party DNS name was contacted by any
+test; every DNS answer in the test suites came from a deterministic double.
+
+END OF EVIDENCE

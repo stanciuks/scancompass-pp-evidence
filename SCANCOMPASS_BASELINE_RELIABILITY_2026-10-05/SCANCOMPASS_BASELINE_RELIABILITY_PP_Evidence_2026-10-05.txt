@@ -1,0 +1,286 @@
+SCANCOMPASS — BASELINE RELIABILITY PERSONAL PROJECT EVIDENCE
+Acceptance startup race, wall-clock test fixtures, a network dependency and a
+test timeout
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+DRAFT PR #19. NOT MERGED. NOT DEPLOYED. NO PRODUCTION CODE WAS INTENDED OR
+CHANGED: the only files touched are the acceptance runner, which is tooling,
+and tests. No product behaviour, migration, schema, grant or security policy
+changed. Production, the VPS and Stripe were not contacted. [S1,S2]
+
+IMPORTANT: the login lockout concurrency race that acceptance run 7 exposed is
+NOT FIXED BY PR #19. It is recorded separately in
+SCANCOMPASS_LOGIN_LOCKOUT_RACE_FINDING_2026-10-05.txt and awaits its own
+reviewed change.
+
+This is a factual technical record, not a student reflection. Reflection
+prompts are carried unanswered in section 8.
+
+1. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Branch: claude/nifty-hopper-9ohwmt
+Base: main at 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca
+Head: be73d471e453ae594bb0642a2f985d3b4bc67b6c
+Pull request: #19, DRAFT, OPEN, base main
+Opened: 2026-10-05 14:39:08 UTC
+Diff: 9 files changed, 1117 insertions, 44 deletions
+
+Environment: Linux on an ephemeral cloud container with 4 CPUs, Node v24.21.0,
+pnpm 11.21.0, Docker server 29.6.2, PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)
+from a digest-pinned image, with the matching dump and restore tools. Both
+database URL variables were unset for every run.
+
+2. WHY THIS EXISTS
+
+Four defects in the repository's TESTS AND ACCEPTANCE TOOLING — not in the
+product — had been independently reproduced during the payment-after-domain
+rehearsal. Each was reproduced AGAIN here on untouched main before anything was
+changed, because a fix for a defect you have not reproduced is a guess.
+
+On untouched main the full suite showed 4 failed of 7,102, and the acceptance
+runner refused to start at all.
+
+3. DEFECT 1 — THE ACCEPTANCE RUNNER REFUSED A GENUINE POSTGRESQL 18.6
+
+The runner reported that the disposable server was not PostgreSQL 18.6. The
+image IS PostgreSQL 18.6, so the verdict was FALSE — and the runner did not log
+the version query's output, so the cause had to be established separately.
+
+3.1 THE REPRODUCTION: 18 OF 20
+
+The runner's readiness sequence was replayed command for command against 20
+fresh containers:
+
+  the version query succeeded                              2
+  "database ... does not exist"                            9
+  "the database system is shutting down"                   5
+  "connection to server on socket ... failed"              4
+
+18 OF 20 WOULD HAVE REFUSED. On this host the runner was effectively unusable.
+The rate is specific to the host — the readiness step had not tripped during
+the original executions on a different machine — and the record says so: the
+number is evidence that the race is REAL, not a measure of how often it occurs
+elsewhere.
+
+3.2 THE ROOT CAUSE
+
+The image's entrypoint initialises a new cluster by starting a TEMPORARY server
+bound to a Unix socket only, creating the database, stopping it, and only then
+starting the real server on TCP. A traced container log shows all of it: the
+temporary server accepting connections, a probe failing because the database
+did not exist yet, the fast-shutdown request, a probe refused during shutdown,
+and finally the real server listening on TCP.
+
+The readiness tool reports "accepting connections" from the TEMPORARY server —
+and does not check that the named database exists — so the gate opened on a
+server that was about to disappear. The single version query that followed
+landed in one of three windows and failed to connect, and the runner treated
+ANY failure of that query as a VERSION FACT.
+
+TWO DEFECTS COMPOUNDED: readiness was proven against the wrong server, and a
+connection failure was reported as a version.
+
+3.3 THE CORRECTION: A READINESS PROOF, NOT A READINESS GUESS
+
+  - FINAL SERVER ONLY. Each probe connects over TCP to the loopback address,
+    and the ANSWER ITSELF must report that it came from that address. The
+    temporary server listens on no TCP address, so it cannot answer at all;
+  - STABLE. Three consecutive successful probes 250 ms apart FROM THE SAME
+    POSTMASTER, identified by its start time. A failure, or a different start
+    time, resets the count;
+  - EXACT VERSION FROM TWO SOURCES, which must both parse and agree, and must
+    be exactly 18.6. This is STRICTER than before: the old substring test would
+    have accepted "PostgreSQL 18.60";
+  - FAIL-CLOSED. A well-formed wrong version refuses IMMEDIATELY and is never
+    waited out. An unparseable or self-contradictory answer gets its own new
+    refusal code, also immediate. A connection failure is only "not yet" — and
+    still "not yet" at the deadline becomes a third, distinct refusal carrying
+    the last failure text, so the runner can no longer report a connection
+    problem as a version problem;
+  - BOUNDED. A 60-second deadline on an INJECTED clock, plus a probe cap so a
+    clock that does not advance still terminates, plus a per-probe timeout so
+    one hung command cannot hold the loop. The only sleep is the 250 ms
+    interval; there is no fixed "wait for init" sleep;
+  - supervision, cancellation and cleanup are unchanged, and the check's
+    displayed name is unchanged.
+
+4. DEFECT 2 — TWO TESTS READ THE REAL CLOCK AGAINST A PINNED FIXTURE
+
+Two signup tests built a challenge expiring 60 seconds after a PINNED instant
+but passed only the hasher, not the clock, into a service that already takes a
+clock seam. They therefore compared a fixed fixture against the real clock, and
+FAILED FROM ONE MINUTE PAST THAT INSTANT ONWARDS — every other completion test
+in the file already passed the clock.
+
+Confirmed by running main's unmodified file with the process clock shifted one
+year BACK: 17 of 17 pass; unshifted, 2 fail. The dependence is on wall time and
+nothing else.
+
+The fix is two lines — pass the clock — but the REGRESSION WORK is the
+substance: 30 new boundary tests covering one millisecond before expiry,
+exactly at expiry and one millisecond after, for the hashed, rejected-password
+and busy-hasher paths, each asserting what ran, what did not, and what was
+deleted. EACH CASE RUNS AT THREE ANCHORS: the fixture's own date, the year
+2000 and the year 2100. A test that fell back to the real clock CANNOT pass at
+both the 2000 and the 2100 anchor, so the suite now fails TODAY on such a
+regression instead of on some future date.
+
+MUTATION CHECK: replacing the injected clock with nothing in the boundary tests
+produced 12 failures — exactly the cases whose verdict the real clock
+contradicts. A separate audit, not committed, shifted the clock forward by one
+day, 31 days and 365 days across 18 account and API test files, 482 tests, all
+passing.
+
+5. DEFECT 3 — A NETWORK DEPENDENCY IN THE TEST PATH
+
+A policy-regeneration test shelled out to a TypeScript runner that is NOT a
+dependency of this repository, so the package runner fetched it from the
+registry at test time. Here it printed notices and then failed outright, and in
+a network-restricted environment it CANNOT work at all.
+
+Plain Node could not replace it: the generator's import graph uses
+extensionless relative imports, which Node's type stripping does not resolve.
+That was verified rather than assumed, and REJECTED as a fix because making the
+graph resolvable would mean rewriting imports in PRODUCTION SOURCE — out of
+scope for a test-reliability change.
+
+The test now imports the generator through the test runner's OWN TypeScript
+loader, which is a declared, installed dependency. Importing runs the module
+exactly as its command line does, and the test asserts the output file is
+byte-identical before and after and equal to the module's own rendering. NO
+DEPENDENCY WAS ADDED. Drift detection was verified by appending a line to the
+committed file and watching the test fail.
+
+6. DEFECT 4 — A TEST TIMEOUT WITH A MEASURED CAUSE
+
+Not a hang and not a network problem. Each start of the retention command costs
+a near-constant 0.63 to 0.68 seconds, MEASURED 12 TIMES on an idle host and
+dominated by loading its import graph. The failing test spawned EIGHT of them
+sequentially inside ONE test with a 5-second budget: about 5.1 seconds even
+idle, and under full-suite load a single spawn was measured at up to 1.47
+seconds, so the test needed 8 to 12. Every other test in the file spawns at
+most two.
+
+The eight-case loop became eight separate tests, each with its own 5-second
+budget — roughly seven times headroom idle and three times at the worst
+measured loaded spawn. EVERY CASE AND ASSERTION IS KEPT, AND THE TIMEOUT WAS
+NOT RAISED. Measured afterwards: 620 to 685 milliseconds each.
+
+7. RESULTS
+
+Quality gates: diff check clean, typecheck pass, lint pass, build pass, and
+pnpm test:run showing 185 FILES PASSED, 1 SKIPPED; 6,855 TESTS PASSED, 326
+SKIPPED, 0 FAILED — run twice, the second time concurrently with a build.
+
+A new 38-test readiness suite drives a scripted probe against an injected
+clock: a temporary success then a shutting-down answer then a real 18.6 server
+becomes READY after exactly three consecutive probes; a transient refusal then
+18.6 becomes READY; a stable 17.x is WRONG VERSION on the FIRST probe; a
+temporary 18.6 followed by a stable wrong version is WRONG VERSION; a server
+that never stabilises TIMES OUT; malformed output is refused at once. Also
+covered: a restart under the probe resets the streak, a slow probe cannot
+overrun the deadline, a frozen clock still terminates, cancellation is never
+ready, and twelve malformed answer shapes are each classified. Four more tests
+drive the whole runner lifecycle end to end. One early test draft classified
+"PostgreSQL 18.60" as malformed; it is well-formed and correctly a WRONG
+VERSION, so THE TEST EXPECTATION WAS CORRECTED, NOT THE CLASSIFIER.
+
+7.1 TEN REPEATED ACCEPTANCE RUNS
+
+Ten consecutive runs of the acceptance runner at the committed head, with the
+working tree verified clean before the first and after the last, and no local
+patch. Each run created, used and removed its own container.
+
+  Run   Exit  Seconds  Readiness (probes until 3 stable)  Verdict
+   1     0     105     PASS (7)                           PASS
+   2     0     104     PASS (7)                           PASS
+   3     0     108     PASS (7)                           PASS
+   4     0     109     PASS (6)                           PASS
+   5     0     104     PASS (7)                           PASS
+   6     0     108     PASS (7)                           PASS
+   7     1     112     PASS (7)                           FAIL — see below
+   8     0     111     PASS (8)                           PASS
+   9     0     104     PASS (7)                           PASS
+  10     0     108     PASS (7)                           PASS
+
+READINESS: 10 OF 10. Every run saw three to five failed probes during
+initialisation — the exact window in which the old runner refused 18 of 20
+replays — before three stable answers from the final server. No wrong-version,
+never-ready or unverifiable refusal occurred.
+
+WHOLE-RUN VERDICT: 9 PASS, 1 FAIL. Every run, run 7 included, ended with its
+owned resources removed and verified absent; after run 10 no labelled container
+and no volume remained.
+
+7.2 RUN 7 EXPOSED A NEW, REAL PRODUCT DEFECT
+
+Run 7 failed on ONE assertion, in a test that is not part of this change:
+a concurrent-wrong-password lockout test EXPECTED 6 AND OBSERVED 5.
+
+That is a genuine login lockout concurrency race in PRODUCT code. IT IS NOT A
+READINESS OR RUNNER FAILURE, AND IT IS NOT FIXED BY PR #19. It was NOT re-run
+away and NOT retried into a pass: THE RECORD IS 9 OF 10, stated as such. The
+integration test is correct and should stay exactly as it is. The finding is
+recorded in SCANCOMPASS_LOGIN_LOCKOUT_RACE_FINDING_2026-10-05.txt.
+
+7.3 APPROACHES THAT FAILED OR WERE REJECTED
+
+  - the first acceptance trial, with the readiness fix but before the clock
+    fix, PASSED READINESS on real Docker and still FAILED overall, because the
+    hermetic phase runs the wall-clock signup tests. Both fixes were needed;
+    that trial is not counted in the ten;
+  - using plain Node for the policy generator — rejected, see section 5;
+  - NO APPROACH THAT ONLY LENGTHENED A SLEEP OR A TIMEOUT WAS TRIED.
+
+7.4 FOLLOW-UP ITEMS LEFT OPEN
+
+Three operator-facing script comments still document the same networked tool as
+the regeneration workflow; no test depends on them, and changing a documented
+operator workflow is a separate decision. The readiness proof relies on the
+official image's temporary server being socket-only; that is the image's
+documented behaviour, it is checked per answer, and the stability window is a
+second, image-independent line of defence — but a future image that made the
+temporary server listen on TCP and outlive three probes would need revisiting.
+
+8. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The reproduction, the diagnosis, the corrections, the regression suites, the
+ten repeated acceptance runs and this record were produced by Claude, an AI
+coding assistant, in an ephemeral cloud container. The decision NOT to fix the
+login lockout race in this change was an explicit instruction from the owner,
+and it was followed.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words.
+
+  1. The runner reported a wrong version when the real problem was that it
+     could not connect. Why is a tool that reports the wrong cause worse than
+     one that simply fails?
+  2. Two tests would have started failing on a particular date whatever anyone
+     did. What makes a test that depends on the real clock so hard to notice?
+  3. Why run the acceptance ten times instead of once?
+  4. Run 7 found a real defect that this change deliberately did not fix. Why
+     is reporting 9 of 10 better than re-running until it passed?
+
+9. SOURCE LOCATORS
+
+[S1] Branch claude/nifty-hopper-9ohwmt at
+     be73d471e453ae594bb0642a2f985d3b4bc67b6c; GitHub pull request
+     stanciuks/site-security#19, draft, open, unmerged.
+[S2] docs/evidence/BASELINE_RELIABILITY_FIXES_2026-10-05.md at that commit.
+[S3] scripts/acceptance/m12b6-acceptance.mjs — the readiness proof of
+     section 3.3 — and tests/unit/deploy/m12b6-readiness.test.ts.
+[S4] tests/unit/server/account-signup-service.test.ts,
+     tests/unit/deploy/scanner-egress-policy.test.ts and
+     tests/unit/server/retention-cli.test.ts — sections 4, 5 and 6.
+[S5] Branch main at 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca, where every
+     defect above was reproduced before anything was changed.
+
+No credential, token, capability value, password, email address, database URL,
+host identifier or provider key appears in this note. The random password used
+by the disposable database was never written to any repository.
+
+END OF EVIDENCE

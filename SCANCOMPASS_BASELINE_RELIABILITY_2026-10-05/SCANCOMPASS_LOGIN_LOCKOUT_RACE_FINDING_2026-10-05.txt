@@ -1,0 +1,132 @@
+SCANCOMPASS — LOGIN LOCKOUT CONCURRENCY RACE
+Technical finding only. Security-relevant. NO FIX EXISTS YET.
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+DISCOVERED. SECURITY-RELEVANT. NOT FIXED.
+A source fix is PENDING SEPARATE REVIEW and is deliberately not part of PR #19,
+by the owner's instruction. Nothing in this note describes a fix, because no
+fix has been written. Production was not contacted and nothing was deployed.
+[S1,S2]
+
+This is a factual technical finding, not a student reflection. Reflection
+prompts are carried unanswered in section 6.
+
+1. HOW IT WAS FOUND
+
+Not by looking for it. It surfaced as run 7 of ten repeated acceptance runs
+carried out to prove an unrelated reliability fix, where one assertion in an
+existing concurrency test failed:
+
+  a concurrent-wrong-password lockout test EXPECTED 6 AND OBSERVED 5
+
+The test was NOT re-run away, NOT retried into a pass, and NOT modified. The
+acceptance record stands at 9 of 10, with run 7 reported as a failure. See
+SCANCOMPASS_BASELINE_RELIABILITY_PP_Evidence_2026-10-05.txt section 7.2.
+
+2. THE DEFECT
+
+The login route captures the current time BEFORE the password-verification
+step, and the authentication service records a failed attempt using THAT
+captured value. Password verification is intentionally slow — it is a
+memory-hard hashing step chosen to be expensive — so the gap between capturing
+the time and committing the failure is large and VARIABLE.
+
+The failure count itself is written under a row lock, and the lock does its job:
+the writes are correctly serialised. The defect is not a lost update. THE
+DEFECT IS THE STALE TIMESTAMP THAT TRAVELS THROUGH THE SLOW STEP.
+
+The lockout policy decides whether a new failure belongs to the currently open
+observation window by computing the elapsed time since the window opened, and
+it requires that elapsed value to be NON-NEGATIVE. When two wrong-password
+attempts run concurrently and finish OUT OF TIMESTAMP ORDER — the one stamped
+EARLIER committing AFTER the one stamped later has already opened the window —
+the elapsed value is NEGATIVE. A negative elapsed time is treated as "outside
+the observation window", so the policy opens a new window and RESETS THE
+DURABLE FAILURE COUNTER TO 1.
+
+The observable result is the one above: a counter that should have reached 6
+reached 5. An attacker making concurrent attempts can therefore cause the
+lockout counter to be reset, which is a security-relevant weakening of the
+protection that lockout exists to provide.
+
+Confirmed by a direct audit check, not committed: a counter standing at 2, then
+a failure stamped 40 milliseconds earlier, gives 1.
+
+3. WHY IT MATTERS THAT THIS PATTERN IS FAMILIAR
+
+THIS IS THE SAME STALE-TIME PATTERN ALREADY CORRECTED TWICE ELSEWHERE in this
+project, in both cases after review:
+
+  - in the account recovery and signup flows, where the rule adopted was to
+    judge expiry from a time read UNDER THE LOCK rather than from a time
+    captured before the slow work;
+  - in M12C domain verification, where an independent review found that a time
+    captured before a DNS lookup could let an EXPIRED CHALLENGE CREATE AN
+    AUTHORISATION, and the correction made the time a clock function read after
+    the row locks, and REMOVED the time parameter from the public check so that
+    no caller can supply a stale instant.
+
+The rule exists and has been applied twice. It had NOT been applied to the
+login lockout path. That is the finding.
+
+4. WHY IT IS NOT FIXED HERE
+
+A change to this path changes PRODUCT AND SECURITY BEHAVIOUR — when an account
+locks, and for how long — so it belongs in its own reviewed change with its own
+concurrency evidence, not bundled into a test-reliability pull request. The
+owner instructed that PR #19 fix the reliability defects ONLY, and that
+instruction was followed.
+
+THE EXISTING INTEGRATION TEST IS CORRECT AND SHOULD STAY EXACTLY AS IT IS. It
+is currently the only thing that catches this.
+
+NO FIX IS DESCRIBED IN THIS NOTE. Any statement about how the defect will
+eventually be corrected would be invention, and the record does not contain
+one.
+
+5. CURRENT EXPOSURE
+
+Public signup and account email are CLOSED in production and NO ACCOUNT EXISTS,
+so there is presently no account whose lockout counter could be attacked. The
+defect is in deployed source and would become live exposure as soon as accounts
+exist. That is the reason it is recorded now rather than when it bites.
+
+6. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The acceptance run that exposed this, the diagnosis and this note were produced
+by Claude, an AI coding assistant. The instruction not to fix it in the same
+change came from the owner. No fix has been written by anyone.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words.
+
+  1. The row lock worked perfectly and the data was still wrong. What was the
+     lock actually protecting, and what was it not?
+  2. This is the third time the same stale-time mistake has appeared in this
+     project. What would have to change for it not to appear a fourth time?
+  3. The defect appeared in 1 run out of 10. What would have happened if the
+     acceptance had been run once?
+  4. Why record a security defect before writing the fix, instead of fixing it
+     quietly first?
+
+7. SOURCE LOCATORS
+
+[S1] docs/evidence/BASELINE_RELIABILITY_FIXES_2026-10-05.md, section 9
+     ("Unresolved and follow-up"), on branch claude/nifty-hopper-9ohwmt at
+     be73d471e453ae594bb0642a2f985d3b4bc67b6c.
+[S2] The session route, the password-authentication service and the lockout
+     policy module under src/ at that commit — the three files between which
+     the stale timestamp travels.
+[S3] tests/integration/persistence-account-session.test.ts — the concurrent
+     wrong-password lockout test that caught it. Unmodified.
+[S4] docs/evidence/M12C_DOMAIN_OWNERSHIP_FOUNDATION_2026-10-05.md section 10.2
+     — the same pattern, found by independent review and corrected, described
+     in SCANCOMPASS_M12C_Step1_PP_Evidence_2026-10-05.txt section 7.1.
+
+No credential, token, capability value, password, email address, database URL,
+host identifier or provider key appears in this note. No exploit procedure is
+given: the mechanism is described at the level needed to review and fix it.
+
+END OF EVIDENCE

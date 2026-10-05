@@ -1,0 +1,295 @@
+SCANCOMPASS — M13 AFTER M12C INTEGRATION REHEARSAL
+Reconciling the payment foundation with domain authorisation
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+REHEARSAL ONLY. NOT MERGED. PR #15 ITSELF WAS NOT TOUCHED and remains a draft
+at its own head; nor were PRs #16, #17 or #18, nor main. STRIPE WAS NOT
+CONTACTED — not the live service, not the sandbox, not any third-party network
+service. No Stripe key of any kind was used; every provider interaction in the
+tests is a deterministic double. Production and the VPS were not contacted.
+[S1,S5]
+
+This records what was found when the payment foundation was applied on top of
+main plus the operator invite plus M12C, on a disposable branch. It is a
+factual technical record, not a student reflection. Reflection prompts are
+carried unanswered in section 9.
+
+1. INPUTS
+
+  Disposable branch   integration/m13-after-m12c-rehearsal
+  Base                the rehearsed merge of main + PR #16 + PR #17
+  Payment source      PR #15 head 423e3fae1162ca60b77ffc93fc84f251d2078843
+  Not an ancestor     PR #18 (the visual redesign) — deliberately excluded
+
+The base was verified rather than assumed: the three input commits were each
+checked to be ancestors, and the redesign and payment heads checked NOT to be.
+
+Environment: Node v24.21.0 (the container default was below the repository's
+minimum), pnpm 11.21.0, Docker server 29.6.2 started by hand inside the
+container, PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2) on a loopback-only port
+with a random password kept outside the repository. The Docker daemon died once
+mid-task and was restarted; the working tree survived.
+
+2. THE CENTRAL FINDING: A PAYMENT ASSUMPTION HAD GONE OBSOLETE
+
+PR #15 was written BEFORE M12C existed, and it had to assume what a domain
+authorisation would eventually mean. It assumed the paid object is a
+REGISTRABLE DOMAIN — that buying example.com covers www.example.com and
+shop.example.com, and that a subdomain input would be refused or folded into
+its parent.
+
+M12C then chose the opposite, deliberately: authorisation is for ONE EXACT
+CANONICAL HOSTNAME and grants nothing on a parent or a child.
+
+The product documentation was checked rather than guessed at. An older section
+does say "per registrable domain", but a newer M12C section records that this
+was NARROWED to the exact canonical hostname, and the canonical-domain module
+states it. NO DOCUMENT REQUIRES a paid assessment to cover a registrable
+domain, so nothing needed escalating, and the narrower, fail-closed reading was
+chosen.
+
+ADOPTED SEMANTICS: a paid assessment is purchased for, and admitted for, the
+exact canonical hostname the authenticated account is CURRENTLY authorised for.
+The payment layer's domain type IS M12C's canonical type — no second brand was
+invented. Checkout canonicalises with M12C's own parser, exactly as M12C's
+routes do; admission REFUSES an alias rather than correcting it, mirroring the
+authorisation check. Both payment domain columns carry M12C's storage-shape
+constraint, so a payment row can never hold a value that could not equal an
+M12C domain.
+
+Proven against a real database with real M12C rows: an authorisation for
+shop.example.com cannot buy example.com, www.shop.example.com,
+www.example.com or blog.example.com; an example.com authorisation cannot buy
+www.example.com; an entitlement for a subdomain admits nothing for its parent.
+A tenant under a private suffix is its own identity, while the suffix itself is
+refused. Internationalised and uppercase spellings resolve to one identity;
+schemes, paths, ports, credentials, whitespace and public suffixes are refused
+rather than stripped.
+
+3. NINE OTHER OBSOLETE ASSUMPTIONS, AND WHAT EACH BECAME
+
+  - the older "per registrable domain" rule was taken as governing; it is
+    superseded by the M12C narrowing;
+  - the eligibility check always answered "not integrated"; it now calls
+    M12C's real authorisation check;
+  - M12C would return an authorisationId — see section 4;
+  - the eligibility query carries a time value from the caller — see section 5;
+  - eligibility has two outcomes, and a database failure is "not eligible or
+    thrown". M12C has a THIRD, an explicit unavailable outcome, now mapped to a
+    503 response rather than being silently treated as a refusal;
+  - the payment migration is 0003 — M12C owns 0003; see section 6;
+  - a restrict-violation foreign key raises one SQLSTATE. True on the
+    PostgreSQL 16.14 the draft was written against; PostgreSQL 18.6 raises a
+    DIFFERENT code for RESTRICT than for NO ACTION. Confirmed directly on 18.6
+    and the test corrected;
+  - the migration ledger can be checked with a prefix slice plus a loose
+    pattern; replaced by exact lists;
+  - the draft's database acceptance ran on PostgreSQL 16.14; it was re-run on
+    18.6, the production major version.
+
+4. authorizationId WAS REMOVED, NOT INVENTED
+
+The draft threaded an authorisation identifier from the eligibility check
+through to the admission result. M12C's rows are keyed by (account, domain)
+with NO SURROGATE IDENTIFIER, so there was nothing to supply.
+
+Every use was audited: NO COLUMN, ORDER, EVENT, PROVIDER REQUEST OR COMPARISON
+EVER USED IT. It was therefore REMOVED rather than replaced, and nothing was
+invented to fill it. If provenance is needed later, M12C's own authorised
+answer already carries the method, the verification time and the expiry.
+
+5. NO STALE CALLER TIME, AND WHERE AUTHORISATION IS RECHECKED
+
+The draft passed a time value from the caller into eligibility and admission.
+Accepting it would have undone the exact correction M12C had just made for the
+same class of defect, so it was removed:
+
+  - NO TIME REACHES THE AUTHORISATION CHECK. Admission no longer takes one, and
+    its entitlement half reads a clock AFTER the M12C decision returns;
+  - checkout's own time value remains, but only for payment bookkeeping —
+    order timestamps, session expiry, the open-order window;
+  - the M12C feature gate is not consulted by payment, matching M12C's
+    contract that the gate neither grants nor removes authority.
+
+WHERE AUTHORISATION IS CHECKED, AND WHY THAT PLACEMENT:
+
+  - CHECKOUT asks M12C before writing anything, and the answer IS NOT STORED;
+  - FULFILMENT — the provider webhook — DOES NOT consult authorisation at all.
+    A verified payment is recorded as A FACT ABOUT MONEY. If the domain
+    authorisation expired between checkout and the webhook, THE WEBHOOK STILL
+    RECORDS A VALID FINANCIAL EVENT, because money did change hands and
+    pretending otherwise would lose a real record;
+  - ADMISSION asks M12C AGAIN at the moment the paid assessment is actually
+    used. Payment alone never admits.
+
+That separation is the interesting part of this reconciliation: the financial
+record and the authority to act are deliberately allowed to disagree, and the
+check that matters happens at use. It was tested directly — an authorisation
+lapsing between checkout and webhook leaves the payment recorded and the
+admission refused, restored only by a fresh M12C proof, and refused again once
+the account is disabled.
+
+Payment does not read the authorisation tables; it imports only M12C's
+canonical-domain module, a type-only identity module and the authorisation
+check itself. M12C imports nothing from payment. Both directions are pinned by
+boundary tests.
+
+6. THE PAYMENT MIGRATION WAS REGENERATED AS 0004, NOT RENAMED
+
+M12C owns 0003, so the provisional payment migration had to move. It was NOT
+hand-renamed. The M12C snapshot and journal were restored from the base, the
+provisional file deleted, the schema resolved, and the migration GENERATED
+afresh by the tool — producing 0004 with a snapshot whose previous-identifier
+field points at M12C's, and a journal entry at index 4. A second generation run
+reported no schema changes, which is the check that the committed state and the
+declared schema agree.
+
+Migrations 0000 through 0003 are byte-identical to the base, with their
+checksums unchanged. The generated 0004 differs from the provisional file only
+by two added storage-shape constraints. The schema contract label moved to
+m13-0004. The combined schema reaches 17 tables.
+
+7. CONFLICTS, AND THREE DEFECTS THAT MERGED SILENTLY
+
+Applying the payment branch produced 19 CONFLICTED FILES, resolved textually in
+one commit so the chronology stays reviewable. The resolutions were unions
+where both sides added, and the BASE's stricter form where the two disagreed —
+for example the base's exact ledger list was kept and extended rather than
+accepting the payment branch's looser pattern.
+
+More interesting are the three defects that produced NO CONFLICT AT ALL and
+were wrong anyway. They were found by the first gate run, not by the merge:
+
+  1. both branches had added the same variable name in the same scope of one
+     test file. The merge kept BOTH, giving a compile error for a redeclared
+     block-scoped variable;
+  2. three tests asserting "this milestone changed no migration" used a
+     three-item slice that silently met M12C's four-entry list, giving three
+     failures. Restored to the exact-list form and extended;
+  3. a policy test still read the deleted provisional migration file by name,
+     failing the whole suite.
+
+A clean automatic merge is not a correct one. That is the lesson this section
+exists to record.
+
+8. RESULTS ON POSTGRESQL 18.6, WITH THE FAILURES BEFORE THE CORRECTIONS
+
+Payment suite, FIRST run: 2 FAILED of 28. One was the SQLSTATE difference of
+section 3, confirmed directly against 18.6. The other was a defect in a NEW
+TEST, not in the product: it opened four checkouts on one account and hit the
+per-account cap of three. Split across accounts. SECOND RUN: 28 PASSED.
+
+M12C suite on the combined tree, FIRST run: 70 FAILED of 77. Its "upgrading a
+live 0002 database applies 0003 alone" test ran against the real repository
+root, which now applies 0003 AND 0004; the rest cascaded. Corrected the same
+way M12C itself had corrected an equivalent suite — upgrade from a checkout
+holding only 0000 to 0003, then require the real root to apply exactly 0004.
+SECOND RUN: 77 PASSED.
+
+A first combined invocation used the test runner's default file parallelism
+against one database and the suites interfered — an invocation error, not a
+product failure. Re-run the way the acceptance runner does it, without file
+parallelism: 14 files, 423 tests passed, 32 skipped.
+
+FINAL SUITE RESULTS ON POSTGRESQL 18.6:
+
+  migrations 0000 through 0004   applied in order, each recorded once
+  payment suite                  28 PASSED of 28 (the draft had 18 tests)
+  M12C domain authorisation      77 PASSED of 77
+  operator invite                12 PASSED of 12
+
+New payment coverage runs the REAL M12C eligibility against the same database,
+with authorisations created through the real issue-and-verify path and a DNS
+double: exact host; parent and subdomain in both directions; alias,
+internationalised, uppercase and trailing-dot forms; scheme, path, port,
+credential, whitespace, public-suffix and IP refusals; wrong account; expired;
+revoked; disabled account; an early request timestamp that cannot extend an
+expired authorisation; the unavailable outcome producing a 503 path with
+nothing written and no provider call; the lapse-between-checkout-and-webhook
+case of section 5; the storage-shape constraint on payment rows; and a combined
+privilege posture. The draft's own coverage was retained, including that a
+browser return grants nothing, signature and idempotency handling, eight
+parallel duplicate deliveries, and restart through a new connection pool.
+
+EFFECTIVE GRANTS were re-proven across all 17 tables using the full PostgreSQL
+18 table-privilege set, with negative controls: payment orders get select,
+insert and update; payment events and entitlements get select and insert; the
+M12C tables are unchanged; the migration ledger grants nothing at table or
+column level. No delete, truncate, references, trigger or maintain privilege on
+any payment table; PUBLIC holds nothing anywhere; schema usage true and create
+false; no default ACLs. Readiness now requires 52 privileges.
+
+Quality gates at the rehearsal head: diff check clean, typecheck pass, lint
+pass, build pass with both payment routes built, migration generation reporting
+no changes, and the full test run showing 7,208 passed with exactly the four
+pre-existing baseline failures and nothing else.
+
+8.1 AN ACCEPTANCE RUNNER STARTUP DEFECT WAS DISCOVERED HERE
+
+The acceptance runner refused to start on PostgreSQL 18.6 with a WRONG VERSION
+verdict, on five of six attempts. Reproduced by hand and traced: the official
+image's entrypoint initialises a new cluster by starting a TEMPORARY server,
+creating the database, stopping it, and only then starting the real one. The
+runner's readiness probe answered from the temporary server, and the single
+version query that followed landed in a window where it could not connect — and
+the runner reported ANY failure of that query as a version fact.
+
+NO UNMODIFIED RUN REACHED A PASS, on the rehearsal tree OR on the base, which
+is how it was classified as pre-existing rather than caused by this work. With
+a local, uncommitted readiness patch the rehearsal tree's database phases all
+passed — 34 account acceptance, the restart child, 30 restore drill, and 452
+across the guarded suites — with the verdict still failing on the hermetic
+phase alone, because of two wall-clock-dependent tests that also fail on the
+base. The patch was removed from both trees. BOTH DEFECTS WERE FIXED
+AFTERWARDS IN THEIR OWN SEPARATE CHANGE; see the baseline reliability record.
+
+9. REMAINING BLOCKERS, AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+Before a real payment rebase: M12C must merge first and the migration must be
+regenerated the same way, because the checksum above holds only if the combined
+schema is identical; the runner startup race and the wall-clock test fixtures
+need their own reviewed fixes; and the reconciled payment code needs
+independent review, in particular the exact-host semantics and the deliberate
+decision that fulfilment records a payment even when the authorisation lapsed.
+The unchanged pre-sandbox items remain: purchase interface, provider
+configuration by the owner, refunds and disputes, consumption, legal and
+retention.
+
+AI assistance: the reconciliation, the migration regeneration, the test
+corrections and this record were produced by Claude, an AI coding assistant, on
+a disposable branch. No pull request, production system or payment provider was
+contacted.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words.
+
+  1. PR #15 was written before M12C existed. What does that say about building
+     against an interface that does not exist yet?
+  2. Why was an identifier the payment code expected REMOVED rather than
+     invented?
+  3. Why should a webhook record a payment even when the buyer's authorisation
+     has expired — and what stops that becoming a loophole?
+  4. Three real defects merged without any conflict being reported. What does a
+     clean merge actually prove?
+
+10. SOURCE LOCATORS
+
+[S1] docs/evidence/M13_AFTER_M12C_INTEGRATION_REHEARSAL_2026-10-05.md on the
+     disposable branch integration/m13-after-m12c-rehearsal.
+[S2] GitHub pull request stanciuks/site-security#15, draft, open, unmerged, at
+     head 423e3fae1162ca60b77ffc93fc84f251d2078843 — NOT modified.
+[S3] db/migrations/0004_m13_payments.sql and its journal and snapshot on the
+     rehearsal branch, alongside the unchanged 0000 to 0003.
+[S4] src/server/payments/** on that branch — eligibility, checkout, admission
+     and the provider adapter; and src/server/domain/** from M12C, which it
+     consumes and does not modify.
+[S5] Branch main at 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca, unchanged.
+
+No credential, token, capability value, password, email address, database URL,
+host identifier, customer record or payment-provider key appears in this note.
+No Stripe service, sandbox or live, was contacted at any point, and no payment
+was made.
+
+END OF EVIDENCE

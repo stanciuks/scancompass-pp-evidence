@@ -1,0 +1,312 @@
+SCANCOMPASS — VISUAL REDESIGN PERSONAL PROJECT EVIDENCE
+Direction D, "Course + Evidence": exploration, owner choice, implementation
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+DIRECTION D CHOSEN BY THE OWNER AND IMPLEMENTED IN SOURCE. DRAFT PR #18.
+NOT MERGED. NOT DEPLOYED. Visual and user-experience change only: no scanner,
+scoring, coverage, catalogue, report-data, API, persistence, account/session,
+trusted-Origin, rate-limit, capability, sharing, download, email, signup,
+launch-control, migration, schema, grant, deployment, payment or M12C
+behaviour was changed. Server-side code is untouched; the only server-rendered
+additions are markup and CSS. [S1,S2,S3]
+
+This record is a factual technical and design record. It is NOT a student
+reflection and is not written in the owner's voice. Reflection prompts are
+carried unanswered in section 10.
+
+1. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Exploration branch: claude/vigilant-ritchie-ytebgb (head 59d09ff — the commit
+  that records the owner's choice of D)
+Implementation branch: design/course-evidence-implementation
+Head: 40a50f44d8d22583af555ad13dc7607ab7dc2e24
+Pull request: #18, DRAFT, OPEN, base main
+Opened: 2026-10-05 10:11:17 UTC
+Diff: 98 files changed, 9229 insertions, 952 deletions
+
+2. WHY THE WORK WAS DONE: THE OLD INTERFACE WAS UNAUTHORED
+
+The owner was dissatisfied with the previous user interface, which read as
+generic and AI-looking. The audit stated the problem precisely: the interface
+was not broken, it was UNAUTHORED. Almost every visual decision was the
+default of the tools it was built with, and none came from the subject.
+
+  - the typeface was the one the application framework's project generator
+    installs by default — the page literally wore the starter typeface;
+  - one weight ramp was applied to every heading at every level, so the hero,
+    the ten report section titles and the card titles differed only in size;
+  - tracked uppercase micro-labels appeared everywhere, which the design
+    guidance names as the commonest template tell;
+  - the hostname was set in a monospaced face for no reason except that it was
+    a hostname;
+  - the score and the coverage figure were presented as two equal headline
+    numbers side by side, so a reader compares them as if they were two
+    verdicts — exactly the confusion earlier comments in that component had
+    been written to prevent;
+  - the coverage band and a finding's severity used the same badge component,
+    size and border, making two unrelated things look like one kind of thing;
+  - the grade — the thing most people remember — was a 12-pixel badge beside a
+    48-pixel number, making it the least visible element in the summary;
+  - the account, reset and verify pages were unstyled: under the CSS
+    framework's preflight the sign-in inputs had no border or background at
+    all, so the form was effectively invisible (screenshot 02).
+
+3. METHOD: THE frontend-design SKILL, USED AS A CHECKLIST
+
+The exploration used the `frontend-design` skill, and the implementation
+session used it again. Its five named "generic AI" tells were used as an
+explicit review checklist BEFORE any code was written, and the checklist
+caught real things, which were revised rather than defended:
+
+  - direction C's first instinct was EXACTLY the first tell — warm cream paper,
+    an editorial serif, a warm red accent. Revised to cool paper, a
+    low-contrast slab typeface, and a red used only as a pencil mark on
+    evidence, never as an accent or a button;
+  - direction A's early dark "instrument panel" variant drifted straight into
+    the second tell and the hacker look the brief bans; it was rejected;
+  - direction A's first draft was a white card per panel — the SaaS card kit.
+    Replaced with rows on one sheet per section;
+  - A's first draft set every label and value in a monospaced face; mono is now
+    only for literal observed and expected values;
+  - one middot meta string slipped into A's group row and was removed;
+  - B's first sketch had a giant hero number, which is the default stat
+    treatment; the measuring rule became primary with the score in a sentence;
+  - two decorations were CUT for not serving the brief: a topographic
+    contour-line background texture, and handwritten-font margin notes.
+
+4. THREE DIRECTIONS, THEN A FOURTH
+
+  A. Reference Range    observed against expected, as a laboratory result
+  B. Course             a route with marked controls — the compass in the name
+  C. Marked Evidence    a document with evidence quoted and marked up
+
+The assistant's stated opinion, offered to inform the owner's choice and not
+to make it, was that A fitted the product as a whole best, C had the most
+distinctive single idea, and B had the most brand personality.
+
+Owner feedback during the exploration, in order:
+  - revision 2: the site should be DARK;
+  - revision 3: more outstanding, SCANCOMPASS in CAPITALS, and a light theme
+    as an option;
+  - the owner said they LIKED B AND C, and that the product noun is
+    "assessment".
+
+D (Course + Evidence) was then created from B's frame and C's evidence
+language. THE OWNER EXPLICITLY SELECTED D. A, B and C remain in the repository
+as history and are not developed further. [S3]
+
+5. WHAT "SCANNING POLICY" KEPT, AND WHY
+
+The scanning-policy page was deliberately left alone. Its ADDRESS must not
+change as part of design work: the scanner's outbound identity embeds that
+exact path in every request it sends, so changing it would change the
+scanner's identity and would need a redirect so the old address keeps working.
+The page TITLE could have become "Assessment policy", but the recommendation
+was to keep "Scanning policy": its readers are owners of assessed sites who
+noticed automated requests in their logs, and "scanner" is their word. Inside
+the product, the noun is "assessment" everywhere. [S3]
+
+6. THE DESIGN SYSTEM, AND WHAT THE REPORT IS ALLOWED TO CLAIM
+
+Every colour has one job. One marking ink carries the course, the controls and
+the problem marks; yellow means only "this value was recorded" and appears
+nowhere else; blue means only "this protection is confirmed". Every tone is
+always beside a word, never colour alone. One typeface family carries
+hierarchy through its width axis, with a monospaced face only for values
+quoted from evidence; both are self-hosted at build time exactly as before, so
+there is no runtime request to a font host. Contrast ratios were measured, not
+assumed, for both themes.
+
+The decisive constraint was that the design may not claim more than the
+report establishes:
+
+  - the course is the REAL fix order. It reads associations the data transfer
+    object already states — the server's own ranking, a check action's source
+    finding, an insight action's member checks, each action's categories.
+    Nothing is re-sorted or inferred;
+  - evidence values come only from the finding evidence the server's own
+    evidence policy already bounds. EVERY value of a finding is highlighted,
+    so no single value is singled out as the defect;
+  - the prototype's hand-picked "ring this value" mark and its hand-written
+    margin notes were NOT carried over, because the report does not establish
+    them;
+  - a finding with no public evidence shows its own headline in words, with no
+    highlight;
+  - there are no grade bands on the measuring rule and no cap numbers on the
+    landing page, because the thresholds live in the scoring configuration,
+    which the web application may not import — and typing them into copy would
+    drift.
+
+Screenshots are of the REAL application, built and served in production mode
+under the strict content-security policy. Report data is real pipeline output
+driven through the real assessment and public-response code with scripted
+capabilities; only the host name was relabelled to a fictional one. No
+backend, worker or database was involved: three endpoints were intercepted in
+the browser. [S2]
+
+7. VISUAL QA, MOBILE AND ACCESSIBILITY CORRECTIONS
+
+Defects found by looking at the first screenshots, and what changed:
+
+  1. landing course labels collided with each other; labels now sit on the
+     open side of each control;
+  2. the theme button showed a double space and no visible pressed state;
+  3. a chip in the yellow band rendered light grey on yellow, because a tone
+     utility outranked the band rule; the band now forces its own ink;
+  4. the control description sheet was too narrow for real titles;
+  5. an insight showed only members that had evidence, so one real finding's
+     words were missing, and insights had no verification step; each member
+     now shows its own words and each sub-step its check;
+  6. the disabled in-progress button was hard to read;
+  7. a heading sat on top of a form label;
+  8. TRIED AND REVERTED: line-break hints in long host names changed the
+     heading's computed accessible name in testing, so they were removed and
+     host names wrap by ordinary means instead.
+
+Accessibility work: semantic headings throughout; a visible focus ring that
+switches colour on yellow; the theme control is one button with a constant
+name and its state in an ARIA attribute; focus moves to the report heading
+when the report replaces the form and returns to the domain field on "New
+assessment"; the map, rule, symbols and leader lines are hidden from assistive
+technology or given a sentence, with their meaning always also in text; errors
+are sentences with a heading or role, never colour alone; touch targets are at
+least 44 pixels; reduced-motion preference removes every drawing, stamp and
+sweep animation; forced-colours mode keeps the band and highlight.
+
+Mobile at 390 pixels: a scripted check across every captured page found no
+horizontal overflow; long host names wrap; leader lines drop to text
+references; two table columns drop while the content still carries both.
+
+8. THE THEME-STORAGE EXCEPTION, AND HOW IT WAS NARROWED
+
+The brief asked for the theme choice to persist without a flash of the wrong
+theme. The repository pins, as mandatory tests, that browser local storage
+appears NOWHERE in the application source, that session storage is confined to
+the capability store, that cookies are never written from browser-reachable
+code, and that React's dangerous raw-HTML escape hatch appears nowhere — that
+last one being the report renderer's safety boundary.
+
+A persisted, flash-free theme needs storage AND a pre-paint inline script. In
+the first pass the assistant DID NOT make that change and did not alter the
+tests, because an exception to those invariants is a security decision, not an
+implementation detail. It shipped a theme that holds for the visit and
+documented the smallest possible exception for the owner to decide.
+
+THE OWNER THEN APPROVED IT, narrowly. The exception as enforced:
+
+  - exactly ONE module may contain local storage, and the test asserts the
+    list of such modules EQUALS that one path;
+  - that module imports NOTHING, so no capability, token, session or report
+    value can reach it;
+  - exactly one key, "scancompass.theme", spelled once;
+  - only get and set of that key — no remove, clear, enumeration or bracket
+    access, with every access parsed;
+  - the only value written passes through a parser that yields only "dark" or
+    "light";
+  - no capability vocabulary may appear in that module;
+  - session storage stays confined to the capability store;
+  - cookies stay banned in browser-reachable code;
+  - the raw-HTML ban is UNCHANGED.
+
+The three new assertions were MUTATION-CHECKED: adding a local-storage write
+to the capability store, a second key to the theme module, or a cookie write to
+the toggle each made the boundary suite fail, and each edit was reverted.
+
+The flash-free mechanism was chosen by audit, with four options rejected in
+writing: the framework guide's own raw-HTML example (breaks the escaping
+invariant), an external script file (the production image copies no public
+directory, so it would 404), a new route serving the script (a new public HTTP
+surface for a cosmetic preference), and the framework's before-interactive
+script (not guaranteed to run before first paint). The chosen mechanism is
+TEXT CHILDREN OF A NONCE'D SCRIPT IN THE DOCUMENT HEAD: React renders a
+script's text children verbatim while still neutralising any closing-tag
+sequence, so React's escaping stays on and no raw-HTML escape hatch is needed.
+The script body is a module constant; nothing from the request, the URL or
+storage is interpolated into code. The layout reads the nonce the application's
+proxy already generates, and the policy builder is untouched: production is
+still a nonce plus strict-dynamic, with no unsafe-inline, no unsafe-eval and
+no hashes.
+
+Browser proof under the production policy, with ZERO policy violations in every
+case: nothing stored gives dark; a stored dark gives dark; a stored light gives
+light with a light first frame; a stored light at 390 pixels on the account
+page gives light; a stored light with EVERY framework script blocked still
+gives light, which shows the inline initialiser and not React does it; and a
+junk value containing an injection attempt falls back to dark. (Screenshot 10.)
+
+9. GATES, AND THE SCREENSHOT REDUCTION
+
+  git diff --check   clean
+  pnpm typecheck     pass
+  pnpm lint          pass
+  pnpm test:run      6,839 passed, 326 skipped, 1 failed — a pre-existing
+                     environment failure present on the untouched base
+  pnpm build         pass
+
+New tests: a 28-test design suite covering theme semantics, the course-to-fix
+mapping and its order, the map adapting to any course length, the evidence
+sheet quoting exactly what the data object states and nothing off-course, the
+absence of inline style attributes in server-rendered markup (required by the
+strict policy), focus management, and the init script rendering as the exact
+constant inside a nonce'd script; plus a 4-test policy suite proving the
+production policy still carries the nonce and strict-dynamic with no
+unsafe-inline, unsafe-eval or hash.
+
+REPOSITORY HYGIENE: the branch had accumulated every capture of every round —
+189 PNG files, about 20 MB. The independent review asked for a set that still
+shows every STAGE, not every intermediate capture. IT NOW CARRIES 42, about
+5 MB. Nothing in the design document's text was removed; the defects each
+revision found are all still listed. A scripted check found no broken
+documentation links or image references.
+
+The ten images in this directory are a further, smaller selection for the
+Personal Project record; see README_VISUAL_EVIDENCE.txt.
+
+10. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The audit, the three directions, direction D, the implementation, the tests and
+the design documents were produced by Claude, an AI coding assistant, using the
+`frontend-design` skill as described in section 3. THE DIRECTION WAS CHOSEN BY
+THE OWNER, not by the assistant, and the theme-storage exception in section 8
+was an explicit owner decision that the assistant declined to make on its own.
+An independent review produced the two corrections in sections 8 and 9.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. Nothing in this file is a reflection.
+
+  1. What is the difference between an interface that is broken and one that is
+     unauthored, and why was the second harder to notice?
+  2. The checklist caught a design that had drifted into the exact look it was
+     meant to avoid. What does that say about using a checklist on your own
+     work?
+  3. Why was the prototype's hand-marked "this is the problem value" removed
+     from the real report?
+  4. Why was remembering a light/dark preference treated as a security decision
+     rather than a convenience?
+  5. Why keep the page called "Scanning policy" when the product noun became
+     "assessment" everywhere else?
+
+11. SOURCE LOCATORS
+
+[S1] Branch design/course-evidence-implementation at
+     40a50f44d8d22583af555ad13dc7607ab7dc2e24; GitHub pull request
+     stanciuks/site-security#18, draft, open, unmerged.
+[S2] docs/design/evidence/COURSE_EVIDENCE_IMPLEMENTATION_2026-10-05.md at that
+     commit — the implementation record, including its section 10, the
+     independent review corrections.
+[S3] docs/design/SCANCOMPASS_VISUAL_DIRECTIONS_2026-10-05.md at that commit —
+     the audit, the three directions, the calibration critique, the four
+     revisions, the owner's decision and the screenshot curation; exploration
+     branch claude/vigilant-ritchie-ytebgb at 59d09ff.
+[S4] docs/design/screenshots/ at that commit — the 42 curated images, of which
+     the ten in this directory are a further selection.
+
+No credential, token, capability value, password, email address, database URL,
+host identifier or provider key appears in this note or in the screenshots. The
+report screenshots use a fictional host name and report data generated by the
+real assessment code; no real third-party site is shown.
+
+END OF EVIDENCE

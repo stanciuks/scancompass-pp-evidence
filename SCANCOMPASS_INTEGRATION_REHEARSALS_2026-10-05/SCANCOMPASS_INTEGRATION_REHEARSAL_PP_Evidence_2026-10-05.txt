@@ -1,0 +1,200 @@
+SCANCOMPASS — SOURCE INTEGRATION REHEARSAL PERSONAL PROJECT EVIDENCE
+main then PR #16, PR #17, PR #18 — what the owner's real merges will meet
+Review date: 5 October 2026
+Classification: Confidential project evidence
+
+STATUS
+REHEARSAL ONLY. NOT FOR MERGE. NOTHING WAS MERGED INTO main, which is still
+66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca. PRs #15, #16, #17 and #18 and their
+branches were NOT modified; no pull request was opened, edited, commented on or
+merged. Production was not contacted and nothing was deployed. [S1,S5]
+
+This exists so the owner's real merges meet a known shape rather than a
+surprise. It is a factual technical record, not a student reflection.
+Reflection prompts are carried unanswered in section 8.
+
+1. INPUTS
+
+  main                                  66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca
+  PR #16  M12B-7A operator invite       4d0e9ba418303be8ea5e2c47a98f7b388d2bf4a2  (1 commit)
+  PR #17  corrected M12C                52310d31e23a97c9222b80fe8c47cae3629b4015  (4 commits)
+  PR #18  Course + Evidence redesign    40a50f44d8d22583af555ad13dc7607ab7dc2e24  (7 commits)
+
+All three branch from the current main; none is behind it. The rehearsal ran on
+its own disposable branch, in the intended order #16 then #17 then #18.
+
+Environment: Node v24.21.0, pnpm 11.21.0, Docker 29.6.2, PostgreSQL 18.6
+(Debian 18.6-1.pgdg13+2) from the pinned image. Docker Hub rate-limited the
+pull, so the image came through a pull-through mirror and was retagged.
+
+2. STEP 1 — PR #16 ONTO main: NO CONFLICTS
+
+The merged tree matches the PR #16 head exactly. Nine files. After this step
+the acceptance runner's exact integration inventory holds 13 required files —
+the 12 already on main plus the operator-invite suite.
+
+3. STEP 2 — PR #17 AFTER #16: ONE TEXTUAL CONFLICT, AND IT WAS DOCUMENTATION
+
+THE ONLY TEXTUAL CONFLICT IN THE WHOLE REHEARSAL WAS docs/MILESTONES.md, and
+its cause was trivial: both pull requests append a new entry at the end of the
+same file. Resolution: keep BOTH, in date order — the M12B-7A entry first, then
+the M12C entry — with neither entry's text changed.
+
+No source file conflicted. That is the headline result, and it is worth stating
+plainly: two substantial pieces of work, written in parallel by separate
+sessions against the same base, met in one changelog line.
+
+3.1 THE AUTO-MERGED FILES WERE CHECKED BY HAND ANYWAY
+
+A clean automatic merge is not proof of a correct one, so the files both pull
+requests touched were inspected:
+
+  - the acceptance runner's required-file inventory: #16 adds the operator
+    invite suite and #17 adds the domain-authorization suite, IN DIFFERENT
+    HUNKS OF THE SAME ARRAY. Git merged both, so BOTH SUITES ARE PRESENT, and
+    #17's renamed restore-drill check was kept as well. This is the one place a
+    careless manual resolution would silently drop a required suite;
+  - migrations: #16 adds none, so 0003 comes from #17 alone and the migration
+    directory is byte-identical to #17. The 0003 checksum in the merged tree
+    matches the checksum in #17's own evidence exactly. 0000 to 0002 and their
+    snapshots are byte-identical to main;
+  - the operator-invite suite applies every migration in the checkout, so after
+    the merge it runs on 0000 through 0003. It asserts nothing about the
+    ledger, so it needed no change and passes;
+  - the two pull requests add different evidence documents, so there was no
+    overlap.
+
+3.2 THE COMBINED ACCEPTANCE INVENTORY PRESERVED BOTH NEW SUITES
+
+The runner's combined phase ends with exactly 14 required integration files and
+one named inert exception, which is exactly what the integration test directory
+contains. BOTH new suites are in it. The other phases are unchanged from main.
+
+4. STEP 3 — PR #18 AFTER #16 AND #17: NO CONFLICTS, AND THE SECURITY BOUNDARY
+   FILE AUTO-MERGED CORRECTLY
+
+The redesign produced no textual conflicts at all. The file that mattered was
+the repository's boundary test suite, which both #17 and #18 change: #17 adds
+the M12C containment assertions and #18 adds the theme-storage exception.
+
+The automatic merge was verified by differencing in both directions: the added
+and removed lines of main-to-#17 equal those of #18-to-merge, and the added and
+removed lines of main-to-#18 equal those of (#16+#17)-to-merge. NO M12C
+SECURITY-BOUNDARY ASSERTION WAS REMOVED. The theme-storage exception still
+holds exactly one module, and M12C's own panel keeps its DNS value in component
+state only, so it does not touch the exception. Both boundary tests pass.
+
+Every file #18 changed is byte-identical to its own head in the merged tree,
+except that one boundary file, which also carries the M12C additions.
+
+5. THE ONE REAL GAP FOUND: /account/domains HAS NO DESIGN SHELL
+
+M12C's domains page and its panel PREDATE the redesign, so the redesign's own
+account-page fix could not cover them. Two consequences in the combined tree:
+
+  1. the layout's skip link points at a main-content target. On main only the
+     landing, legal and not-found pages carried that target, and the account
+     pages had bare main elements. #18 fixes the four account pages it knows
+     about — so after integration /account/domains IS THE ONLY PAGE IN THE
+     WHOLE APPLICATION WHOSE SKIP LINK POINTS AT NOTHING. #18 does not cause
+     this; it is the one page its fix could not reach;
+  2. without the shell the page heading and gutter do not match the other
+     account pages.
+
+NO AUTOMATED TEST CATCHES EITHER. The rehearsal applied the smallest adaptation
+— the same page shell #18 gives the other four account pages, in the page file
+only, with the panel and all M12C logic unchanged — and checked the result in a
+production build at desktop and mobile widths: one main element, the skip-link
+target present, the heading using the shared class, and the panel rendering its
+unavailable state inside the new shell.
+
+WHAT WAS DELIBERATELY NOT DONE: the panel's own controls remain unstyled. Under
+the CSS framework's preflight its bare inputs and buttons have no border or
+background — which was ALREADY TRUE ON main, so the redesign does not cause it.
+Rather than invent a design for a panel it did not own, the rehearsal recorded
+a mapping from each panel element to a class the redesign already ships, for
+the owner to accept or reject.
+
+6. TEST RESULTS
+
+                         main        #16+#17     #16+#17+#18
+  git diff --check       —           clean       clean
+  pnpm typecheck         0           0           0
+  pnpm lint              0           0           0
+  test files             185         193         195
+  tests                  7,102       7,464       7,528
+  tests passed           6,774       7,049       7,113
+  tests failed           2           2           2
+  pnpm build             14 routes   18 routes   18 routes + the domains page
+  acceptance runner      —           PASS (0)    PASS (0)
+
+Acceptance runner detail on the full stack: hermetic 1,871 across 13 files,
+account acceptance 34, restart child 3, restore drill 30, combined guarded
+phase 424 across 15 files, 2 owned resources confirmed absent.
+
+Standalone against a disposable loopback-only PostgreSQL 18.6 instance, the two
+new suites together gave 89 OF 89 PASSED — 77 for M12C and 12 for the operator
+invite, which is exactly what each pull request's own evidence claims. The
+combined tree reproduces both numbers rather than averaging them away.
+
+6.1 THE TWO FAILURES ARE BASELINE, NOT INTEGRATION REGRESSIONS
+
+Both fail IDENTICALLY on untouched main, which is how they were classified:
+
+  - a policy-regeneration test shells out to a tool that is not a project
+    dependency and must be fetched from the network; the container had none.
+    With it installed — an environment change, no repository change — the suite
+    passes 51 of 51 on the full stack;
+  - a retention CLI test exceeds its 5-second budget, taking 5.6 to 6.0 seconds
+    in this container. With a longer timeout it passes 24 of 24. This is the
+    same load sensitivity an earlier evidence note recorded.
+
+Both were fixed afterwards in their own separate change; see the baseline
+reliability record.
+
+7. BLOCKERS TO THE REAL MERGE: NONE, WITH FOUR NOTES FOR THE OWNER
+
+  1. merging #17 after #16 will produce the same documentation append conflict;
+     resolve it by keeping both entries in date order;
+  2. after merging #17, CHECK THAT THE ACCEPTANCE RUNNER STILL LISTS BOTH new
+     suites. Git merges them automatically, but a manual "take theirs" on that
+     one file would silently drop one;
+  3. #18 needs the one page-shell change of section 5 before or as part of its
+     rebase;
+  4. non-blocking: once #17 lands, a line in the M12B-7A changelog entry saying
+     M12C is not started is out of date. It was accurate when written, and the
+     M12C entry that follows supersedes it.
+
+8. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The rehearsal, the hand verification of the auto-merged files, the page-shell
+adaptation and the written record were produced by Claude, an AI coding
+assistant, on a disposable branch. No pull request and no production system was
+touched.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words.
+
+  1. Why rehearse a merge at all, when the version-control tool reports no
+     conflict?
+  2. The riskiest file in this rehearsal merged cleanly and automatically. Why
+     was it still the one worth checking by hand?
+  3. The missing skip-link target was caught by reading, not by a test. What
+     kind of defect tends to escape automated checks?
+
+9. SOURCE LOCATORS
+
+[S1] docs/evidence/INTEGRATION_REHEARSAL_2026-10-05.md on the disposable
+     rehearsal branch claude/integration-rehearsal-2026-10-05-spz3j7.
+[S2] GitHub pull requests stanciuks/site-security#16, #17 and #18, all draft,
+     open and unmerged, at the heads listed in section 1.
+[S3] scripts/acceptance/m12b6-acceptance.mjs and tests/boundaries.test.ts in
+     the merged tree — the inventory and the boundary file discussed in
+     sections 3 and 4.
+[S4] src/app/account/domains/page.tsx — the page discussed in section 5.
+[S5] Branch main at 66dc55c66d4aff025ee4cb7a5d2fd3d9490591ca, unchanged.
+
+No credential, token, capability value, password, email address, database URL,
+host identifier or provider key appears in this note.
+
+END OF EVIDENCE
