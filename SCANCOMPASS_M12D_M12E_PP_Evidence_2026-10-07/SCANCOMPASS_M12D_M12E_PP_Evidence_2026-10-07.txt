@@ -1,0 +1,369 @@
+SCANCOMPASS — M12D AND M12E PERSONAL PROJECT EVIDENCE
+Real PDF reports without a browser, and a minimal continuous-integration gate
+Review date: 7 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M12D AND M12E ARE IMPLEMENTED, INDEPENDENTLY REVIEWED AND MERGED TO MAIN.
+PR #27 was merged 2026-10-07 05:45:44 UTC as commit
+6e002024e78ba407032994b398811aa2c38610c8.
+
+MERGED IS NOT DEPLOYED. No source record states that this work has been
+deployed to production, and the last owner-observed deployed source remains
+928323f1552db1550f658502d01956298d89df7c (M12C). Production, the VPS, DNS, the
+hosting provider, Postmark, Stripe, every production database, env file and
+gate were not accessed or changed by the work recorded here. No migration was
+added; there is no 0004. No payment or M13 code exists. [S1,S2]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 12.
+
+1. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Branch: integration/m12d-m12e-current-main-2026-10-07
+Base: main @ 928323f1552db1550f658502d01956298d89df7c (M12C, accepted in
+  production)
+Final functional code head: 286e01e (the independent-review corrections)
+Pull request head: f211fb9b18f23416dd52af8ee61bd85901da6091
+Pull request: #27, base main
+Opened: 2026-10-06 23:51:52 UTC
+Merged: 2026-10-07 05:45:44 UTC as 6e002024e78ba407032994b398811aa2c38610c8
+Diff: 35 files changed, 3,988 insertions, 27 deletions
+
+Environment: Node v24.21.0 (the container default v22.22.0 is below the
+repository's `>=24.7`), pnpm 11.21.0, Docker 29.8.2, PostgreSQL 18.6.
+
+Baseline before any editing: 18 API routes; 197 test files, 7,335 passed and
+461 skipped of 7,796; 10 production dependencies and NO PDF library; no CI of
+any kind, because there was no workflow directory at all. [S2]
+
+2. M12D — WHY A LIBRARY AND NOT A BROWSER
+
+The milestone required a real PDF produced by a NON-BROWSER renderer. Driving
+a headless Chromium, Playwright, Puppeteer, wkhtmltopdf or any print-to-PDF
+path is FORBIDDEN by the project's own roadmap and architecture, so those were
+not weighed on convenience grounds; they were out of scope by design.
+
+Three library alternatives were examined from registry metadata and rejected
+with reasons recorded rather than dismissed:
+
+  pdfkit     six runtime dependencies including a font engine with roughly ten
+             more transitive ones, and font metrics read from disk at
+             runtime — a known hazard for the framework's standalone file
+             tracing. A larger surface for the same output
+  pdfmake    wraps pdfkit, and adds another dependency
+  jspdf      browser-oriented, with optional canvas and sanitiser dependencies
+
+CHOSEN: pdf-lib 1.17.1, pinned exactly, as a production dependency. It and its
+four transitive dependencies are all permissively licensed, have NO install
+scripts and NO native code; a filesystem search found no compiled binding. The
+library's build contains no filesystem, process, network, TLS or DNS import.
+Its only clock read is disabled by the option the renderer passes, and its only
+random-number use is reached through an API the renderer does not call. [S2]
+
+THE RISK WAS STATED, NOT HIDDEN. pdf-lib's last release was November 2021. It
+was accepted for this use with an explicit argument: the most dangerous part of
+a PDF library is its PARSER, and the parser is never given untrusted input
+here, because the application only WRITES, from a report it issued and has just
+verified. The API surface actually used is pinned by a boundary test. [S2]
+
+3. AN UPSTREAM VULNERABILITY REPORT, AND HOW IT WAS ANSWERED
+
+The independent review raised an open upstream issue alleging a
+regular-expression denial of service in pdf-lib's date-parsing function for
+versions up to and including the pinned one.
+
+The response was deliberately narrow and is worth recording precisely. The
+source record makes NO claim about whether the reported vulnerability is real.
+It establishes only ONE thing: whether this project's renderer can reach the
+function at all. The call graph was read from the installed package, in both
+of its builds, and written out: the parse function is called only by two
+date-decoding methods, which are called only by two document getters, which
+are called only by the public API and by a document-copy method that nothing
+inside the library calls.
+
+The renderer calls none of them. Document creation is passed the option that
+writes no dates at all; the date SETTERS only format and never parse; the
+renderer never loads, copies or reads metadata from any document; and text from
+the assessed site reaches the library only as hex-encoded operands inside
+content streams, never as a string object that anything decodes.
+
+CONCLUSION: NOT REACHABLE. Because the issue does not apply, no dependency
+change was made, and NO FORK WAS ADOPTED — a fork would need its own review
+and would disturb a writer whose determinism is already tested.
+
+UNREACHABILITY WAS THEN PINNED IN SOURCE RATHER THAN ASSERTED IN PROSE, with
+three guards:
+
+  1. a boundary test forbidding the parse path, every parsing API and every
+     metadata reader from appearing in the renderer's source;
+  2. an EXACT ALLOWLIST of the nineteen names imported from the library, which
+     deliberately excludes the two classes that own the date decoders and every
+     parser, and which refuses namespace, default, re-export and deep imports;
+  3. a RUNTIME check that spies on all six functions and then renders a report
+     whose title, detail and evidence carry twenty-thousand-digit hostile
+     date-shaped strings. It requires zero calls, success, and completion under
+     five seconds — with a POSITIVE CONTROL proving the spies really do fire
+     when that path is exercised, so the check cannot pass vacuously.
+
+Three mutations were applied one at a time and all three were detected. [S2]
+
+RESIDUAL RISK, stated plainly in the source record and repeated here because it
+is the honest part: this review closes ONE reported issue for ONE code path. It
+does NOT establish that the library is free of vulnerabilities. There has been
+no upstream release since 2021, so a future finding would get no upstream fix,
+and the options would then be a reviewed fork or a different writer. The
+exposure is BOUNDED — no untrusted bytes are parsed, input is a report this
+application issued and verified, site text arrives only as policy-filtered
+hex operands, the API surface is pinned, and rate limits plus the page and byte
+ceilings bound the work — and bounding exposure is not the same as proving
+there are no vulnerabilities. [S2]
+
+4. M12D — WHAT WAS BUILT
+
+A new endpoint, POST /api/reports/pdf, taking the routes from 18 to 19. It
+reuses the EXISTING share-capability resolver unchanged — the one that
+verifies the frozen artifact's size, digest and schema and performs no write —
+and then calls a renderer that is PURE: no database, network, filesystem,
+process, clock or randomness, and no capability in its signature.
+
+The existing HTML download was NOT replaced. Nothing required replacing it,
+and it still renders characters the PDF's standard fonts cannot. The new route
+sits under the same server prefix as the other report endpoints, so it inherits
+the existing rate limit with NO web-server configuration change; a test that
+derives the route list from the filesystem proved it.
+
+CAPABILITY HANDLING, which is the security core of the step:
+
+  in the request body only        the route reads only the form body; a token
+                                  in the query string with an empty body is a
+                                  400 and the composition is never called
+  never in URL, path, fragment,   proven by interface tests and by structural
+  DOM, component state or         boundary tests
+  browser storage
+  never in logs, PDF or headers   proven over the PDF bytes, their hex form,
+                                  every decoded content stream, every logger
+                                  call, and every response header
+  zero-write resolution           proven against a statement-recording fake —
+                                  exactly one read, no write, no transaction —
+                                  and again end to end against live database
+                                  table statistics
+  revoked, expired, malformed or  answered with a neutral page that is
+  unknown                         BYTE-IDENTICAL to the HTML download's
+  integrity failure               refused and never rendered
+
+The user interface renders two buttons, each a field-less POST form; the token
+is read from an in-memory reference at click time and written into that one
+submission by the browser's own form-data event. No hidden input, no property,
+no state, no URL, no blob, no ticket, no storage, and no client-side PDF
+generation. [S2]
+
+5. BOUNDS, UNICODE AND DETERMINISM
+
+The work stops at 300 pages, checked as each page opens, and 8 MiB, checked on
+the finished bytes; a breach is logged and answered as unavailable rather than
+served. Measured worst cases: 170,000 CJK characters produced 262 pages in
+about 0.45 s; 120,000 emoji produced 212 pages in about 0.36 s; a 500,000
+character unbroken token produced 124 pages in about 0.14 s.
+
+The honesty rule from the HTML report was carried over rather than softened:
+characters the standard fonts cannot draw are NEVER deleted and NEVER silently
+substituted. They fall back to a symbol face where one genuinely exists, and
+everything else is drawn as a visible code-point notation in a distinct marker
+colour, with a note on the last page saying so. The HTML download remains the
+place where non-Latin scripts render as themselves.
+
+Output is byte-identical for identical input, and that is tested, not claimed.
+[S2]
+
+6. QUALITY GATES
+
+On the final functional head:
+
+  git diff --check     clean, over the whole tree
+  pnpm typecheck       0 errors
+  pnpm lint            0 problems
+  pnpm test:run        201 files (200 passed, 1 skipped) / 7,934 tests —
+                       7,473 passed, 461 skipped, 0 failed
+  pnpm build           clean; 19 /api/ routes
+
+Structural assertions read the PDF bytes with the project's OWN object and
+stream parser, independent of the writer, and the library's parser is used once
+only, to prove a real parser loads the file. Three independent external PDF
+tools were run locally on the served file and agreed on page count, page size,
+and the absence of JavaScript, forms, annotations, an open action and
+encryption. [S2]
+
+7. MUTATION TESTING — 18 MUTATIONS
+
+Each mutation was applied ALONE, the named suites were run, the file was
+restored, and the working tree was confirmed clean. The set covers capability
+bypass at the route and at the composition, skipping artifact verification,
+removing each ceiling, adding an active-content annotation, changing the media
+type, leaking the token into the filename, into the document and into a hidden
+form input, serving a live re-scored report instead of the frozen artifact,
+taking a timestamp from the clock, weakening operand escaping, posting the
+token in a URL, widening the CI trigger and token, and unpinning a CI action.
+
+  17 of 18 detected on the first pass.
+  1 SURVIVED and was recorded rather than quietly fixed: notating bidirectional
+  overrides. It was an EQUIVALENT MUTANT — the font had no glyph for those
+  control characters, so the fallback notated them anyway. A FONT-INDEPENDENT
+  test was then added, and the re-run detected it.
+  18 of 18 detected on the re-run, and 18 of 18 on the first pass when the
+  whole set was repeated on the final head after the review corrections.
+
+Each of the three review-correction tests was also checked against its own fix
+reverted, and each failed as it should. [S2]
+
+8. A REAL CONTAINER, AND A REAL REQUEST
+
+The unmodified production container definition was built and the resulting
+image inspected: it runs as a non-root user, carries no Chromium, Chrome,
+wkhtmltopdf, Puppeteer or Playwright anywhere on its filesystem, and does not
+carry the PDF library as a separate package because the build bundles it.
+
+End to end against that image — a disposable PostgreSQL 18.6, the committed
+roles and grants, migrations applied 4 and skipped 0, and one scan and one
+share minted through the REAL write path, with the container run read-only,
+with all capabilities dropped and no new privileges:
+
+  valid token                     200, application/pdf, 40,937 bytes, an
+                                  attachment with the expected filename, and
+                                  the full download privacy header set
+  the same request again          BYTE-IDENTICAL
+  the HTML download, same token   200, unchanged
+  a random well-formed token      404
+  the same route by GET           405
+  share table write counters      unchanged before and after
+  token in the PDF bytes          0 occurrences
+  token in the container logs     0 occurrences
+
+Two sandbox-only accommodations were recorded and are NOT in the repository: a
+proxy certificate added to the base image, and build-time proxy arguments,
+which the image history was checked not to retain. [S2]
+
+9. A DEVELOPMENT INCIDENT, RECORDED
+
+The committed acceptance runner was run three times, and then three times
+again on the corrected head, all six exits 0 and all six leaving no containers
+behind — even though the change touches no persistence, which was deliberately
+not treated as a reason to skip it.
+
+During that check, one anonymous container volume was found that had been left
+behind by THE SESSION'S OWN end-to-end harness, created before the runner
+started, because a removal command omitted its volume flag. It was confirmed
+unreferenced, removed, and the harness was corrected. It is recorded here
+rather than omitted. [S2]
+
+10. M12E — A MINIMAL CI GATE, AND WHAT IT DELIBERATELY DOES NOT DO
+
+One workflow, one job, with a thirty-minute ceiling. The design is almost
+entirely a list of refusals:
+
+  - it triggers on pull requests and on pushes to the main branch ONLY, and
+    NEVER on the trigger variants that would run untrusted code with the
+    repository's own privileges;
+  - the token is read-only at the top level, no job widens it, and the checkout
+    is told not to persist credentials into the working copy;
+  - exactly two external actions are used, each pinned to a FULL COMMIT SHA
+    with its version in a comment; both SHAs were resolved and their definitions
+    read during the work rather than copied from documentation;
+  - the package manager is checked to equal the version the repository pins,
+    and installation uses the frozen lockfile;
+  - there is NO CACHE of any kind, because a cache is state a pull-request run
+    could write and a main-branch run could read;
+  - no secret, no environment, no deployment, no registry push, no external
+    scanning, and no interpolation of event data into a shell command.
+
+The gates it runs are whitespace, typecheck, lint, the full test suite and the
+build, plus a clean-tree check. The whitespace gate caught a trailing blank
+line before the first push. A test suite of thirteen cases pins every one of
+those properties, and two of the eighteen mutations in section 7 target the
+workflow itself.
+
+WHY THE DATABASE ACCEPTANCE IS NOT A CI JOB, recorded as a decision rather than
+an omission: the guarded suites need a disposable PostgreSQL with superuser
+rights and run destructive schema statements; the runner takes about two
+minutes, pulls an image from a registry that rate-limited this project twice in
+one session, and supervises process groups and volumes. A flaky required check
+trains people to re-run until green. It stays an explicit RELEASE gate before a
+database-touching deployment, as it was for M11, M12B and M12C — and CI makes
+the gap VISIBLE instead of hiding it, by stating in its summary that the 461
+skipped tests did not run.
+
+The first real CI run on the pull request succeeded in 3 minutes 39 seconds,
+with a read-only token, the pinned Node and package-manager versions, and a
+summary line reporting 7,469 passed, 0 failed and 461 skipped of 7,930. [S2,S4]
+
+11. KNOWN LIMITATIONS, AND AI TRANSPARENCY
+
+  1. Non-Latin scripts appear in the PDF as code-point notation; the HTML
+     download renders them. Hostnames are normalised to ASCII, so the identity
+     line is unaffected.
+  2. The PDF library is unmaintained since 2021. The reported issue is not
+     reachable and is guarded, which is not a general claim of safety.
+  3. A report past the page or byte ceiling gets no PDF, while the HTML
+     download still works. No real report is near either bound.
+  4. The PDF carries no structure tree, so screen-reader support remains the
+     HTML file's job.
+  5. Some web-server configuration comments still say "five report endpoints";
+     coverage is by prefix and is tested.
+  6. BRANCH PROTECTION IS A REPOSITORY SETTING THIS CHANGE CANNOT MAKE. Until
+     the owner marks the CI check as required, a red run does not block a
+     merge.
+
+An independent adversarial reviewer was given the diff with read-only
+instructions and asked to block on anything wrong. It returned NO BLOCKER and
+six findings. Four of them, each FIXED with a regression test: a CI concurrency
+grouping that could end a main-branch commit on a cancelled result; thirty
+private-use code points in the symbol table that were being drawn as look-alike
+characters, a silent substitution the honesty rule forbids; one capital letter
+measured with the wrong advance width; and a paragraph beginning with a space
+that wrapped into an empty line. Of the remaining two, one was ACCEPTED and
+listed as a limitation, and one was a comment correction.
+
+All implementation, tests, documents and this record's source were produced by
+Claude, an AI coding assistant, in an ephemeral cloud container under a task
+specification written by the project owner.
+
+12. STUDENT REFLECTION PROMPTS — NOT WRITTEN REFLECTION
+
+Carried forward UNANSWERED, to be written later in the student's own words.
+
+  1. A vulnerability was reported in a library this project depends on. Why was
+     "we cannot reach that function" written down as a proof in test code
+     rather than as a sentence in a document?
+  2. Why was an unmaintained library chosen on purpose, and what makes that a
+     defensible decision here but not everywhere?
+  3. One mutation survived because the font could not draw the characters
+     anyway. Why was that written down instead of being quietly fixed?
+  4. The CI design is mostly a list of things it refuses to do. Why is a
+     refusal a feature of an automated build?
+  5. The database acceptance was deliberately left out of CI. What is the cost
+     of that decision, and how was the cost made visible?
+
+13. SOURCE LOCATORS
+
+[S1] GitHub pull request stanciuks/site-security#27, merged 2026-10-07
+     05:45:44 UTC as 6e002024e78ba407032994b398811aa2c38610c8; branch
+     integration/m12d-m12e-current-main-2026-10-07 at head
+     f211fb9b18f23416dd52af8ee61bd85901da6091. Read from the GitHub API in
+     this session.
+[S2] docs/evidence/M12D_M12E_COMPLETION_2026-10-07.md at main
+     9a4cbdfbc172c68bd78ae35959f9d762c877454b — the source record from which
+     every figure in this note is taken.
+[S3] src/server/report-pdf/**, src/app/api/reports/pdf/route.ts and the
+     "the PDF report (M12D)" block of tests/boundaries.test.ts at that commit.
+[S4] .github/workflows/ci.yml and tests/unit/deploy/ci-workflow.test.ts at
+     that commit, and the GitHub Actions run recorded on PR #27.
+
+No credential, token, capability value, password, email address, database URL,
+connection string, host identifier or provider API key appears in this evidence
+note. The only long identifiers are commit SHAs. No real third-party website
+and no customer record appears; the end-to-end report in section 8 was minted
+by the application's own code for a fictional host.
+
+END OF EVIDENCE

@@ -1,0 +1,235 @@
+SCANCOMPASS — M12C STEP 3 PERSONAL PROJECT EVIDENCE
+Production deployment, acceptance, and the first real domain verification
+Review date: 7 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M12C IS MERGED AND ACCEPTED IN PRODUCTION, AND THE DOMAIN-VERIFICATION GATE IS
+OPEN. Migration 0003 is applied to the production database, the schema contract
+is m12c-0003, and exactly one real domain authorisation exists. Public signup
+and report-email delivery remain CLOSED. [R1,S1,S2]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Three kinds of statement appear in this note and are kept apart throughout.
+
+  OWNER-OBSERVED   An observation the OWNER made while performing the
+                   controlled production deployment, supplied as text to the
+                   assistant session of 7 October 2026 and recorded in the
+                   source acceptance document. Marked [R1].
+  SESSION-VERIFIED Repository and pull-request state read directly from the
+                   GitHub API while this Personal Project note was being
+                   written. Marked [S1].
+  SOURCE-RECORDED  Statements taken from a committed source evidence document.
+                   Marked [S2] or [S3].
+
+NEITHER the assistant session that produced the source acceptance document NOR
+the session that wrote this Personal Project note accessed production, the
+VPS, SSH, the production database, DNS, the hosting provider, Postmark or
+Stripe, ran any production command, or saw any raw production output. Nothing
+in this note is re-derived, extrapolated or independently confirmed by either
+session. Where a fact is production reality, it is production reality BECAUSE
+THE OWNER OBSERVED IT, and it is labelled [R1].
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 9.
+
+1. WHAT THIS STEP SUPERSEDES
+
+SCANCOMPASS_M12C_Step1_PP_Evidence_2026-10-05.txt says M12C is source only, on
+draft PR #17, not merged, not deployed, with migration 0003 never applied
+outside disposable databases and the gate closed by default. THAT WAS CORRECT
+WHEN WRITTEN AND IS NOT AMENDED. The Step 2 note,
+SCANCOMPASS_M12C_Step2_PP_Evidence_2026-10-06.txt, records the release
+candidate, which was correct when written and became merged the same evening.
+
+This note records what happened next, so the earlier status is read as a point
+in a chain rather than as the current state. The same convention the source
+repository followed — annotate, do not rewrite history — is used here.
+[S2,S3]
+
+2. WHAT WAS DEPLOYED
+
+  SESSION-VERIFIED [S1]
+  PR #26 merged 2026-10-06 21:58:35 UTC as
+    928323f1552db1550f658502d01956298d89df7c
+  PR #17 closed unmerged, as superseded
+  PR #18 (visual redesign) still an open draft, unchanged
+  PR #15 (M13 payments) still an open draft, unchanged
+
+  OWNER-OBSERVED [R1]
+  Deployed source            928323f1552db1550f658502d01956298d89df7c
+  Application image digest   sha256:ef5cf2fc91576c45430a69304c795f8f7e8a4946
+                             f07b56c1a2575ce9371ddfb6
+  Production database        PostgreSQL 18.6
+  Schema contract            m12c-0003
+  Migrations present         0000, 0001, 0002, 0003
+
+3. MIGRATION 0003 IN PRODUCTION (OWNER-OBSERVED) [R1]
+
+  Migration     0003_m12c_domain_authorizations
+  SHA-256       37c562ad7d7982afefb501a11667ae207b0684f11903f12935db2552349a
+                3a54 — the same digest the M12C review and the release
+                candidate both name for the committed file
+  Runner result applied=1 skipped=3
+  DB audit      PASS 14/14, using the committed read-only audit file
+
+4. THE BACKUP GATE, PROVEN BEFORE THE SCHEMA CHANGED (OWNER-OBSERVED) [R1]
+
+A fresh encrypted backup was taken IMMEDIATELY BEFORE the migration, and that
+exact object was then downloaded off-host and decrypted with the
+operator-held identity. The identity of the backup object is deliberately not
+reproduced here, following the convention set in M12B Step 7.
+
+  restore target                     an isolated PostgreSQL 18.6
+  committed pre-migration preflight  PASS 12/12
+  restored-data integrity            PASS 8/8
+  content                            22 scans and 22 frozen reports present;
+                                     EVERY frozen report artifact recomputed
+                                     to its stored SHA-256
+  post-restore invalidation          the required three-statement form passed.
+                                     The restore was of a PRE-0003 database,
+                                     so the five-statement form did not yet
+                                     apply
+  cleanup                            scratch database, container, volume,
+                                     plaintext dump and ciphertext copy all
+                                     removed and confirmed removed
+
+5. CLOSED-GATE PRODUCTION ACCEPTANCE (OWNER-OBSERVED) [R1]
+
+Performed with the domain gate still CLOSED, before it was opened:
+
+  - the application was healthy with 0 restarts;
+  - persistence readiness READY, expected schema contract m12c-0003;
+  - the scanner-worker container and the database container were UNCHANGED;
+  - all /api/account/domains routes answered 404 while the gate was closed;
+  - public signup answered 503, the signup gate being closed;
+  - the existing operator session remained valid across the deployment;
+  - an anonymous assessment of the project's own domain completed normally,
+    scoring 89, grade B, 96 % coverage;
+  - the final database audit passed 14/14.
+
+6. THE GATE OPENED, AND THE FIRST REAL DOMAIN VERIFICATION (OWNER-OBSERVED)
+
+The owner then deliberately opened the domain gate. This was an explicit,
+separately authorised step, not part of the deployment. Gate values as the
+owner reported them: [R1]
+
+  SCAN_PRODUCTION_ENABLED       1
+  ACCOUNT_SIGNUP_ENABLED        0
+  ACCOUNT_EMAIL_ENABLED         1
+  EMAIL_DELIVERY_ENABLED        0
+  DOMAIN_VERIFICATION_ENABLED   1
+
+  - the production application container's resolver was shown to resolve the
+    verification name BEFORE anything relied on it — the resolver-path proof
+    the runbook makes a STOP check;
+  - the owner published the one-time TXT value. THAT VALUE WAS NOT SUPPLIED TO
+    EITHER ASSISTANT SESSION, IS NOT RECORDED ANYWHERE IN THIS PERSONAL
+    PROJECT REPOSITORY, AND NO ATTEMPT WAS MADE TO RECOVER IT;
+  - end-to-end verification SUCCEEDED: the project's own domain is verified for
+    the operator account;
+  - database acceptance: authorizations=1, challenges=0, and exactly one active
+    authorisation for the exact hostname — the challenge was consumed, as the
+    replay rule requires;
+  - that authorisation expires around 2027-01-04T23:10:31Z, which is 90 days
+    from verification, never extended by use, exactly as the M12C lifetime rule
+    specifies.
+
+This is the first time the design decisions recorded in Step 1 — DNS TXT only,
+exact-host semantics, one live challenge, consume-and-delete, a 90-day validity
+that use does not extend — were exercised against a real zone rather than a
+deterministic test double. [R1,S3]
+
+7. FINAL RUNTIME, AND WHAT DID NOT CHANGE
+
+  OWNER-OBSERVED [R1]
+  - final runtime: the M12C application image above, health healthy, 0
+    restarts;
+  - temporary transfer artifacts and the transfer reference were removed
+    afterwards.
+
+  ADJACENT FACTS the owner supplied, and what they do NOT authorise [R1]
+  - the email provider account was manually approved and is permitted to send
+    to arbitrary recipients;
+  - the payment provider's live account identity verification and bank setup
+    are complete.
+
+  NEITHER changes any gate. Report-email delivery remains CLOSED, public
+  signup remains CLOSED, and no payment code exists on the main branch. M13 is
+  not started. No bank detail, account identifier, provider key or identity
+  document is recorded here or anywhere in this repository.
+
+8. HOW THE REPOSITORY'S OWN PROSE WAS RECONCILED (SOURCE-RECORDED) [S2]
+
+Status prose across eight repository documents that still described M12C as
+source only, draft, or not deployed now carries a dated current-status note
+pointing at the acceptance record. HISTORICAL PASSAGES WERE NOT REWRITTEN:
+each is a correct record of the moment it describes and is annotated so a
+reader cannot mistake it for present reality.
+
+One operational consequence was called out because it is easy to miss: since
+0003 is applied in production, the FIVE-STATEMENT post-restore invalidation is
+now IN FORCE for any restore of a post-0003 backup. The three-statement form
+is correct only for a pre-0003 backup, such as the one restored in section 4.
+
+One pre-existing documentation defect was recorded and explicitly NOT claimed
+as introduced by that work: the operations runbook cites an evidence file that
+is not present in the repository, while the drill it refers to does exist as a
+committed integration test and is recorded in the release-candidate document.
+
+9. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The source implementation, the release candidate, the production package, the
+runbook and the source evidence documents were produced by Claude, an AI coding
+assistant, in ephemeral cloud containers under task specifications written by
+the project owner, and were independently reviewed.
+
+THE PRODUCTION DEPLOYMENT ITSELF WAS CARRIED OUT BY THE OWNER. The owner read
+the runbook, ran every production command personally, entered credentials
+privately, took and restored the backup, decided to open the domain gate,
+published the TXT record, and supplied the observed outputs. No assistant
+session had, or has, access to production. This Personal Project note was
+assembled by Claude from the committed source records and the GitHub API only.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. Nothing in this file is a reflection.
+
+  1. Why was the backup restored and verified off-host BEFORE the migration
+     ran, rather than simply taken and trusted?
+  2. The gate was opened as a separate, separately authorised step after
+     acceptance had already passed. Why split it that way?
+  3. Why does this note label every production fact as the owner's
+     observation instead of simply stating it?
+  4. The one-time TXT value was never shared with the assistant. What would
+     have been lost if it had been?
+  5. Applying migration 0003 changed which post-restore procedure is correct.
+     What does that say about documentation that describes a live system?
+
+10. SOURCE LOCATORS
+
+[R1] Owner observations from the controlled production deployment, migration,
+     closed-gate acceptance, gate opening and real domain verification carried
+     out on 7 October 2026, supplied by the owner as text and recorded in [S2].
+     Raw operator transcripts, host identifiers, credentials, connection
+     strings, environment-file values, backup object identities, backup keys
+     and the one-time DNS TXT value are deliberately NOT reproduced.
+[S1] GitHub pull-request state for stanciuks/site-security #15, #17, #18 and
+     #26, and the main branch commit
+     9a4cbdfbc172c68bd78ae35959f9d762c877454b, read from the GitHub API while
+     this note was written.
+[S2] docs/evidence/M12C_PRODUCTION_ACCEPTANCE_2026-10-07.md at main
+     9a4cbdfbc172c68bd78ae35959f9d762c877454b — the source acceptance record,
+     including its own provenance table, from which every owner-observed
+     figure in this note is taken.
+[S3] docs/evidence/M12C_DOMAIN_OWNERSHIP_FOUNDATION_2026-10-05.md and
+     docs/rollout/M12C_PRODUCTION_RUNBOOK.md at that commit — the reviewed
+     design and the procedure the owner followed.
+
+No credential, DNS TXT value, challenge token, session token, capability value,
+password, email address, database URL, connection string, backup object
+identity, backup key, bank detail, account identifier, host identifier or
+provider API key appears in this evidence note. The only long identifiers are
+commit SHAs, one migration checksum and one container image content digest.
+
+END OF EVIDENCE

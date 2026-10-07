@@ -1,0 +1,317 @@
+SCANCOMPASS — M12C STEP 2 PERSONAL PROJECT EVIDENCE
+Current-main release candidate and production package (PR #26)
+Review date: 6 October 2026
+Classification: Confidential project evidence
+
+RECORD DATE NOTE
+The work described here was carried out on 6 October 2026. This Personal
+Project note was written on 7 October 2026 from the committed repository
+record and from the GitHub pull-request state, and is NOT presented as a
+journal entry written on 6 October. The same academic-integrity note that
+governs the M12A consolidation applies.
+
+STATUS
+M12C RELEASE CANDIDATE BUILT ON CURRENT MAIN, REVIEWED, AND MERGED.
+PR #26 was opened 2026-10-06 21:52:55 UTC and merged 2026-10-06 21:58:35 UTC
+as commit 928323f1552db1550f658502d01956298d89df7c. At the time of the work
+recorded below, nothing was merged and nothing was deployed: production, the
+VPS, any production database, env file or backup object, Stripe, real email
+and real DNS records were not contacted or changed. The domain gate was
+CLOSED throughout. The production rollout itself is a separate step and is
+recorded in SCANCOMPASS_M12C_Step3_PP_Evidence_2026-10-07.txt. [S1,S2,S3]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 10.
+
+1. WHAT THIS STEP WAS FOR
+
+Step 1 (SCANCOMPASS_M12C_Step1_PP_Evidence_2026-10-05.txt) recorded the M12C
+domain-ownership foundation as reviewed SOURCE on draft PR #17, branched from
+a main that had since moved on by 53 commits. This step rebuilt that reviewed
+work on the main branch as it actually stood, proved it against a from-scratch
+database, and added the operational package a human would need in order to
+deploy it. [S2,S5]
+
+2. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Branch: integration/m12c-current-main-2026-10-06
+Base: main @ 2e883b88b21dea2f42a7a609691b0fb7593d6ac8 (M12B-7A accepted in
+  production)
+Code head the gates and the 20 acceptance runs were taken on: 4f30e23
+Pull request head: dc3db8a2def4805f1c50978e36f928372a1b837c
+Pull request: #26, OPEN then MERGED, base main
+Opened: 2026-10-06 21:52:55 UTC
+Merged: 2026-10-06 21:58:35 UTC as 928323f1552db1550f658502d01956298d89df7c
+Diff: 59 files changed, 10,625 insertions, 108 deletions
+
+Source audited: PR #17 claude/inspiring-brahmagupta-89ozc0 @ 52310d3, plus two
+disposable integration branches. PR #17 was not modified during this step; it
+was later CLOSED AS SUPERSEDED rather than merged, because this branch carries
+its reviewed content. [S1,S2]
+
+Environment: Node v24.21.0 (the container default v22.22.0 is below the
+repository's `>=24.7`), pnpm 11.21.0, Docker 29.8.2, PostgreSQL image
+`postgres:18.6` giving server PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2).
+
+3. HOW THE REVIEWED WORK WAS CARRIED ACROSS
+
+PR #17 was taken commit by commit rather than merged, so each imported change
+kept its own identity and reason:
+
+  - the M12C foundation, the PostgreSQL acceptance suite, the evidence
+    identity and the independent-review corrections were imported with
+    `cherry-pick -x`;
+  - exactly ONE textual conflict arose across the whole import — docs/
+    MILESTONES.md, where main's M12B-7A entry and PR #17's M12C entry had both
+    been appended. It was resolved by keeping BOTH, M12C after M12B-7A;
+  - the merge commits of changes main already had were deliberately not
+    imported;
+  - two test-only hardening commits were imported from a disposable
+    integration branch, and one further test-only commit was written new.
+
+CHERRY-PICK VERIFICATION, recorded rather than assumed. For every file PR #17
+touches, the diff between PR #17's head and this branch is empty except four
+files where main had moved independently; for those four, the added and
+removed lines of this branch's diff against main equal PR #17's own diff
+exactly. [S2,S5]
+
+SEMANTIC CHECK AGAINST CURRENT MAIN. M12C's runtime diff against main is
+ADDITIVE ONLY. No file under the account, session, notification, launch or
+retention source changed, and no existing route changed — so account email,
+signup, the mail outcome vocabulary, session invalidation, the login lockout
+clock and the retention bound are byte-identical to main. The reviewed
+/account/domains page was used exactly as reviewed: plain and unstyled, with
+NO redesign styling and NO navigation link, both recorded as later UX
+decisions rather than quietly added. [S5]
+
+4. MIGRATION 0003 ON THIS BRANCH
+
+The committed 0003 is BYTE-IDENTICAL to the reviewed migration, calculated
+from the file and compared against the file at PR #17's head, so no
+semantic-equivalence argument was needed.
+
+  FINAL migration file: db/migrations/0003_m12c_domain_authorizations.sql
+  FINAL SHA-256:
+    37c562ad7d7982afefb501a11667ae207b0684f11903f12935db2552349a3a54
+  Schema contract: m12c-0003
+  Ledger: exactly 0000-0003, each checksum equal to its file's SHA-256
+
+Running the schema generator against the committed schema reported "No schema
+changes, nothing to migrate". [S3,S5]
+
+5. FROM-SCRATCH MIGRATION AND GRANT AUDIT (PostgreSQL 18.6)
+
+A scratch script outside the repository built a fresh container on loopback,
+applied the committed roles-and-schema example, ran the migration as the
+migration role, applied the committed grants template, then queried the
+catalogue and ran the application's own readiness function as the application
+role.
+
+  migrate from empty        applied=4 skipped=0; second run applied=0 skipped=4
+  readiness before grants   UNAVAILABLE / PRIVILEGE_MISSING, contract m12c-0003
+  readiness after grants    READY / OK, contract m12c-0003, nothing missing
+  domain constraints        primary keys, cascading foreign keys and the eight
+                            CHECKs, ALL VALIDATED
+  ownership                 schema, every table, every index and the sequence
+                            belong to the migration role
+  app privileges            43 across 8 privilege types and 14 tables —
+                            exactly the contract; the two new tables carry
+                            SELECT, INSERT, UPDATE and DELETE only
+  app on the ledger         nothing
+  PUBLIC                    0 table privileges, 0 column ACLs, schema USAGE
+                            false, CREATE false
+  default / column ACLs     0 / 0
+  refused as the app role   CREATE TABLE, TRUNCATE, any read of the ledger,
+                            DELETE FROM accounts, ALTER TABLE
+  migration credential      absent from the running application container, from
+                            both environment files, and from every source module
+
+One pre-existing posture item was recorded as NOT M12C's and not changed: the
+application role holds a database-level temporary-object privilege through
+PostgreSQL's own default PUBLIC database ACL, which is main's existing state.
+[S5]
+
+6. REAL BACKUP AND RESTORE COVERAGE
+
+The M12B-6 drill was extended to M12C and uses REAL dump and restore inside
+the disposable container, with the application role for every application
+operation. Before the dump it establishes a live session, a live reset
+challenge, a pending signup, a PENDING DOMAIN CHALLENGE and a CURRENT DOMAIN
+AUTHORISATION; after the dump all five are spent or revoked and shown dead.
+
+  unsanitized restore (positive control)  every one of the five comes back to
+                                          life, including the domain
+                                          authorisation and a challenge
+                                          completed with the backup-time proof
+  sanitized restore                       a five-statement invalidation in one
+                                          application-role transaction kills
+                                          all five; a second run deletes
+                                          nothing; a fresh login and a fresh
+                                          domain verification still work;
+                                          account, credential and report
+                                          content digests unchanged
+  partial-failure injection               a failure after the fourth statement
+                                          commits NONE of the five
+  omission testing                        omitting EACH of the five, on its own
+                                          fresh restore, leaves exactly the
+                                          matching capability usable
+
+The drill passed 41/41 in every one of the twenty runs in section 8. Five
+mutations of its sanitized transaction were each detected, and renaming one
+critical check made the acceptance runner REFUSE the report rather than pass
+it. [S5,S6]
+
+7. THE TEST-HELPER DEFECT, RE-MEASURED
+
+A test helper in PR #17 replaced the merged authorisation row instead of
+overriding one field, so every override case was being refused for the wrong
+reason. Seven mutations of the authorisation module were re-measured against
+both test suites, with the source restored after each:
+
+  mutation                            PR #17 tests    current tests
+  remove the expiry check             0 failed        3 failed
+  expiry inclusive-valid              0 failed        2 failed
+  remove the method check             0 failed        2 failed
+  remove the exact-domain comparison  0 failed        3 failed
+  a parent row authorises a subdomain 0 failed        1 failed
+  clock read before the DB read       0 failed        1 failed
+  remove the account-state check      1 failed        1 failed
+
+Six of seven mutations had been UNDETECTED. The new test-only commit adds a
+guard that the helper changes only the field an override names, one-field-away
+pairs so each refusal can come only from its named field, and fail-closed
+uncertainty cases covering every indeterminate resolver code. Reverting the
+helper to the replacing shape now fails four tests immediately. [S5]
+
+8. QUALITY GATES AND TWENTY CONSECUTIVE ACCEPTANCE RUNS
+
+Gates on the final code head:
+
+  git diff --check     clean
+  pnpm typecheck       0 errors
+  pnpm lint            0 problems
+  pnpm test:run        197 files (196 passed, 1 skipped) / 7,796 tests —
+                       7,335 passed, 461 skipped, 0 failed
+  pnpm build           clean; 18 /api/ routes and the /account/domains page
+
+The committed acceptance runner was then run UNMODIFIED twenty times back to
+back from a shell loop with no retry, 21:09:17Z to 21:51:44Z, about two
+minutes each. After each run the exit code was recorded and an independent
+container listing counted leftovers.
+
+  RESULT: 20 / 20 PASS, exit 0 every run, 0 leftover containers every run.
+
+Counts were identical in every run: hermetic 1,929 across 14 files; account
+acceptance 34 plus restart child 3; invite 14/14; M12C 77/77; login lockout
+6/6 plus 13/13; account-acceptance lockout 5/5; retention 45/45 including the
+exact bound 22/22; the REAL restore drill 41/41 with both restore exit codes
+0; all guarded suites 472 across 15 files. No run failed, so nothing needed
+diagnosing; no test was retried, skipped or weakened, and the runner was not
+patched. [S5]
+
+TRANSPARENCY NOTE, carried across from the source record rather than dropped:
+a first draft of the source evidence document sat untracked in the repository's
+evidence directory for roughly eighteen seconds during run 2 before being moved
+out, and was not restored until after run 20. Nothing reads that directory at
+test time. Separately, the drill mutations in section 6 were run BEFORE the
+twenty runs, each with the test file restored and the working tree clean
+afterwards. [S5]
+
+9. THE PRODUCTION PACKAGE — REHEARSED, NOT EXECUTED
+
+This step produced the operational package itself: a read-only preflight, a
+read-only audit, a post-restore invalidation, a written production runbook, a
+guard test over the package, and a rehearsal script.
+
+The rehearsal built a disposable, production-shaped stack from the committed
+production compose file with placeholder secrets at the M12B-7A baseline,
+created the operator account the way production had, and then followed the
+runbook using the committed files.
+
+  FINAL REHEARSAL RESULT: PASS, 56 checks, 0 failed.
+
+Two earlier rehearsal runs failed on HARNESS defects only — a baseline
+maintenance image that did not trust the stand-in certificate authority, an
+invalidation file that printed aligned output, and a sign-in probe that looked
+for the wrong field. Each was fixed in the harness or the package before the
+final run, and NO PRODUCT CODE was changed. This is recorded rather than
+omitted. [S4,S5]
+
+Observations the rehearsal produced, in runbook order: the preflight passed
+12/12 on the baseline; deploying the candidate application BEFORE the
+migration was tried deliberately as a negative control and its readiness came
+back UNAVAILABLE with the two required objects missing, so it was rolled
+straight back; the migration applied 0003 and skipped three while the baseline
+application stayed healthy and signing in throughout; grants and audit passed
+14/14, with a PUBLIC grant and a revoked DELETE each shown to FAIL the audit;
+the closed-gate deployment was healthy with readiness READY on contract
+m12c-0003 and no migration credential in the container; all four domain routes
+answered 404 while the gate was closed, signed in and anonymous, and the
+non-domain surface was BYTE-IDENTICAL to the baseline; the application-only
+rollback was proven to work against a database that already carries 0003; and
+with the gate opened in the rehearsal, a check for a record that had not been
+published returned the explicit RECORD_NOT_FOUND outcome with no authorisation
+row written. [S4,S5]
+
+NOT DONE in this step, stated plainly: the production rollout itself; a
+restore of a real production backup with the five-statement invalidation; a
+real end-to-end domain verification, which needs a TXT record only the owner
+can publish; and proving the resolver path from the real production container.
+The runbook makes that last one an explicit STOP check. [S4,S5]
+
+10. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The integration, the audits, the rehearsal, the test additions, the production
+package and the source evidence document were produced by Claude, an AI coding
+assistant, running in an ephemeral cloud container under a task specification
+written by the project owner. The decision to merge, and the decision to close
+PR #17 as superseded rather than merge it, were the owner's.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. Nothing in this file is a reflection.
+
+  1. Why was reviewed work rebuilt on the current main branch commit by commit
+     instead of simply merging the branch it was reviewed on?
+  2. Six of seven mutations went undetected because of one wrong line in a
+     test helper. What does that say about trusting a passing test suite?
+  3. Why was a rehearsal on a disposable copy worth two days of work before
+     anything touched the real server?
+  4. Why was deploying the new application BEFORE the migration tried on
+     purpose, as a test that was expected to fail?
+  5. Why were the two failed rehearsal runs written down when the final run
+     passed?
+
+11. SOURCE LOCATORS
+
+[S1] GitHub pull request stanciuks/site-security#26, merged 2026-10-06
+     21:58:35 UTC as 928323f1552db1550f658502d01956298d89df7c; branch
+     integration/m12c-current-main-2026-10-06 at head dc3db8a2def4805f1c-
+     50978e36f928372a1b837c; and pull request #17, closed unmerged as
+     superseded. Read from the GitHub API in this session.
+[S2] Base commit 2e883b88b21dea2f42a7a609691b0fb7593d6ac8 on main, and PR #17
+     head 52310d31e23a97c9222b80fe8c47cae3629b4015.
+[S3] db/migrations/0003_m12c_domain_authorizations.sql, its journal and
+     snapshot, and deploy/postgres/02-application-grants.sql.example.
+[S4] docs/rollout/M12C_PRODUCTION_RUNBOOK.md and the deploy/rollout/m12c/
+     package at main 9a4cbdfbc172c68bd78ae35959f9d762c877454b.
+[S5] docs/evidence/M12C_CURRENT_MAIN_RELEASE_2026-10-06.md at main
+     9a4cbdfbc172c68bd78ae35959f9d762c877454b — the source record from which
+     every figure in this note was taken.
+[S6] tests/integration/persistence-restore-resurrection.test.ts and
+     tests/integration/persistence-domain-authorization.test.ts at that
+     commit.
+
+CONTEXT CARRIED FROM MAIN, not part of this step but needed to read it: at the
+time of this work main already contained the baseline-reliability, login
+lockout and retention corrections recorded in the PP notes under
+SCANCOMPASS_BASELINE_RELIABILITY_2026-10-05/, which were still drafts when
+those notes were written. [S5]
+
+No credential, challenge token, DNS TXT value, capability value, password,
+email address, database URL, connection string, backup key, host identifier or
+provider key appears in this evidence note. No real domain was verified and no
+third-party DNS record was created by any part of this step.
+
+END OF EVIDENCE

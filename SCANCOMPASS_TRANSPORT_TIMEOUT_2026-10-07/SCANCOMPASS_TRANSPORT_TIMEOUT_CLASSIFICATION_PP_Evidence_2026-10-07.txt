@@ -1,0 +1,215 @@
+SCANCOMPASS — TRANSPORT TIMEOUT CLASSIFICATION PERSONAL PROJECT EVIDENCE
+A latent nondeterminism found by CI, split out of the redesign, fixed alone
+Review date: 7 October 2026
+Classification: Confidential project evidence
+
+STATUS
+IMPLEMENTED, REVIEWED AND MERGED TO MAIN AS A CHANGE OF ITS OWN. PR #29 was
+merged 2026-10-07 06:56:44 UTC as commit
+9a4cbdfbc172c68bd78ae35959f9d762c877454b, which is the current main branch.
+
+MERGED IS NOT DEPLOYED. No source record states that this change has been
+deployed to production; the last owner-observed deployed source remains
+928323f1552db1550f658502d01956298d89df7c (M12C). Production, the VPS, DNS,
+Postmark and Stripe were not accessed. No live secret was read. No migration
+and no schema change. [S1,S2]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 9.
+
+1. REVIEWED VERSION AND PULL REQUEST
+
+Repository: stanciuks/site-security
+Branch: fix/transport-timeout-classification-2026-10-07, cut from main @
+  6e002024e78ba407032994b398811aa2c38610c8
+Pull request head: fb469520357b89002f7efd2723ab819ee2e0058f
+Pull request: #29, base main
+Opened: 2026-10-07 06:45:43 UTC
+Merged: 2026-10-07 06:56:44 UTC as 9a4cbdfbc172c68bd78ae35959f9d762c877454b
+Diff: 3 files changed, 189 insertions, 6 deletions — one scanner source file,
+  one test file, and the evidence record
+
+PROVENANCE OF THE PATCH, recorded because it matters for how PR #28 is read:
+the source and test change was FIRST WRITTEN ON THE REDESIGN BRANCH (PR #28)
+and was then carried here as a recorded cherry-pick. The patch is
+BYTE-IDENTICAL to the original. This change stands on its own and does NOT
+depend on PR #28 being merged. [S1,S2]
+
+2. HOW THE DEFECT WAS FOUND
+
+It was not found by review, by a user, or by the work that was actually being
+done. It was found because a continuous-integration run on the REDESIGN pull
+request — one that changes no server or scanner code at all — failed exactly
+one test out of 8,005. The test asserted that an operation deadline is
+end-to-end rather than per redirect hop, and it received the reason code
+REQUEST_TIMEOUT where it expected OPERATION_TIMEOUT. [S2,S3]
+
+M12E's minimal CI gate had itself merged to main at 05:45:44 UTC. The run that
+failed started at 05:57:27 UTC — ABOUT TWELVE MINUTES LATER, and the first
+time that gate had been applied to this branch. [S1,S4]
+
+3. WHY IT WAS NOT DISMISSED AS A FLAKY TEST
+
+Three reasons were written down before any code was touched:
+
+  - the failing test and the whole scanner network layer were BYTE-IDENTICAL to
+    main on that branch. The test had passed on main's own push CI and on every
+    run of the preceding pull request. So it was a LATENT DEFECT IN SHARED
+    CODE, not something the change under test had introduced;
+  - the same test's elapsed-TIME assertion passed. The timing was correct and
+    only the REASON CODE was wrong, which points at a classification race
+    rather than at a slow machine;
+  - a test that sometimes reports the wrong reason is reporting a real
+    nondeterminism in the code. The fix is to make the code deterministic;
+    retrying the run or relaxing the assertion would only hide it.
+
+4. THE ROOT CAUSE
+
+The scanner's fetch enforces ONE end-to-end operation budget across all
+redirect hops. For each hop it computes the remaining budget and arms that
+hop's request timer for whichever is smaller, the configured per-request
+timeout or the remaining budget. When the remaining budget is the smaller one,
+THAT HOP'S TIMER IS THE OPERATION DEADLINE.
+
+When the timer expired, the transport returned the per-request reason code, and
+the caller upgraded it to the operation reason code only if a FRESH clock
+reading showed the whole budget had been spent.
+
+Node arms a timer from the event loop's CACHED time, so a timer can fire
+slightly before the clock has advanced by its full delay. A local probe —
+arming a 50 ms timer after work in the same loop iteration — saw this in 8 OF
+20 TRIALS, by up to 1 ms. When it happens, the re-check finds the budget
+fractionally unspent and the operation deadline is reported as a per-request
+timeout. [S2]
+
+5. THE CORRECTION, AND EXACTLY WHAT IT DOES NOT CHANGE
+
+Before the request is made, the code now records whether the clamped hop
+deadline IS the operation deadline. Classification is then decided from that
+CLAMP rather than from a clock reading taken afterwards.
+
+  clamped hop timer expires      reported as the operation timeout, decided
+                                 from the clamp
+  the two are exactly equal      the operation timeout, because the operation
+                                 deadline is reached at that same instant
+  a genuine per-request timeout  still the per-request timeout, when the
+                                 configured limit is shorter than the budget
+  the clock re-check             KEPT, as a second path, so nothing previously
+                                 classified as an operation timeout can become
+                                 a per-request timeout
+
+THIS CHANGES THE REASON CODE ONLY. Timeout durations, the deadline arithmetic,
+the operation budget, the redirect and request counts, and network authority —
+which addresses may be contacted, and under what connection policy — are ALL
+UNCHANGED. The new value feeds only the classification decision, and the timer
+value passed to the request is the same expression as before. [S2,S3]
+
+6. PROVING IT, INCLUDING THE ATTEMPT THAT DID NOT WORK
+
+DETERMINISTIC REGRESSION. For the duration of one fetch call, the global timer
+function is wrapped so that EVERY timer fires 3 ms before its nominal delay,
+while the clock stays real. That is exactly the early-firing timer seen in CI,
+made deterministic. Against a silent socket with a 60 ms budget, so that the
+clamped hop timer is the operation deadline:
+
+  old implementation   FAILS WITH CI'S EXACT ASSERTION — expected
+                       REQUEST_TIMEOUT to be OPERATION_TIMEOUT
+  with the fix         returns the operation timeout
+
+COUNTER-CASE. With a silent socket, a 5-second budget and a 50 ms per-request
+limit — a hop limit shorter than the remaining budget — the result is STILL
+the per-request timeout.
+
+AN EARLIER ATTEMPT IS RECORDED RATHER THAN OMITTED. Making the clock lag
+uniformly did NOT reproduce the bug, because the start time lagged by the same
+amount and the difference cancelled. That approach was tried and rejected while
+the test was being written.
+
+MUTATION CHECK. Each mutation applied alone, the suite run, the file restored,
+and the working tree clean afterwards:
+
+  restore the old clock-only classification   the deterministic regression
+                                              FAILS, with CI's exact assertion
+  over-report: always treat the hop deadline  the counter-case FAILS
+  as the operation deadline
+  fix restored                                31 of 31 pass
+
+The existing deadline and redirect tests are unchanged and pass, including the
+original test that failed in CI. NO TIMING ASSERTION WAS WEAKENED. [S2,S3]
+
+7. GATES
+
+  git diff --check                        clean
+  pnpm typecheck / pnpm lint              0 errors / 0 problems
+  the transport redirect suite            31 passed
+  scanner network, worker and boundary    35 files, 2,747 passed
+  suites together
+  pnpm test:run                           201 files (200 passed, 1 skipped) /
+                                          7,940 tests — 7,479 passed, 461
+                                          skipped, 0 failed. That is main's
+                                          7,477 plus the two new tests; the
+                                          461 skipped are the unchanged
+                                          guarded PostgreSQL suites
+  pnpm build                              clean; 19 /api/ routes
+
+After the merge, main's own push CI run on the resulting commit SUCCEEDED.
+[S2,S4]
+
+8. CONSEQUENCE FOR THE REDESIGN PULL REQUEST
+
+Because this fix was extracted and merged INDEPENDENTLY, the scanner change is
+no longer part of PR #28's net difference against main. That is recorded in
+the redesign's own Personal Project note, in the directory
+SCANCOMPASS_VISUAL_REDESIGN_CURRENT_MAIN_2026-10-07/, and was confirmed there
+by a file-level difference that prints nothing for either file. [S5]
+
+9. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The diagnosis, the correction, the regression tests, the mutation check and the
+source record were produced by Claude, an AI coding assistant, in an ephemeral
+cloud container under a task specification written by the project owner. The
+decision to extract the fix into its own pull request, rather than carry it
+inside the redesign, is recorded in the source documents as the chosen course
+and was merged by the owner.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. Nothing in this file is a reflection.
+
+  1. A build gate twelve minutes old found a defect that review had not. What
+     does that say about automation versus reading code?
+  2. The test failed on a branch that changed nothing in the code under test.
+     Why did that make the failure MORE serious rather than less?
+  3. Only the reason code was wrong; the behaviour was always correct in time.
+     Why was that still worth fixing?
+  4. Why was the fix taken out of the redesign and merged on its own?
+  5. The first attempt at the regression test did not reproduce the bug. Why
+     was that written down?
+
+10. SOURCE LOCATORS
+
+[S1] GitHub pull request stanciuks/site-security#29, merged 2026-10-07
+     06:56:44 UTC as 9a4cbdfbc172c68bd78ae35959f9d762c877454b; branch
+     fix/transport-timeout-classification-2026-10-07 at head
+     fb469520357b89002f7efd2723ab819ee2e0058f. Read from the GitHub API in
+     this session.
+[S2] docs/evidence/TRANSPORT_TIMEOUT_CLASSIFICATION_2026-10-07.md at main
+     9a4cbdfbc172c68bd78ae35959f9d762c877454b — the source record from which
+     every figure in this note is taken.
+[S3] src/scanner/net/fetch-target.ts and
+     tests/unit/net/transport-redirects.test.ts at that commit.
+[S4] The GitHub Actions runs recorded on PR #28 and on main, read from the
+     GitHub API in this session; and the CI gate itself, recorded in
+     SCANCOMPASS_M12D_M12E_PP_Evidence_2026-10-07/.
+[S5] The integration record
+     docs/design/evidence/COURSE_EVIDENCE_CURRENT_MAIN_INTEGRATION_2026-10-07.md
+     on branch integration/redesign-current-main-2026-10-07 at
+     4d509631b7cd832f15283f2fca647b9d9ffc27d7, sections 6.5 and 7.1.
+
+No credential, token, capability value, password, email address, database URL,
+connection string, host identifier or provider key appears in this evidence
+note. The only long identifiers are commit SHAs. No real third-party host was
+contacted by any test; every socket in the regression tests is a local silent
+one.
+
+END OF EVIDENCE

@@ -1,0 +1,351 @@
+SCANCOMPASS — VISUAL REDESIGN, CURRENT-MAIN INTEGRATION
+PERSONAL PROJECT EVIDENCE
+Direction D, "Course + Evidence", rebuilt onto the production main branch
+Review date: 7 October 2026
+Classification: Confidential project evidence
+
+STATUS
+DIRECTION D REBUILT ON CURRENT MAIN, REVIEWED, AND APPROVED FOR REVIEW — BUT
+NOT MERGED AND NOT DEPLOYED. PR #28 is an OPEN DRAFT against main at head
+4d509631b7cd832f15283f2fca647b9d9ffc27d7, intentionally frozen at the time of
+writing.
+
+THIS IS REVIEWED AND APPROVED IMPLEMENTATION EVIDENCE. IT IS NOT PRODUCTION
+EVIDENCE. Nothing in this note describes the live site. Every screenshot in
+this directory is of a locally served build of a draft branch, with network
+responses scripted in the browser. The live site still serves
+928323f1552db1550f658502d01956298d89df7c, which carries NONE of this work.
+
+PR #18, the original redesign pull request, REMAINS AN OPEN DRAFT, UNMERGED AND
+UNMODIFIED. This work did not merge it; it rebuilt its net result on the
+current main branch instead, for the reason recorded in section 2. [S1,S2]
+
+PROVENANCE — THREE KINDS OF STATEMENT
+  SESSION-VERIFIED  Repository, pull-request and continuous-integration state
+                    read directly from the GitHub API while this note was
+                    written. Marked [S1].
+  SOURCE-RECORDED   Figures taken from a committed source evidence document on
+                    the reviewed branch. Marked [S2] or [S3].
+  OWNER-SUPPLIED    Statements the OWNER supplied to this session as text. They
+                    are NOT recorded in the source repository at the reviewed
+                    head. Marked [R1], and only section 9 uses them.
+
+This record is a factual technical and design record. It is NOT a student
+reflection and is not written in the owner's voice. Reflection prompts are
+carried unanswered in section 12.
+
+1. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Branch: integration/redesign-current-main-2026-10-07
+Head: 4d509631b7cd832f15283f2fca647b9d9ffc27d7
+Pull request: #28, DRAFT, OPEN, base main, UNMERGED
+Opened: 2026-10-07 00:27:19 UTC
+Diff: 119 files changed, 9,931 insertions, 1,012 deletions
+
+Source of the design: PR #18, branch design/course-evidence-implementation at
+40a50f44d8d22583af555ad13dc7607ab7dc2e24, itself branched from 66dc55c.
+Direction: D — Course + Evidence, THE OWNER'S OWN SELECTION, recorded in
+SCANCOMPASS_VISUAL_REDESIGN_2026-10-05/.
+
+Current main at the reviewed head: 9a4cbdfbc172c68bd78ae35959f9d762c877454b,
+carrying M12C (in production), M12D and M12E (PR #27), and the transport
+timeout fix (PR #29).
+
+2. WHY THE WORK WAS REBUILT RATHER THAN MERGED
+
+PR #18 has seven commits on top of its base. Main had moved FIFTY-THREE commits
+since that base — through M12C's release and production acceptance, the real
+PDF report, the CI gate and the transport fix. Rather than cherry-pick all
+seven commits, PR #18's NET difference was imported in two commits:
+
+  the design documents and the curated 42-screenshot set, applied as a patch.
+    Cherry-picking the five exploration commits would have carried back the
+    roughly 20 MB of intermediate captures that PR #18 had itself already
+    pruned;
+  everything else — the implementation of direction D, the remembered theme
+    and the review corrections — applied as a three-way merge. NO CONFLICTS.
+
+THE ONLY FILE BOTH SIDES HAD CHANGED was the boundary test file, and the
+three-way apply merged it automatically: it keeps main's account and domain
+blocks AND PR #18's one-file browser-storage allowlist and theme-script pins.
+One component file is deleted, exactly as in PR #18; nothing on current main
+imports it. [S2]
+
+3. WHAT THE REDESIGN IS AND IS NOT ALLOWED TO TOUCH
+
+Measured against the base it started from, this branch changes NOTHING under
+the server, the API routes, the scanner, the worker, the proxy, the database
+directory, the deployment directory, the container definition, the framework
+configuration, the package manifest, the lockfile or the scripts directory —
+zero files in all of those.
+
+At the reviewed head, measured against current main, the net difference is
+PRESENTATION, TESTS AND DESIGN DOCUMENTS ONLY. Nothing under the scanner, the
+server, the API routes, the database, deployment, scripts or the CI workflow
+directory, no change to the package manifest or the lockfile, NO MIGRATION, and
+no payment or M13 work. [S2,S3]
+
+Preservation was checked item by item rather than assumed:
+
+  account flows            sign-in, sign-out, sign out everywhere, reset
+                           request and confirm, signup verification — the
+                           restyle is classes and structure only, and every
+                           account and session suite passes
+  the domain page          restyled in section 4; its tests cover the paths,
+                           the request body it sends, and that the verification
+                           value never reaches storage or the URL
+  legal copy               untouched here; the suite that reads both legal
+                           pages and the content module passes
+  report, share, download  the M11 suites pass unchanged
+  and email
+  capability leakage       the boundary tests — no blob, no ticket, no storage
+                           beyond the exact allowlist, no raw-HTML escape
+                           hatch — and the M11 capability suites pass
+  no M13, no PDF or CI     the difference contains neither
+  work copied in
+
+4. THE DOMAIN PAGE, WHICH THE OLD REDESIGN HAD NEVER SEEN
+
+The domain panel and its page were added by M12C AFTER PR #18 was written, so
+the original redesign never styled them. The decision recorded here is that the
+CURRENT component was restyled, rather than the page being replaced with an
+older snapshot from the redesign branch — the newer behaviour wins, and the
+design adapts to it.
+
+The restyle gives the page the same shell as the account page; puts the add
+form, the DNS instructions and the domain list in the design's own panel,
+form, label and key-value primitives; sets the hostname and the record name and
+value in the design's literal-value style, which wraps long values; and gives
+each domain a status chip in one of three meanings — confirmed, marked, or
+neutral for expired. Alert roles are unchanged, and problem notices keep the
+route marking while success notices do not. THE COPY IS UNCHANGED, except that
+the status chips drop a leading dash that only made sense inside the old inline
+sentence. [S3]
+
+5. MERGING THE PDF AND CI WORK IN (PR #27)
+
+Main was merged into this branch with an ordinary merge commit — no rebase and
+no force-push, so history and provenance are kept. Main's own push CI on the
+commit being merged had already SUCCEEDED, so main was green before the
+redesign was integrated. [S1,S3]
+
+Three files overlapped: two textual conflicts and one automatic merge that was
+still checked by hand. EACH WAS RESOLVED BY COMBINING BOTH SIDES, not by
+choosing one:
+
+  the download control    kept the PDF work's closed two-format table and its
+                          labels, and the redesign's button styling. NOT
+                          reintroduced: the old label, any arbitrary action
+                          property, any hidden input, blob or ticket
+  the shared report view  kept the redesign's composition, with BOTH controls
+                          in its action row, PDF first; both read the SAME
+                          in-memory token at click time; no state, no storage,
+                          no URL, no new capability
+  the boundary test file  the UNION of both sides — main's nineteen-route list
+                          including the PDF route, the whole PDF security
+                          block, and the redesign's storage allowlist and
+                          theme pins. The only lines dropped from either side
+                          were ones the other side had deliberately replaced
+
+A new two-case test pins that both buttons sit in the same action row, PDF
+before HTML, that the two forms post to exactly the two expected endpoints with
+no input element, and that each submission carries the one in-memory token
+once and persists nothing. Removing the PDF control, or the design's class,
+makes those tests fail.
+
+PRESERVATION PROVEN BY DIFFERENCE: across the CI directory, the package
+manifest, the lockfile, the report API routes including the new PDF route, the
+whole server directory including the PDF renderer, the scanner, the worker, the
+proxy, the database, deployment, scripts, the container definition, the PDF
+tests and helper, the deployment unit tests, and the evidence documents, the
+difference against main is EMPTY. [S3]
+
+6. THE CI FAILURE THIS BRANCH CAUSED TO BE FOUND
+
+The first CI run after that merge FAILED, with one test of 8,005 failing. The
+failing test was in the scanner's network layer, which this branch does not
+touch.
+
+It was root-caused rather than retried, the fix was written here, and then THE
+FIX WAS EXTRACTED AND MERGED TO MAIN ON ITS OWN AS PR #29. The full account is
+in SCANCOMPASS_TRANSPORT_TIMEOUT_2026-10-07/.
+
+The second CI run, on the fixed head, SUCCEEDED. [S1,S3]
+
+7. MERGING PR #29 BACK IN, AND WHAT THAT REMOVED FROM THIS PULL REQUEST
+
+Main — now carrying both PR #27 and PR #29 — was merged into this branch a
+second time, again as an ordinary merge, with NO CONFLICTS. Main's own push CI
+on that commit had succeeded before the merge was made.
+
+Because PR #29's patch is byte-identical to the one written here, git merged it
+as already present, and the merge brought in only PR #29's evidence record.
+
+THE CONSEQUENCE, WHICH IS THE POINT: the scanner fix IS NO LONGER PART OF THIS
+PULL REQUEST'S NET DIFFERENCE. A file-level difference against main for the two
+files concerned prints NOTHING. The one change this branch had made outside the
+redesign and the merges has left it. [S1,S3]
+
+8. THE DOMAINS LINK, AND WHY IT IS NOT IN THE HEADER
+
+Until this point the domain page was reachable only by typing its address. The
+owner asked for a link. The recorded decision is that it goes in the SIGNED-IN
+STATE OF THE ACCOUNT PANEL, not in the site header:
+
+  - the header is server-rendered and knows nothing about the visitor. A header
+    link would show an account-only destination to EVERYONE, signed out
+    included;
+  - the account panel learns that the visitor is signed in from an existing
+    session request after hydration. A link rendered there is only ever in
+    client output, and only for a signed-in visitor.
+
+It is NAVIGATION ONLY. No API route, no domain logic, no gate behaviour and no
+server code changed, and rendering the link makes no request beyond the session
+request that already happened. The domain page still decides for itself: with
+the gate closed every domain route answers 404 and the page shows its existing
+unavailable notice; signed out, it asks the visitor to sign in.
+
+Five new tests pin that there is exactly one such link, with exactly the right
+address, only when signed in; that it is ABSENT while loading, when signed out,
+and when the feature is unavailable; and that it is ABSENT FROM THE SERVER-
+RENDERED MARKUP of both the panel and the account page. Two mutations — a
+wrong address, and a link added to the signed-out state — each fail. [S3]
+
+9. REVIEW STATUS (OWNER-SUPPLIED) [R1]
+
+The owner supplied the following to this session as text. NEITHER STATEMENT IS
+RECORDED IN THE SOURCE REPOSITORY AT THE REVIEWED HEAD, and this session did
+not perform, witness or verify either review:
+
+  - the independent review of PR #28 PASSED;
+  - the OWNER'S OWN VISUAL REVIEW of PR #28 PASSED, explicitly, on
+    7 October 2026.
+
+Recorded for accuracy rather than tidiness: the pull-request description at the
+reviewed head still lists "Needs owner visual review" as an open item, and the
+committed integration record still says the owner should look at the
+integration screenshots before the pull request leaves draft. Those documents
+were written BEFORE the owner's review and have not been updated since; they
+are not evidence that the review did not happen, and this note does not treat
+them as such. [S1,S3,R1]
+
+PR #28 remains a DRAFT. It has not been marked ready, has not been merged, and
+has not been deployed. [S1]
+
+10. GATES, CONTINUOUS INTEGRATION AND VISUAL CHECKS
+
+Gates on the reviewed tree (Node v24.21.0): [S3]
+
+  git diff --check              clean
+  pnpm typecheck / pnpm lint    0 errors / 0 problems
+  focused suites                14 files, 1,655 passed — the download control,
+                                the shared report view, the PDF route, renderer
+                                and composition, the boundary file, the CI
+                                workflow, the domain panel, the account panel,
+                                the design suite, theme and policy, and the
+                                transport redirect suite
+  pnpm test:run                 204 files (203 passed, 1 skipped) / 8,013
+                                tests — 7,552 passed, 461 skipped, 0 failed.
+                                The 461 skipped are the SAME guarded
+                                PostgreSQL suites as on main, not a new gap
+  pnpm build                    clean; 19 /api/ routes; both the account page
+                                and the domain page present
+
+CONTINUOUS INTEGRATION on the reviewed head: the run concluded SUCCESS. That
+conclusion was read from the GitHub API in this session; the counts above are
+the local gates on the same tree. [S1]
+
+VISUAL CHECKS. A real browser drove a production-mode server of this tree, with
+the session, domain and report-resolution endpoints intercepted so no backend,
+worker or database was involved. Across the shared report at desktop dark,
+desktop light and mobile, a very long report on mobile, the landing page, the
+account page signed in and signed out, and the domain page in its ready,
+unavailable, gate-closed and signed-out states:
+
+  - NO horizontal overflow at any size;
+  - the two download controls never overlap, wrapping onto two rows on mobile;
+  - keyboard focus reaches every control, with a visible focus ring;
+  - the remembered theme is applied;
+  - a REAL click on the PDF button produced a form POST with the token ONLY in
+    the body — in no request URL and not in the page markup;
+  - the domain page still sends the M12C request body it always did;
+  - NO content-security-policy violation and no script error anywhere. The only
+    console errors are the browser's own log lines for the responses the script
+    mocked on purpose. [S3]
+
+11. OPEN ITEMS, NOT PAPERED OVER
+
+  1. BUTTON SPACING. Each control renders a field-less form beside its button,
+     and an empty form is still an item of the action row, so the two buttons
+     sit one extra gap apart. Hiding the empty forms with a style rule would
+     close the gap, but it changes the very element the token handoff depends
+     on, so it was LEFT FOR A SEPARATELY TESTED CHANGE rather than fixed in
+     passing. The gap is cosmetic and the buttons stay readable.
+  2. The visual review in section 10 was done by SCREENSHOT, by the assistant.
+     The owner's own visual review is the separate, owner-supplied fact in
+     section 9.
+  3. PR #18's own record carries over unchanged, INCLUDING its one
+     owner-approved browser-storage exception for the theme and its nonce'd
+     pre-paint script. Both were reviewed in PR #18 and are not re-litigated
+     here.
+  4. PR #18 itself is still open and unmerged. Whether it is closed as
+     superseded, as PR #17 was, is an owner decision that has not been taken.
+
+12. AI AND TOOLING TRANSPARENCY, AND REFLECTION PROMPTS
+
+The audit, the three directions, direction D, the original implementation, this
+integration, the restyled domain page, the conflict resolutions, the tests, the
+screenshots and the source records were produced by Claude, an AI coding
+assistant. THE DIRECTION WAS CHOSEN BY THE OWNER, the request for a navigation
+link came from the owner, and the browser-storage exception was an explicit
+owner decision the assistant had declined to make on its own.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. Nothing in this file is a reflection.
+
+  1. The design was two days old and the codebase had moved fifty-three commits.
+     Why was rebuilding it cheaper than merging it?
+  2. Every conflict was resolved by keeping BOTH sides. When is that the right
+     answer, and when is it the lazy one?
+  3. A design change caused a real defect in the scanner to be found, and the
+     fix then LEFT the design change. Why is that a better outcome than fixing
+     it in place?
+  4. Why does an account-only link belong in a panel that waits for the session
+     rather than in the header everyone sees?
+  5. One cosmetic gap was left unfixed on purpose because fixing it would touch
+     a security-relevant element. What does that trade say about priorities?
+
+13. SOURCE LOCATORS
+
+[S1] GitHub pull-request state for stanciuks/site-security #18 (open draft,
+     unmerged, head 40a50f44d8d22583af555ad13dc7607ab7dc2e24) and #28 (open
+     draft, unmerged, head 4d509631b7cd832f15283f2fca647b9d9ffc27d7), the
+     commit list of PR #28, and the continuous-integration run conclusions on
+     PR #28 and on main — all read from the GitHub API in this session.
+[S2] docs/design/evidence/COURSE_EVIDENCE_IMPLEMENTATION_2026-10-05.md and
+     docs/design/SCANCOMPASS_VISUAL_DIRECTIONS_2026-10-05.md on branch
+     integration/redesign-current-main-2026-10-07 at
+     4d509631b7cd832f15283f2fca647b9d9ffc27d7 — the original audit,
+     directions, owner decision and implementation record.
+[S3] The integration record
+     docs/design/evidence/COURSE_EVIDENCE_CURRENT_MAIN_INTEGRATION_2026-10-07.md
+     at that commit — the record from which every figure in this note is
+     taken.
+[S4] docs/design/screenshots/current-main-integration/ at that commit — the
+     captures from which the four images in this directory are a selection;
+     see README_VISUAL_EVIDENCE.txt.
+[R1] The project owner, supplying to this session, as text: that the
+     independent review of PR #28 passed, and that the owner's visual review
+     of PR #28 passed explicitly on 7 October 2026. Not recorded in the source
+     repository at the reviewed head; not verified by this session.
+
+No credential, token, capability value, password, email address, database URL,
+connection string, host identifier or provider key appears in this note or in
+the screenshots. No account was signed in to; the sign-in form is empty. The
+report screenshot uses a FICTIONAL host name with report data generated by the
+application's own assessment code, and no real third-party website is shown. No
+DNS verification value is reproduced — see the exclusion recorded in
+README_VISUAL_EVIDENCE.txt.
+
+END OF EVIDENCE
