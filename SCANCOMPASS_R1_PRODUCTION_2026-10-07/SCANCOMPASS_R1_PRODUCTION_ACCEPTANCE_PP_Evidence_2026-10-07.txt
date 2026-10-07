@@ -1,0 +1,570 @@
+SCANCOMPASS — R1 PRODUCTION RELEASE AND ACCEPTANCE
+PERSONAL PROJECT EVIDENCE
+The redesign, the real PDF download and two corrections, deployed behind a
+deliberately closed scan gate
+Review date: 7 October 2026
+Classification: Confidential project evidence
+
+STATUS
+R1 IS DEPLOYED AND ACCEPTED IN PRODUCTION. The Course + Evidence redesign,
+M12D's real PDF download, PR #29's scanner transport-timeout correction and
+PR #30's theme-toggle correction are live. M12E is repository-only and reaches
+no runtime surface. R1 CARRIED NO DATABASE MIGRATION: the schema contract is
+still m12c-0003 and the migration ledger is still 0000–0003. [R1,S1,S2]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Four kinds of statement appear in this note and are kept apart throughout.
+
+  OWNER-OBSERVED   An observation the OWNER made while performing the
+                   controlled production deployment and acceptance, supplied
+                   as text to the assistant session of 7 October 2026 and
+                   recorded in the committed source acceptance document.
+                   Marked [R1].
+  OWNER-SUPPLIED   A statement the OWNER supplied to THIS Personal Project
+                   session as text which is NOT recorded in the source
+                   acceptance document. Marked [R2]; only section 12 uses it.
+  SESSION-VERIFIED Repository, pull-request and continuous-integration state
+                   read directly from the GitHub API while this note was being
+                   written. Marked [S1].
+  SOURCE-RECORDED  Figures taken from a committed source evidence document.
+                   Marked [S2].
+
+NEITHER the assistant session that produced the source acceptance document NOR
+the session that wrote this Personal Project note accessed production, the VPS,
+SSH, the production database, DNS, the hosting provider, Postmark or Stripe,
+ran any production command, or saw any raw production output. Nothing in this
+note is re-derived, extrapolated or independently confirmed by either session.
+Where a fact is production reality, it is production reality BECAUSE THE OWNER
+OBSERVED IT, and it is labelled [R1].
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 16.
+
+1. WHAT THIS NOTE SUPERSEDES
+
+Two earlier notes in this evidence repository carry status lines that R1 has
+now moved past. THEY WERE CORRECT WHEN WRITTEN AND ARE NOT AMENDED; this note
+states what they no longer describe, which is the convention already used by
+SCANCOMPASS_M12C_Step3 and by the reliability-chain continuation note.
+
+  SCANCOMPASS_M12D_M12E_PP_Evidence_2026-10-07.txt says "MERGED IS NOT
+  DEPLOYED" and names 928323f1552db1550f658502d01956298d89df7c as the last
+  owner-observed deployed source. M12D is now deployed and accepted in
+  production as part of R1; the deployed source is
+  a3d3a47c8e9da450f51bbb2631c6730a3446aeb6. M12E remains repository-only, as
+  that note said, because it has no runtime surface.
+
+  SCANCOMPASS_VISUAL_REDESIGN_CURRENT_MAIN_PP_Evidence_2026-10-07.txt says
+  "NOT MERGED AND NOT DEPLOYED" and records PR #28 as an open draft. PR #28
+  was marked ready and merged 2026-10-07 16:39:04 UTC as
+  e7f7173882ad9e73c3b94a0c995940a32cb2d9a7, and its work is live. That note's
+  separation of implementation evidence from production evidence still holds:
+  its screenshots remain captures of a locally served draft build, and this
+  note does not reclassify them as production screenshots. [S1]
+
+  PR #18, the original redesign pull request, IS STILL AN OPEN DRAFT, unmerged
+  and unmodified. PR #15 (M13 payments) is still an open draft, unmerged and
+  unmodified. [S1]
+
+2. WHAT R1 IS, AND THE ORDER THE WORK ARRIVED (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+
+Merged into R1, in this order:
+
+  PR #27  M12D real PDF reports + M12E minimal CI
+          merged 2026-10-07 05:45:44 UTC as
+            6e002024e78ba407032994b398811aa2c38610c8
+  PR #29  scanner transport-timeout classification correction
+          merged 2026-10-07 06:56:44 UTC as
+            9a4cbdfbc172c68bd78ae35959f9d762c877454b
+  PR #28  Course + Evidence redesign (direction D) on current main
+          merged 2026-10-07 16:39:04 UTC as
+            e7f7173882ad9e73c3b94a0c995940a32cb2d9a7
+          119 files changed, 9,931 insertions, 1,012 deletions
+  PR #30  theme-toggle correction, the closed-gate acceptance defect
+          merged 2026-10-07 19:12:41 UTC as
+            a3d3a47c8e9da450f51bbb2631c6730a3446aeb6
+          3 files changed, 155 insertions, 21 deletions
+
+Continuous integration on the main branch, read from the GitHub API:
+
+  run 37653717638  SUCCESS on e7f7173… — the source the SCANNER image was
+                   built from
+  run 37672752847  SUCCESS on a3d3a47… — the DEPLOYED source
+  run 37677893839  FAILURE on 1dc0b572… — the FIRST push run on the docs-only
+                   reconciliation merged AFTER acceptance. It is a latent
+                   test-suite nondeterminism and not an R1 defect; the cause,
+                   and the test-only correction that followed, are recorded in
+                   section 15 rather than omitted
+  run 37681213741  SUCCESS on dfa7a207… — PR #32, the test-only correction
+  run 37682898140  SUCCESS on bdbe2820… — the FINAL main head, after PR #32
+
+PR #30's own pre-merge check on head 4bead9507f1000243394c06e23912fa2d8ba6dec
+concluded SUCCESS before it was merged.
+
+3. WHAT WENT TO PRODUCTION
+
+  SESSION-VERIFIED [S1]
+  Deployed functional source   a3d3a47c8e9da450f51bbb2631c6730a3446aeb6
+  Previous deployed source     928323f1552db1550f658502d01956298d89df7c (M12C)
+  Migrations in source          0000–0003 only; there is NO 0004
+  Schema contract in source     m12c-0003
+
+  OWNER-OBSERVED [R1]
+  Schema contract in production m12c-0003
+  Migration ledger              0000–0003
+  Application image             sha256:9758eab0073823e9fccb0e084f6fc71dc0d15c
+                                77029c74215fcc35c4e9b23021
+  Scanner image                 sha256:3672ef72b0d9a13dc95dc6a80a3c45413d7776
+                                e082fe21b3f08ccbff355f0bad
+
+THE TWO IMAGES WERE BUILT FROM DIFFERENT COMMITS, DELIBERATELY. The scanner
+was built from e7f7173…, the source BEFORE the theme-only correction, and was
+NOT rebuilt for PR #30. That is checkable rather than assumed: PR #30 changes
+one component file, one stylesheet selector and one test file, none of which
+the scanner build stage consumes. [S2]
+
+A cross-architecture build path is recorded rather than hidden: the owner's
+build machine is Apple Silicon and production is x86_64, so both images were
+built for linux/amd64. The first attempt, under ordinary emulation, FAILED
+inside the runtime, and the build was moved to an isolated virtualisation
+profile with Rosetta. The build context was a clean archive of the exact
+commit, carrying no repository metadata, no local dependency directory and no
+environment file, and each image was built from its explicit target stage. The
+source tree inside the build was proved file by file against the commit — 733
+expected blobs, 733 actual blobs, exact match. The proof METHOD was designed in
+the assistant session; the RESULT is the owner's observation. [R1,S2]
+
+4. THE DEPLOYMENT ORDER, WHICH IS THE POINT OF THIS STEP (OWNER-OBSERVED) [R1]
+
+The requirement was that NO INTERVAL OF UNCONTROLLED SCANNING exist while the
+images were replaced. Scanning was closed FIRST and reopened only after
+closed-gate acceptance had passed.
+
+  1.  the scan gate was closed, after a protected root-only copy of the
+      application environment file was taken
+  2.  the BASELINE application was recreated on the UNCHANGED image and proved
+      to answer 503 SCAN_DISABLED — the gate was proven closed before any
+      image changed
+  3.  the scanner candidate was deployed FIRST; healthy, 0 restarts, its host
+      port still unpublished
+  4.  the app candidate was deployed SECOND
+  5.  closed-gate acceptance was run (section 5)
+  6.  a visual defect was found (section 7)
+  7.  production REMAINED SCAN-CLOSED while it was fixed
+  8.  PR #30 was built, reviewed, merged, and deployed as an APP-ONLY hotfix
+  9.  closed-gate acceptance passed
+  10. the scan gate was reopened
+  11. open-gate acceptance passed (section 8)
+
+THE SCANNER-EGRESS SERVICE WAS NEVER RESTARTED. It remained active, as did the
+network policy and the web server. Its dependency relationship with the web
+server makes an unnecessary reapply a deliberate edge outage, so it was left
+alone rather than refreshed for tidiness. [R1,S2]
+
+5. CLOSED-GATE ACCEPTANCE (OWNER-OBSERVED) [R1]
+
+  application / scanner / database   healthy, 0 restarts each
+  new assessments                    503 SCAN_DISABLED
+  a malformed PDF request            HTTP 400 and the neutral failure page —
+                                     the PDF route is live and refuses without
+                                     disclosing anything
+  persistence readiness              READY on contract m12c-0003
+  scanner-worker readiness           READY / OK
+  web server / scanner egress        active / active
+  database contract checks 10–130    PASS
+  capability-labelled app-log fields 0 found
+  capability-shaped query parameters 0 found in the checked access-log window
+
+6. DEVIATION ONE — THE BASELINE SHARE CAPABILITY WAS NOT RETAINED
+
+The plan was to create a share link from the PRE-DEPLOYMENT version and use it
+to exercise the PDF and HTML downloads while scanning was closed. The owner did
+not retain it.
+
+IT WAS NOT RECOVERED FROM THE DATABASE, NOT DERIVED FROM A STORED DIGEST, AND
+NOT RECREATED BY MANIPULATING PRODUCTION DATA. Scanning was not reopened early
+to mint a replacement. The capability is intentionally non-recoverable and no
+attempt was made to work around that.
+
+THE CONSEQUENCE IS STATED RATHER THAN SOFTENED: the closed-gate phase proves
+the PDF route REFUSES CORRECTLY; it does NOT prove a successful download. The
+valid share, PDF and HTML acceptance moved to the open-gate phase, immediately
+after the first controlled live assessment produced a fresh share. [R1,S2]
+
+7. DEVIATION TWO — A VISUAL DEFECT, AND THE GATE STAYED CLOSED
+
+During closed-gate visual acceptance the owner found that the header theme
+button read "Light theme" in BOTH the dark and the light state. Switching
+worked and persisted; the label did not move. [R1]
+
+PRODUCTION REMAINED SCAN-CLOSED WHILE IT WAS FIXED. The defect was not
+accepted, and the gate was not reopened to get past it. [R1]
+
+Root cause and fix, from the source record: the visible text was a literal and
+the accessible name was a constant, so the only state-varying attribute was a
+pressed state, which is invisible on screen. PR #30 makes the control name the
+ACTION — "Light theme" while dark, "Dark theme" while light. THE PRESSED STATE
+WAS REMOVED RATHER THAN KEPT beside the new name, because a pressed state
+qualifies a name as a state: with an action name, light mode would have
+announced the dark theme as pressed, which is precisely what is not on. The
+filled visual state moved to a theme data attribute, so the semantics changed
+and the appearance did not. [S2]
+
+The owner confirmed the corrected control in production before scanning was
+reopened. [R1]
+
+8. GATE REOPENED, AND OPEN-GATE ACCEPTANCE (OWNER-OBSERVED) [R1]
+
+The scan gate was restored to enabled, and THE APPLICATION ENVIRONMENT FILE
+RETURNED BYTE-FOR-BYTE TO ITS ORIGINAL PRE-R1 HASH — the only change R1 made
+to production configuration was the gate, twice, and it ended where it started.
+The hash value itself is not recorded here.
+
+  persistence                READY
+  scanner worker             READY / OK
+  production scanning        enabled
+  readyForProduction         true
+  blockerCount               0
+
+One controlled fresh assessment of the project's own domain:
+
+  score                      89
+  grade                      B
+  coverage                   96 %
+  state                      COMPLETED
+  tier                       FREE
+  resultSource, first run    LIVE
+  resultSource, repeat       RECENT_CACHE
+
+THE SCORE, GRADE AND COVERAGE MATCH THE ESTABLISHED PRODUCTION CALIBRATION
+EXACTLY, so the redesign and the scanner timeout correction changed no
+assessment outcome. The same three figures appear in the September production
+screenshot set in this repository.
+
+Owner acceptance items, all PASS:
+
+  the fresh shared report renders in the new design
+  the PDF opens
+  THE SAME PDF DOWNLOADED TWICE HAS MATCHING SHA-256 — the renderer is
+    byte-deterministic, which M12D had tested and production now shows
+  the HTML download works
+  the immediate repeat assessment behaves
+  the corrected light/dark control works
+
+9. TWO MANAGEMENT TOKENS IS EXPECTED, NOT AN ANOMALY
+
+Persistence in the acceptance window: 1 new scan row, 1 frozen report, 2
+management tokens, 1 share. [R1]
+
+The LIVE durable result mints one management capability; a RECENT_CACHE hit on
+a durable report DELIBERATELY mints a distinct capability for that caller. One
+assessment plus one immediate repeat therefore yields two. Written down so a
+later reader does not read it as a leak. [S2]
+
+10. ONE DATABASE-AUDIT CHECK NOW FAILS BY DESIGN
+
+The M12C rollout audit script checks 10–130 PASS. Check 140 — "no domain
+challenge or authorisation exists yet" — NOW FAILS, because production
+legitimately holds 0 domain challenges and 1 domain authorisation since the
+owner verified the project's own domain under M12C.
+
+That script was written for the M12C CLOSED-GATE moment and check 140 encodes
+that moment. IT IS A HISTORICAL EXPECTATION, NOT A DEFECT. The correct R1
+signature is checks 10–130 PASS with check 140 reporting exactly
+0 challenge(s), 1 authorisation(s). Anything else — any failure in 10–130, or
+a different count on 140 — is a genuine stop. [R1,S2]
+
+11. FINAL RUNTIME (OWNER-OBSERVED) [R1]
+
+  application                healthy, 0 restarts
+  scanner                    healthy, 0 restarts
+  PostgreSQL                 healthy, 0 restarts
+  scanner egress             active
+  web server                 active
+  production scanning        enabled
+  readyForProduction         true
+  blockerCount               0
+
+12. CLEANUP, PROVED BEFORE IT WAS DONE (OWNER-SUPPLIED) [R2]
+
+The owner supplied the following to THIS session as text. IT IS NOT RECORDED IN
+THE SOURCE ACCEPTANCE DOCUMENT, and this session did not witness or verify it.
+
+Before deleting any temporary rollout artifact, the owner proved the end state
+first: the production environment file restored to its expected open-gate hash,
+the scan gate enabled, the application, scanner and database healthy, and all
+restart counts 0. Only then were the baseline environment copy, the transferred
+R1 image archive and the transferred hotfix image archive removed.
+
+ROLLBACK IMAGE TAGS WERE INTENTIONALLY RETAINED, temporarily. Deleting the
+transferred archives is not the same as discarding the ability to go back.
+
+13. WHAT R1 DID NOT CHANGE
+
+  SESSION-VERIFIED [S1,S2]
+  The source record states that every one of these surfaces was diffed across
+  928323f → a3d3a47 and returned nothing: the database directory, the
+  production compose file, the web-server configuration, the service units,
+  the firewall configuration, the database bootstrap directory, the production
+  environment example, and both persistence schema modules. The only
+  dependency change in the range is the pinned PDF library.
+
+  OWNER-OBSERVED [R1]
+  Database, schema and grants; web-server configuration; container topology;
+  firewall topology; DNS; Postmark; Stripe; the maintenance image; the public
+  signup gate; and the report-email delivery gate were all unchanged. Public
+  signup and report-email delivery REMAIN CLOSED.
+
+NO MIGRATION WAS CARRIED BY R1, and there is no 0004. No payment code and no
+M13 work exists on the main branch. [S1,S2]
+
+14. M12 STATUS AFTER R1
+
+M12 IS COMPLETE APART FROM THE ALREADY-DELIBERATE HTTPS WELL-KNOWN-FILE
+VERIFICATION DEFERRAL, which remains deferred by decision and not by oversight.
+
+  M12A  accepted in production
+  M12B  accepted in production
+  M12C  accepted in production
+  M12D  accepted in production as part of R1
+  M12E  complete in source and repository CI; NO RUNTIME SURFACE, so there is
+        nothing for production to accept
+
+M13 HAS NOT STARTED. [R1,S1,S2]
+
+An adjacent fact the owner supplied, and what it does not authorise: Stripe
+business verification is complete. That is FUTURE M13 CONTEXT ONLY. R1 did not
+access, configure or change Stripe, no payment code exists on main, and no gate
+moved as a result. [S2]
+
+15. THE TECHNICAL REPOSITORY'S OWN RECONCILIATION (SESSION-VERIFIED) [S1,S2]
+
+After acceptance, a DOCS-ONLY pull request reconciled the repository's status
+prose with production.
+
+  PR #31  docs: R1 production acceptance record + status reconciliation
+          head d3777a67179a8672dcd2149186ebae6db1d11300
+          opened 2026-10-07 19:45:03 UTC
+          merged 2026-10-07 19:53:21 UTC as
+            1dc0b572c02e64826dde42c5017dc9477beb2892
+          11 files changed, 371 insertions, 18 deletions
+          pre-merge CI on the exact head: SUCCESS
+
+The new main SHA ADDS DOCUMENTATION ONLY AND CHANGES NO RUNTIME BEHAVIOUR; the
+deployed functional source is still a3d3a47…. The one source file it touches is
+a worker comment that had claimed nothing starts the worker in production, which
+stopped being true at M12A-6; no executable line moved.
+
+That pull request added docs/evidence/R1_PRODUCTION_ACCEPTANCE_2026-10-07.md,
+the source record this note draws on, which separates OWNER-OBSERVED production
+facts from SESSION-EXECUTED repository facts and records the lost baseline
+share, the theme hotfix, the two expected management tokens, the expected
+check-140 mismatch, the cross-architecture build path, the unchanged calibration
+and the absence of an R1 migration.
+
+IT ALSO ANNOTATED RATHER THAN REWROTE. Status passages that still described the
+PDF work as a draft, the redesign as unmerged, migration 0003 as unapplied or
+the worker as undeployed gained a dated current-status note pointing at the new
+record. And one PRE-EXISTING DOCUMENTATION DEFECT was reconciled honestly: the
+operations runbook cited an evidence document that does not exist in the
+repository. NO DOCUMENT WAS INVENTED to make the citation resolve; it now points
+at the artifacts that do exist, and says what the dangling citation was. [S2]
+
+A LOCAL-GATE DISPOSITION, recorded because it looks like a failure and is not:
+the full test suite on the owner's macOS workstation reports 8 failures, all in
+one deployment-package test file, because the system shell on that platform
+cannot parse a declaration the deployment library uses. The same file passes
+47 of 47 on the Ubuntu runner on the same commit, and production is Ubuntu. The
+exact-commit CI run was treated as authoritative and NO SOURCE WAS CHANGED TO
+MAKE A LOCAL SHELL EXECUTE AN UBUNTU DEPLOYMENT LIBRARY. The 461 guarded
+PostgreSQL suites remain skips in CI and are not claimed as having run. [S2]
+
+A POST-MERGE CI FAILURE ON THAT DOCS-ONLY COMMIT, RECORDED RATHER THAN
+OMITTED (SESSION-VERIFIED) [S1]
+
+The first push run of continuous integration on the docs-only merge commit,
+run 37677893839, CONCLUDED FAILURE. The whitespace, typecheck and lint gates
+passed; the test step failed with 2 of 8,017 tests failing, 7,554 passed and
+the usual 461 guarded suites skipped, and the build and clean-tree gates were
+therefore skipped.
+
+Both failures are in ONE account-mail test, in a case-insensitive check that a
+message must not name password or key-derivation material. The check is applied
+to the WHOLE message — subject and body together — and each message contains a
+RANDOMLY GENERATED one-time link value. On this run that random value happened
+to contain the three letters the check forbids, so both messages tripped the
+same assertion. The forbidden string appeared inside the random value, NOT in
+any copy the project wrote.
+
+WHAT THIS IS, STATED CAREFULLY: a LATENT NONDETERMINISM IN A TEST, of the same
+family as the one PR #29 fixed in the scanner. It is NOT evidence about
+production and NOT an R1 regression, and that reading is supported rather than
+asserted:
+
+  - the pre-merge run on this pull request's exact head concluded SUCCESS;
+  - the DEPLOYED source is a different commit, a3d3a47…, whose own push run
+    concluded SUCCESS;
+  - the failing test exercises message copy, which this pull request does not
+    change, and production's report-email delivery gate is CLOSED in any case;
+  - production was accepted BEFORE this commit existed, and this commit changes
+    no runtime behaviour.
+
+It is nonetheless a real finding about the test suite: an assertion whose
+outcome depends on random input will fail at some rate, and this run is that
+rate arriving. [S1]
+
+THE TEST-ONLY CORRECTION — PR #32 (SESSION-VERIFIED, SOURCE-RECORDED) [S1,S3]
+
+  PR #32  test(account-mail): do not read an opaque capability as authored copy
+          head dfa7a207409cbd9d20a45ca51fff85cdb166cb02
+          base main @ 1dc0b572…
+          opened 2026-10-07 20:20:08 UTC
+          merged 2026-10-07 20:33:23 UTC as
+            bdbe282084be3554ac93ced40fc46044e8285f39
+          2 files changed, 261 insertions, 3 deletions — the test file and its
+            own evidence record, and NOTHING ELSE
+          branch CI on the exact head: run 37681213741, SUCCESS
+          post-merge main CI: run 37682898140, SUCCESS
+
+THE RATE WAS MEASURED RATHER THAN ESTIMATED. The capability is 32 random bytes,
+43 base64url characters, and the scan folded case before searching, so each of
+the three forbidden letters could match in either case. Two hundred thousand
+tokens were put through the same message shape: the old assertion would have
+failed 249 times — 0.124 %, about one run in eight hundred — and every one of
+the 249 was the same three-letter term, the only one short enough to be
+realistically reachable. The corrected assertion failed 0 times in the same
+200,000. [S3]
+
+WHAT THE CORRECTION CHANGED IS THE PROPERTY, NOT THE THRESHOLD. The test now
+excludes ONLY the exact opaque payload — the challenge identifier and the token
+— from the semantic scan, by splitting on that literal rather than by a
+pattern, so no character of a random token can be read as one. STILL INSPECTED,
+DELIBERATELY: the subject, every line of authored prose, the link's origin and
+path, and the fragment marker itself; the notification that carries no
+capability is still inspected WHOLE, and the test proves that by asserting the
+redacted copy is byte-identical to the raw copy in that case. The separate
+assertions about where a capability may and may not appear are untouched. [S3]
+
+IT IS PINNED BOTH WAYS. A committed deterministic fixture — a valid 32-byte,
+43-character capability that CONTAINS the forbidden term — reproduces the old
+false positive on demand, and a second regression plants real forbidden wording
+in the subject and in prose directly beside the link and requires the scan to
+find it, so the exclusion cannot be hiding a genuine occurrence. Making the
+exclusion a no-op fails three tests, including the deterministic regression, so
+it does not pass regardless of the fix. The fixture value is NOT reproduced in
+this note. [S3]
+
+NO RUNTIME SOURCE CHANGED, no deployment followed, and production remained on
+the already accepted R1 images. The authored message copy was clean throughout:
+the two forbidden terms that appear in the mail module at all are in docblock
+comments stating the rule the module follows, and neither reaches a built
+message. The deployed functional source is still a3d3a47…; main's current head,
+bdbe2820…, is R1's docs plus this test correction and changes no runtime
+behaviour. [S1,S3]
+
+THIS NOTE'S OWN RECORDING GATE, AND THE CHRONOLOGY IT PRODUCED. The owner's
+instruction for this Personal Project update made a SUCCESSFUL post-merge run
+the precondition for recording R1 here. The order of events is kept as it
+happened rather than tidied into a single green moment:
+
+  1. R1 deployed and ACCEPTED in production on source a3d3a47…, whose own
+     post-merge run 37672752847 concluded SUCCESS;
+  2. PR #31 merged documentation and evidence only, as 1dc0b572…;
+  3. its FIRST post-merge run, 37677893839, FAILED, exposing the latent test
+     nondeterminism described above;
+  4. NO Personal Project evidence was committed, because the requested
+     CI-success gate was not met. The failure was reported, not waived;
+  5. PR #32 corrected the test-only defect;
+  6. PR #32's branch CI, run 37681213741, concluded SUCCESS;
+  7. PR #32 merged as bdbe2820…;
+  8. the final post-merge main run, 37682898140, concluded SUCCESS;
+  9. the gate was therefore satisfied, and this note was committed.
+
+STEP 3 IS NOT DELETED BY STEP 8. A record that showed only the green run would
+hide the one genuinely new finding of the sequence — that a test asserting a
+property over random input is a lottery — and would misrepresent why this file
+sat prepared but uncommitted until the test was corrected. [S1]
+
+16. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The implementation, the tests, the source acceptance record and this Personal
+Project note's source were produced by Claude, an AI coding assistant, under
+task specifications written by the project owner. THE PRODUCTION DEPLOYMENT,
+THE GATE DECISIONS AND EVERY PRODUCTION OBSERVATION IN THIS NOTE ARE THE
+OWNER'S. No assistant session held production access at any point.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. Scanning was deliberately switched off before the images were replaced and
+     switched back on only after acceptance. What would have been risked by
+     deploying with the gate open, and who would have carried that risk?
+  2. The pre-deployment share link was lost, and it was NOT recovered by
+     reaching into the database or by reopening the gate early. Why is
+     recording a weaker acceptance honestly better than producing a complete
+     one by other means?
+  3. A one-word label — a button that said "Light theme" in both states — held
+     a finished release closed until it was fixed. Why was that worth the
+     delay?
+  4. Two management tokens and one failing audit check both LOOK like defects
+     and are both expected. What does writing the expected signature down
+     protect a future reader from?
+  5. The scanner image was deliberately not rebuilt for a correction that
+     touched only the interface. What has to be true about a build for that
+     decision to be safe rather than lazy?
+  6. The repository's status prose was annotated instead of corrected in place.
+     Why does an evidence trail need to keep statements that are no longer
+     true?
+  7. A test searched forty-three random characters for English security words,
+     and failed roughly one run in eight hundred. Why was the answer to narrow
+     what the test reads rather than to re-run it until it passed?
+
+17. SOURCE LOCATORS
+
+[R1] The project owner, who performed the controlled production deployment and
+     acceptance of 7 October 2026 and supplied the observations as text to the
+     assistant session of that date, where they were recorded in [S2]. Not
+     verified by any assistant session.
+[R2] The project owner, supplying to THIS session, as text, the cleanup
+     sequence in section 12. Not recorded in [S2]; not verified by this
+     session.
+[S1] GitHub state for stanciuks/site-security read from the GitHub API across
+     the two sessions that wrote this note: pull requests #15, #18, #27, #28,
+     #29, #30, #31 and #32; the main branch commit list and its head
+     bdbe282084be3554ac93ced40fc46044e8285f39; and the
+     continuous-integration conclusions for runs 37653717638, 37672752847,
+     37677893839, 37681213741 and 37682898140, together with the checks on
+     PR #30's and PR #31's heads.
+[S2] docs/evidence/R1_PRODUCTION_ACCEPTANCE_2026-10-07.md, added at main
+     1dc0b572c02e64826dde42c5017dc9477beb2892 — the source acceptance record
+     from which every production figure in this note is taken.
+[S3] docs/evidence/ACCOUNT_MAIL_OPAQUE_CAPABILITY_TEST_2026-10-07.md at main
+     bdbe282084be3554ac93ced40fc46044e8285f39 — the source record for PR #32,
+     from which the measured failure rate and the corrected test property in
+     section 15 are taken.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M12C_PP_Evidence_2026-10-05/        M12C, and the production
+                                                  baseline R1 replaced
+  SCANCOMPASS_M12D_M12E_PP_Evidence_2026-10-07/   the PDF writer and the CI
+                                                  gate, as merged source
+  SCANCOMPASS_TRANSPORT_TIMEOUT_2026-10-07/       PR #29
+  SCANCOMPASS_VISUAL_REDESIGN_CURRENT_MAIN_2026-10-07/
+                                                  the redesign as reviewed
+                                                  implementation, before merge
+  SCANCOMPASS_VISUAL_REDESIGN_2026-10-05/         direction D and the owner's
+                                                  selection
+
+No credential, token, capability value, share URL, password, email address,
+database URL, connection string, environment-file value or hash, DNS
+verification value, backup object identity, backup key, host identifier or
+provider API key appears in this note. The only long identifiers are commit
+SHAs and two container image digests. The share capability created during
+acceptance was NEVER supplied to any assistant session and is not recorded. No
+screenshot accompanies this note; no production screenshot was taken by any
+assistant session, and none is invented here.
+
+END OF EVIDENCE
