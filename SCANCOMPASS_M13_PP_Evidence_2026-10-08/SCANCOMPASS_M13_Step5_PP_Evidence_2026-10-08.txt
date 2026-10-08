@@ -1,0 +1,355 @@
+SCANCOMPASS — M13 STEP 5 PERSONAL PROJECT EVIDENCE
+The product interface, and the first and only Stripe contact of the project:
+real TEST-mode acceptance on a disposable database, four rounds of independent
+review, and production deliberately untouched
+Review date: 8 October 2026
+Classification: Confidential project evidence
+
+STATUS
+IMPLEMENTED, REVIEWED FOUR TIMES, CORRECTED AND MERGED as PR #38. This is the
+ONLY slice of M13 that contacted Stripe, and it did so in TEST MODE ONLY, in
+the owner's Stripe SANDBOX account, against a DISPOSABLE local PostgreSQL
+database that was destroyed afterwards.
+
+PRODUCTION WAS NOT CONTACTED. Migration 0004 is NOT applied to production.
+LIVE STRIPE MODE WAS NEVER USED — the live interlock stayed closed, every
+credential was a test credential, every provider object carried the test flag,
+and every order and event row recorded TEST mode.
+
+M13 IS NOT COMPLETE. M13-6 has not started, and every live-mode blocker remains
+open. [S1,S7,R1]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Three kinds of statement appear in this note and are kept apart.
+
+  SESSION-VERIFIED Repository, pull-request and continuous-integration state
+                   read directly from the GitHub API while this note was being
+                   written. Marked [S1].
+  SOURCE-RECORDED  Figures taken from the committed source evidence record.
+                   Marked [S7].
+  OWNER-OBSERVED   An action only the project owner could take: installing the
+                   Stripe command-line tool and signing in, creating the test
+                   product and price, creating the test credential, paying the
+                   hosted test checkout in a browser, and issuing the full and
+                   partial test refunds. Reported by the owner and then
+                   verified by its durable effect in the disposable database.
+                   Marked [R1].
+
+THERE IS NO PRODUCTION OBSERVATION IN THIS NOTE, because this step made none.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 12.
+
+1. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #38, "feat(m13): add product UI and real Stripe test-mode
+              acceptance"
+Base: main at 15fb2bdf… (the M13-4 merge)
+Final branch head before merge: 3c7ab46ffe1ecf321336c90f536db10db7d26724
+Merged: 2026-10-08 21:14:41 UTC as 4afee87386d79ce11a671a4c75f996ccdbb21ac7
+Diff: 15 files changed, 2,920 insertions, 21 deletions
+Post-merge continuous integration: run 37845393073, SUCCESS
+Route inventory: 21, UNCHANGED — this step adds pages and components, not
+                another interface route
+
+2. THE ONE PRODUCT DECISION THE OWNER WAS ASKED FOR (OWNER-OBSERVED) [R1]
+
+Before any interface was built the owner was asked to settle one thing, and
+confirmed the design's recommendation:
+
+  NO PRICE IS DISPLAYED ON SCANCOMPASS IN M13. The provider's hosted payment
+  page is the single authoritative statement of the amount.
+
+Consequences recorded as instructed: the price used in this step is TEST-ONLY
+commercial configuration, it is not committed to source, it is not evidence of
+a production price, and it may be replaced before launch. No amount or currency
+is recorded in this note. The owner also chose to keep the product description
+IN-ACCOUNT ONLY, publishing no public page for a product the scanner cannot yet
+deliver. [R1,S7]
+
+3. WHAT THE INTERFACE IS
+
+A product summary and a purchase button inside the signed-in account area, plus
+the two pages the provider sends a browser back to. The purchase button sends
+exactly one field — the domain — to one same-origin path, and hands the
+returned payment address straight to a browser navigation. [S7]
+
+What the browser never receives, asserted by automated boundary tests rather
+than by inspection: no price, no currency, no price identifier, no API key, no
+signing secret, no provider mode, no product code, no account or order
+identifier, no payment-provider software-development kit, no publishable key and
+no public payment variable of any kind. The payment address is used once and
+stored nowhere — not in page state, browser storage, an attribute, the page
+address or a log. [S7]
+
+4. REAL TEST-MODE ACCEPTANCE — WHAT WAS PROVEN (SOURCE-RECORDED) [S7]
+
+Run against real Stripe TEST mode and a disposable PostgreSQL 18.6 database.
+
+  closed gate            with payments off, both payment routes answer "not
+                         found" for EVERY method, and the account page serves
+                         no purchase surface at all
+  database               migration 0004 applied to the disposable database;
+                         the pre-migration and post-migration audit scripts
+                         both PASS; contract m13-0004; ledger 0000–0004
+  configuration split    with the signing secret present but the API key, the
+                         price identifier AND the public web address ABSENT,
+                         the refund-recording half reports READY while selling
+                         reports UNAVAILABLE, naming problems but never values
+  reconciling without
+  selling                a REAL signed Stripe test message was received and
+                         recorded with NO selling configuration present at all
+  real hosted checkout   a real hosted payment page was reached; the order
+                         recorded TEST mode and a snapshot of the configured
+                         price; a second attempt ADOPTED the same order and
+                         Stripe returned the SAME session
+  fulfilment             order PAID; exactly ONE entitlement, valid for
+                         exactly 90 days; one ledger row; the audit query for
+                         duplicate usable entitlements returns ZERO rows; NO
+                         raw payload is stored, only a 32-byte digest
+  second purchase        refused as already entitled, with ZERO new provider
+                         sessions created
+  duplicate delivery     a REAL provider redelivery of the same message was
+                         recognised as a duplicate, created no second
+                         entitlement, and its stored digest was BYTE-IDENTICAL
+  full refund            order refunded; entitlement revoked with reason
+                         refunded; the read interface the scanner will use
+                         reports nothing available
+  partial refund         order stays PAID and the entitlement stays available —
+                         a goodwill refund does NOT destroy a paid product
+  expired session        exercised through the provider's own expiry
+                         mechanism; NO internal time constant was shortened
+  reconciliation blocker a payment awaiting reconciliation refuses a further
+                         purchase with ZERO provider calls, and clears itself
+                         once the order is refunded
+  tamper checks          twelve cases against the live local endpoint: every
+                         signature failure refused, every wrong-version message
+                         refused, and NOTHING WRITTEN by any of them
+  log canary             zero occurrences of any key, secret, signature header,
+                         payment address, session, payment or card shape in any
+                         application log
+  free path              the anonymous scanning response is BYTE-IDENTICAL with
+                         payments off and fully on; the launch controls and
+                         their open blockers are identical in both
+
+5. THE API-VERSION PROBLEM, WHICH NEARLY STOPPED THE STEP (SOURCE-RECORDED) [S7]
+
+The application requires inbound provider messages to be formatted as one
+pinned API version and refuses anything else. The first real messages arrived as
+an OLDER version, and the application did exactly what it was built to do:
+refused them, wrote nothing, and did not consume the message identifier, so they
+remained redeliverable.
+
+Four configurations of the provider's local forwarding tool were tested before
+the cause was found: the tool resolves "latest version" lazily, and its startup
+banner is the only reliable indication of what it will actually send. Once it
+reported the expected version, the real message was accepted and recorded at the
+pinned version.
+
+THE PIN WAS NEVER WEAKENED TO MAKE THE TEST PASS. Two findings are carried
+forward: the provider's local forwarding tool does NOT honour a version pinned
+on a provider-side endpoint, so the design's assumption about where that version
+is configured does not hold for local testing — though it does for the live
+endpoint, which carries its own version set at creation; and a lapsed sign-in
+for that tool stops forwarding SILENTLY, which is exactly the condition the
+design calls alarm-worthy. Both were recovered by replaying the messages, which
+is the redeliverability the design relies on. [S7]
+
+6. WHAT WAS NOT EXERCISED, AND WHY (SOURCE-RECORDED, OWNER DECISION) [S7,R1]
+
+Carried honestly rather than quietly closed. In each case what stands in its
+place is named.
+
+  A PROVIDER-FIRST DEFERRED REVERSAL was NOT practically exercised. The exact
+  test schedule was explained to the owner in advance, and the owner DECLINED
+  it on the grounds that provider delivery order is nondeterministic, so the
+  schedule might not reproduce. What stands in its place is M13-4's
+  eleven-case ordered-delivery matrix, driven by locally signed messages
+  through the real transport and transaction against real PostgreSQL. [R1]
+
+  THE THREE-HOUR STALE-CHECKOUT SWEEP TIMING was not exercised in real time,
+  because it would require waiting three hours. The provider's own
+  session-expiry path WAS exercised and reached the same state by a different
+  mechanism; the timing rule itself is proven by M13-4 against real PostgreSQL.
+
+  NO DISPUTE was exercised: a chargeback cannot be raised on demand in test
+  mode without provider tooling this acceptance did not have. The dispute paths
+  are covered by the same M13-4 matrix.
+
+  NO COMPLETED ANONYMOUS FREE SCAN was exercised in the disposable environment.
+  Two reasons, neither payment-related: the launch gate has four unrelated
+  reverse-proxy and hosting blockers in that environment, and the scanner
+  worker's address is a compiled-in container service name that does not
+  resolve on a developer machine. What stands in its place is the
+  byte-identical scanning response across every payment state, plus the
+  automated proof that the scanning and report paths reach no payment module.
+
+  THE TWO PAYMENT READINESS STATUSES EXIST BUT NOTHING SURFACES THEM. No boot
+  log line and no health field reports them, so the design's requirement that
+  the "stop selling, keep reconciling" posture be legible at a glance, and the
+  live blocker requiring the two reconciliation queues to be WATCHED, have no
+  mechanism yet. Proving the two statuses for this acceptance required
+  evaluating the functions directly. Recorded as an M13-6 item.
+
+  AN OBSERVATION MADE AND DELIBERATELY NOT ACTED ON: a real refund message was
+  inspected and DOES carry the order identifier the checkout attaches. The
+  design treats that as a possible future shortcut, not as authority, and NO
+  CODE WAS CHANGED to start relying on it. One confirmed observation is not
+  grounds for making a provider field an authoritative key.
+
+7. FOUR ROUNDS OF INDEPENDENT REVIEW (SESSION-VERIFIED) [S1,S7]
+
+The pull request was reviewed four times before merge, and each round found
+something real. The branch carried five commits.
+
+  6f7e9ff  the implementation and the acceptance record
+  0332501  round 1: a BLOCKER — "in-account only" was not actually enforced.
+           The account page is deliberately unaware of who is signed in and
+           nothing guards the address, so a SIGNED-OUT visitor received the
+           full product description whenever payments were switched on. An
+           account web address is not authentication. The description moved
+           behind the one state that proves a signed-in account. Round 1 also
+           amended the design where the implementation had quietly diverged
+           from it, rather than letting source and design both claim to be
+           authoritative, and narrowed an overclaim in the evidence record
+  af74afe  round 2: two BLOCKERS about truthfulness. A page that reads nothing
+           cannot assert what a visitor did, so one heading was withdrawn; and
+           the cancellation page's claim that the visitor had not completed a
+           purchase was shown to be FALSE for someone who had completed one in
+           another tab. The previous round's defence of that sentence was
+           withdrawn
+  97b9a18  round 3: the pages still PROMISED things. "Your assessment will
+           appear" is false where a payment legitimately ends with money taken
+           and no product delivered; and the product subtitle claimed the
+           reader had already verified a website, which is false for the
+           zero-domain reader the interface deliberately serves. Both made
+           outcome-neutral
+  3c7ab46  round 4: two documentation consistency fixes only
+
+WHY THIS IS THE MOST USEFUL EVIDENCE IN THE STEP. Three successive page
+headings each passed the tests that existed when they were written, because
+"asserts nothing that cannot be known" is not a finite list of banned phrases.
+The eventual fix was not a fourth phrase but a RULE in the design, plus tests
+that pin every visible sentence exactly and a predicate that is itself tested
+against all three withdrawn headings so it cannot become decorative. [S7]
+
+8. VALIDATION BEFORE MERGE (SOURCE-RECORDED) [S7]
+
+  whitespace, type check, lint, build   clean; route inventory 21
+  boundary suite                        1,641 passed
+  product-interface suite               48 passed
+  focused set                           1,698 passed
+  full local suite                      8,496 passed / 609 skipped /
+                                        8 FAILED of 9,113 across 224 files
+
+THE 8 FAILURES ARE THE KNOWN PLATFORM-SPECIFIC ONES AND ARE NOT CAUSED BY THIS
+WORK. They are all in one deployment-package test file that M13 never touches,
+and they appear because this step ran on the owner's macOS workstation — it
+needed the owner's browser and the provider's command-line tool — where the
+system shell cannot parse a declaration the deployment library uses. The same
+failures are already recorded in the R1 production note. They were confirmed
+identical by running the whole suite on a clean checkout of the unmodified main
+branch in the same environment. LINUX CONTINUOUS INTEGRATION ON THE EXACT MERGE
+COMMIT IS THE AUTHORITY, and run 37845393073 concluded SUCCESS. [S1,S7]
+
+9. CLEANUP (SOURCE-RECORDED) [S7]
+
+The local application and the provider forwarding process were stopped; the
+disposable database container was destroyed WITH ITS VOLUME; a test endpoint
+created during the version investigation was deleted; and the forwarding logs,
+the fixture credential, the locally generated test secret, the one recorded
+message payload and the hosted payment address were all deleted. NO RAW PAYLOAD
+WAS RETAINED. The owner's own secret file was left under the owner's control
+rather than deleted, with removal instructions given. The repository was
+verified to contain no secret-bearing file and none was ever staged.
+
+10. WHAT M13 DID NOT TOUCH (SESSION-VERIFIED) [S1]
+
+Across all four commits of this step, the difference against the main branch is
+EMPTY for the database migration directory, the entire server source tree, the
+deployment directory, and the package manifest and lockfile. Migration 0004's
+checksum is unchanged. No new dependency was added, and no payment-provider
+software-development kit exists in the project.
+
+Production, the VPS, SSH, the production database, the production environment
+file, the production web server, production Stripe configuration, DNS and
+Postmark were not contacted at any point in this step or in any other M13 slice.
+
+11. WHAT REMAINS (SOURCE-RECORDED) [S7]
+
+M13-6 has not started. It owes: the rollback floor named with a concrete image
+tag, the written reconciliation procedure for the period after payments exist,
+the production runbook, an operator-visible surface for the two readiness
+statuses, and then TWO EXPLICITLY SEPARATE DECISIONS — deploying migration 0004
+with payments DISABLED, which is additive and user-invisible, and only later
+enabling payments at all. The first must not imply the second.
+
+Every live-mode blocker remains open, including the final price and whether one
+may be displayed, tax treatment, published legal and refund wording, a live
+restricted credential scoped to one capability, a live endpoint pinned to the
+expected version at creation, a verified pre-change backup restored off-host, a
+named owner and response time for the two reconciliation queues, and confirmed
+outbound access from the production container.
+
+M14, M15 and M16 have not started.
+
+12. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The interface, the tests, the acceptance execution, the evidence record and this
+note's source material were produced by Claude, an AI coding assistant, under
+task specifications written by the project owner. EVERY STRIPE CONSOLE ACTION,
+THE BROWSER TEST PAYMENT AND BOTH TEST REFUNDS ARE THE OWNER'S. No assistant
+session held production access, and no assistant session used live Stripe mode.
+The assistant disclosed in the record the test-mode provider actions it took
+itself while diagnosing the API-version problem.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The page a customer lands on after paying is not allowed to say that they
+     paid. Why is a page that knows nothing better than one that guesses?
+  2. Three different headings were each written, tested, and then found to
+     claim something unknowable. Why did writing a RULE work where writing a
+     better sentence three times did not?
+  3. A signed-out visitor could read the product description because the web
+     address began with "account". What does that say about mistaking a name
+     for a protection?
+  4. The provider's version pin refused the first real messages, and the fix
+     was to change the tool rather than the pin. What would lowering the pin
+     have bought, and what would it have cost?
+  5. One acceptance test was declined because the provider's message order
+     cannot be controlled. Why record "not exercised" instead of running
+     something that looks similar?
+  6. Payments now work end to end in a test environment, and the production
+     switch is still off. Why is stopping here the right place to stop?
+
+13. SOURCE LOCATORS
+
+[R1] The project owner, who installed and signed in to the provider's
+     command-line tool, created the test product, price and credential, paid
+     the hosted test checkout in a browser, issued the full and partial test
+     refunds, and declined the deferred-reversal schedule — supplied as text to
+     the assistant session of 8 October 2026 and recorded in [S7]. Not verified
+     by any assistant session except through the durable effect each action had
+     in the disposable database.
+[S1] GitHub state for stanciuks/site-security read from the GitHub API: pull
+     request #38, its four review comments, its branch head
+     3c7ab46ffe1ecf321336c90f536db10db7d26724, its merge commit
+     4afee87386d79ce11a671a4c75f996ccdbb21ac7, and continuous-integration run
+     37845393073.
+[S7] docs/evidence/M13_5_STRIPE_TEST_MODE_ACCEPTANCE_2026-10-08.md at main —
+     the source acceptance record, from which every figure and limitation in
+     sections 4 to 9 is taken.
+
+No Stripe secret key, restricted key, webhook signing secret, Price identifier,
+test price amount or currency, hosted checkout address or capability, Stripe
+session or payment-intent identifier, Stripe account identifier, customer or
+card data, payer email address, raw webhook payload, fixture password or local
+secret-file path appears in this note. The owner's secret file was never read by
+any assistant session. The only long identifiers are Git commit SHAs. No
+screenshot accompanies this note: the acceptance ran against a disposable local
+environment, no screenshot of it was taken, and none is invented here.
+
+END OF EVIDENCE

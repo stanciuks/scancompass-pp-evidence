@@ -1,0 +1,159 @@
+SCANCOMPASS — M13 STEP 3 PERSONAL PROJECT EVIDENCE
+The first payment route: checkout creation, authenticated domain eligibility,
+and serialising on the account row so one payment cannot buy two things
+Review date: 8 October 2026
+Classification: Confidential project evidence
+
+STATUS
+SOURCE IMPLEMENTED AND MERGED as PR #36. The first payment route exists, behind
+BOTH payment flags, so with the default configuration it does not exist at all.
+NO REAL STRIPE CALL — the provider was injected as a deterministic double, and
+real acceptance waited for M13-5. No schema change, no migration, no user
+interface. Production was not touched. [S1,S6]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 8.
+
+1. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #36, "feat(m13): checkout creation and authenticated domain
+              eligibility (M13-3)"
+Base: main at c0d79853… (the M13-2 merge)
+Merged: 2026-10-08 10:13:25 UTC as 630c1b7744adf537fa20d4f11bc68557fabef0f0
+Diff: 24 files changed, 4,347 insertions, 96 deletions
+Post-merge continuous integration: run 37762051417, SUCCESS
+Route inventory: 19 → 20
+
+2. PURPOSE
+
+Let a signed-in account that has already proved it controls a hostname start a
+real hosted payment for that hostname — and make it impossible for the browser
+to influence anything commercial. [S2,S6]
+
+3. THE BROWSER SENDS ONE FIELD
+
+The request body is exactly one field: the domain. The schema is strict, so an
+EXTRA KEY IS A REFUSAL rather than a silently ignored field. The browser
+therefore cannot name an amount, a currency, a quantity, a tier, a price
+identifier, a product, an account, an order or a return address, because no
+such key parses. The account comes from the session cookie; everything
+commercial comes from the server. [S2,S6]
+
+Admission reuses the domain-verification sequence that M12C already had
+reviewed, FACTORED OUT RATHER THAN COPIED, with two substitutions: the payment
+gate and a payment-specific traffic bound. Copying it would have created a
+second copy to keep correct. [S6]
+
+4. EVERY REFUSAL HAPPENS BEFORE STRIPE IS CONTACTED
+
+The order of the checks is the safety property. A refusal costs the customer
+nothing; a Stripe object created by mistake costs a reconciliation.
+
+  not signed in                     refused
+  domain not canonical              refused
+  no current M12C authorisation
+  for that exact hostname           refused
+  already owns a usable assessment
+  for that hostname                 refused
+  a previous payment for that
+  hostname is awaiting a refund     refused, with DIFFERENT wording
+
+EVERY ONE OF THESE HAPPENS INSIDE A DATABASE TRANSACTION, UNDER A LOCK ON THE
+ACCOUNT ROW, BEFORE ANY NETWORK CALL. A refused checkout therefore creates no
+Stripe object at all, and the acceptance proves it by asserting the provider
+double recorded ZERO calls. [S2,S6]
+
+The last two refusals are deliberately different sentences, because they mean
+opposite things to the person reading them: one says you already own this, the
+other says we owe you a refund first. A generic "you already have this" would
+be false. [S2]
+
+5. THE LOCK ORDER, AND WHY THE ROW IS RELEASED BEFORE THE NETWORK CALL
+
+Every payment transaction locks the ACCOUNT row first. That is the fix for the
+race the design review found at Step 0: it makes a checkout and a payment
+arriving for the same account unable to interleave, so the checkout's read of
+existing entitlements happens after any payment has committed rather than a
+moment before.
+
+Equally deliberate is what is NOT held: the transaction COMMITS BEFORE the
+Stripe call. A row lock held across a network round trip would serialise an
+account behind a provider timeout, and would also stall that account's incoming
+payment messages. The acceptance proves both halves — that the lock is taken
+before any eligibility read, and that it is free during the provider call.
+[S2,S6]
+
+A second property proved here is ADOPT, NEVER INSERT: if an open order for the
+same target already exists, a second attempt adopts it and reuses the same
+idempotency key, so the provider returns the SAME session rather than creating a
+second payable one. Two concurrent requests for one target produce exactly one
+order, with no deadlock and no database error surfaced to either caller. [S6]
+
+6. AN HONEST TREATMENT OF "WE DO NOT KNOW"
+
+The provider call has three possible answers and the distinction is the whole
+safety property: a definite success, a definite refusal, and DON'T KNOW — a
+timeout, a connection reset, an undocumented status. A don't-know answer may
+mean a real payable session exists, so the order is deliberately NOT marked
+failed; exactly one immediate retry is permitted with the same idempotency key,
+and the slot stays occupied until the requested expiry has passed. Marking it
+failed would free the slot while a customer could still pay. [S2,S6]
+
+7. VALIDATION (SOURCE-RECORDED) [S6]
+
+Executed in a Linux cloud container, with the concurrency cases against a
+disposable PostgreSQL 18.6 database destroyed afterwards. The provider was a
+deterministic double throughout; no Stripe network call was made.
+
+  every refusal outcome behaves as designed, with the gate closed and open
+  the account lock is taken before the entitlement read
+  the lock is NOT held during the provider call
+  the reconciliation blocker refuses with the provider double at ZERO calls
+  adopt-not-insert, and a byte-stable idempotent request on retry
+  the design review's race, replayed deterministically, now refuses correctly
+  the closed gate answers the same way for every HTTP method
+  the free scanning path provably reaches no payment module
+  full test suite  8,223 passed, 0 failed, 555 skipped of 8,778 across 217
+                   files
+
+8. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The implementation, the tests and the evidence record were produced by Claude,
+an AI coding assistant, under a task specification written by the project owner.
+Two implementation decisions this step had to make — which uncertain provider
+answers earn the single retry, and when a definite answer may mark an order
+failed — are recorded in the design's correction log.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The browser is allowed to send one word: a domain name. What becomes
+     impossible because of that, which a longer request would have made
+     possible?
+  2. Every refusal happens before Stripe is contacted. Who pays for a refusal
+     that happens afterwards instead?
+  3. When the provider's answer is "don't know", the system refuses to call the
+     attempt failed. Why is admitting uncertainty safer here than picking the
+     more likely answer?
+  4. A database lock is deliberately released before the slow network call and
+     re-taken afterwards. What would holding it have cost?
+
+9. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security read from the GitHub API: pull
+     request #36, its merge commit 630c1b7744adf537fa20d4f11bc68557fabef0f0,
+     and continuous-integration run 37762051417.
+[S2] docs/M13_PAYMENTS_ENTITLEMENTS.md at main — the design, including the two
+     implementation decisions this step recorded.
+[S6] docs/evidence/M13_3_CHECKOUT_DOMAIN_ELIGIBILITY_2026-10-08.md at main —
+     the source evidence record for this step, from which the figures in
+     section 7 are taken.
+
+No Stripe secret, key, webhook secret, Price identifier, price amount, hosted
+checkout URL, session or payment-intent identifier, customer data, database URL
+or raw payload appears in this note. No real Stripe object existed at this step.
+The only long identifiers are Git commit SHAs.
+
+END OF EVIDENCE

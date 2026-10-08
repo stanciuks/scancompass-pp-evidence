@@ -1,0 +1,161 @@
+SCANCOMPASS — M13 STEP 2 PERSONAL PROJECT EVIDENCE
+Configuration split, product catalogue and a narrow Stripe provider boundary —
+built and tested entirely against doubles, with no network call
+Review date: 8 October 2026
+Classification: Confidential project evidence
+
+STATUS
+SOURCE IMPLEMENTED AND MERGED as PR #35. NOTHING IS REACHABLE FROM THE INTERNET
+at this step: no route, no service and no user interface consumes any of it.
+NO STRIPE NETWORK CALL WAS MADE — the provider adapter was exercised only
+against deterministic local doubles. No schema change, no migration, no Stripe
+dependency added. Production was not touched. [S1,S5]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 8.
+
+1. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #35, "feat(m13): payment configuration, catalogue and Stripe
+              provider boundary (M13-2)"
+Base: main at fc1e90de… (the M13-1 merge)
+Merged: 2026-10-08 08:32:26 UTC as c0d79853977941952569e1d8b6f657a627e2cd88
+Diff: 25 files changed, 4,644 insertions, 10 deletions
+Post-merge continuous integration: run 37750512375, SUCCESS
+
+2. PURPOSE
+
+Decide how payments are switched on, where the commercial configuration lives,
+and how the application talks to Stripe — before anything can be reached from a
+browser. [S2,S5]
+
+3. THE CONFIGURATION SPLIT, WHICH IS THE WHOLE POINT OF THIS STEP
+
+Payments are off unless an operator sets a flag to exactly the raw value "1".
+" 1 " and "true" stay CLOSED, deliberately, because for a boundary where
+"accidentally on" means real money the strictest reading is the right one.
+
+There are two independent switches, and the gap between them is the valuable
+part:
+
+  payments surface off          both payment routes do not exist at all
+  surface on, selling off       NEW PURCHASES REFUSED, but refunds and
+                                disputes for past purchases are still recorded
+  surface on, selling on        normal operation
+
+The middle row is "STOP SELLING, KEEP RECONCILING", and this step is where it
+stopped being an intention and became structural. The configuration is split
+into three functions with DISJOINT inputs: the webhook half reads the declared
+mode and the signing secret and NOTHING ELSE — not the API key, not the price
+identifier, not the public web address. A deployment that has retired its
+Stripe key, or lost its price configuration, can therefore still record a
+refund it owes a customer. A first draft had put all of it in one place, which
+would have made the middle row untrue in exactly the case it matters. [S2,S5]
+
+4. THE MODE IS DECLARED, NOT INFERRED FROM THE SECRET
+
+An earlier abandoned attempt at payments derived test-versus-live from the shape
+of the API key. This step declares the mode in configuration and CROSS-CHECKS
+the key against the declaration. The reasoning is recorded: deriving the mode
+from a secret means THE SECRET DECIDES THE BLAST RADIUS, so pasting a live key
+into a test deployment would silently convert it into a live one. With a
+declared mode, a key swap alone produces an invalid configuration, which fails
+closed. A live credential with the live interlock closed also fails closed. [S2]
+
+5. ONE PROVIDER ENDPOINT, AND ONE PLACE THAT MAY REACH THE NETWORK
+
+The project writes its own narrow Stripe adapter rather than adding the vendor
+software-development kit, and the decision was re-made on current grounds rather
+than inherited. The whole provider surface is ONE outbound request —
+creating a hosted checkout session.
+
+Exactly one file in the entire payments tree may call the browser-style network
+function, and it is pinned by an automated boundary test: one compiled-in web
+address, one literal path, no parameter that could move the destination, the
+destination re-checked by exact equality immediately before dispatch, and
+redirects refused. The adapter writes exactly twelve named request fields and
+accepts no general field map, so no value can reach Stripe through a field
+nobody reviewed. The payer's email address is deliberately NOT sent. [S2,S5]
+
+Both Stripe API versions are pinned as compiled-in constants rather than
+configuration — the one the application sends, and the one it requires inbound
+messages to be formatted as — because a configuration change must not be able
+to alter how a payload is interpreted without code review. [S2]
+
+6. A VERSION FINDING, AND THE OWNER REVERSING IT
+
+While building the adapter the assistant found that Stripe's newest generally
+available API version REMOVES a field the design had locked, replacing it with
+one that has different semantics. The assistant's conservative choice was to pin
+the PREVIOUS version, which supported every field the design sends.
+
+THE OWNER'S REVIEW REVERSED THAT DECISION: a new integration uses the current
+version, and card-only is expressed with the replacement field instead. Both
+pins are the current version. Recorded because it is a case where the
+conservative automated choice was the wrong product choice, and the owner's
+judgement overrode it. The owner's review made five further corrections to the
+provider boundary, including that the order's own snapshotted price and mode —
+not the current configuration's — must be what is sent, so a configuration
+change cannot re-price an order that is already open. [S2,S5]
+
+7. VALIDATION (SOURCE-RECORDED) [S5]
+
+Executed in a Linux cloud container. No Stripe network call at any point; the
+adapter was driven entirely by deterministic doubles, and the signature verifier
+by known-answer vectors.
+
+  the full configuration matrix behaves as designed, including every
+    fail-closed case
+  the webhook configuration is READY with NO api key, NO price identifier and
+    NO public web address present
+  the selling configuration returns DISABLED BEFORE ANY SECRET IS READ
+  the signature verifier passes every known-answer and negative vector
+  an unexpected inbound API version is refused
+  nothing is reachable from the internet
+  full test suite  8,022 passed / 0 failed / 529 skipped across 211 files
+                   (M13-1's baseline was 7,617)
+
+Problems are reported by NAME ONLY — "api key missing", "price id malformed" —
+never by value, length or key shape. [S5]
+
+8. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The implementation, the tests and the evidence record were produced by Claude,
+an AI coding assistant, under a task specification written by the project owner.
+The API-version decision and five provider-boundary corrections are the owner's,
+recorded in the design's correction log.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The configuration is deliberately split so that the half which records
+     refunds cannot depend on the half which sells. Why is that worth extra
+     complexity?
+  2. A flag must be exactly "1"; the text "true" leaves payments switched off.
+     Why be that strict about one boundary and not about others?
+  3. The assistant pinned an older provider version to stay safe, and the owner
+     overruled it. What does each of them know that the other does not?
+  4. Only one file in the whole payments system is allowed to reach the
+     network, and a test fails if that ever changes. What does that buy that
+     careful coding alone would not?
+
+9. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security read from the GitHub API: pull
+     request #35, its merge commit c0d79853977941952569e1d8b6f657a627e2cd88,
+     and continuous-integration run 37750512375.
+[S2] docs/M13_PAYMENTS_ENTITLEMENTS.md at main — the design, including the
+     API-version finding and the owner's provider-boundary corrections.
+[S5] docs/evidence/M13_2_PAYMENT_PROVIDER_BOUNDARY_2026-10-08.md at main — the
+     source evidence record for this step, from which the figures in section 7
+     are taken.
+
+No Stripe secret, key, webhook secret, Price identifier, price amount, hosted
+checkout URL, session or payment-intent identifier, customer data or raw payload
+appears in this note. None was in use at this step: no Stripe account was
+contacted and no credential existed. The only long identifiers are Git commit
+SHAs.
+
+END OF EVIDENCE

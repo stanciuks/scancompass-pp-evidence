@@ -1,0 +1,162 @@
+SCANCOMPASS — M13 STEP 1 PERSONAL PROJECT EVIDENCE
+Payment persistence foundation: migration 0004, three tables, least-privilege
+grants, and two constraint defects found by running it
+Review date: 8 October 2026
+Classification: Confidential project evidence
+
+STATUS
+SOURCE IMPLEMENTED AND MERGED as PR #34. MIGRATION 0004 IS NOT APPLIED TO
+PRODUCTION and has never been applied anywhere but disposable databases. No
+route, no provider client, no configuration and no user interface exists at
+this step, so NOTHING IS REACHABLE FROM THE INTERNET. Stripe was not contacted.
+Production, the VPS, SSH, DNS and Postmark were not touched. [S1,S4]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 8.
+
+1. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #34, "M13-1: payment persistence foundation — migration 0004,
+              grants, readiness, store"
+Base: main at abd1fe47… (the M13-0 merge)
+Merged: 2026-10-08 05:58:18 UTC as fc1e90de4c051c01dddc88f1acf6425409c701e0
+Diff: 33 files changed, 7,892 insertions, 78 deletions
+Post-merge continuous integration: run 37735082442, SUCCESS
+
+2. PURPOSE
+
+Give payments a durable shape before anything can write to it: the tables, the
+keys, the constraints, the indexes and the database privileges, plus the
+readiness check that proves the running image and the database agree about which
+schema version they are on. [S2,S4]
+
+3. WHAT WAS ADDED
+
+Three tables in the project's dedicated database schema:
+
+  payment_orders   one server-created purchase attempt, carrying the account,
+                   the exact hostname, the state, the declared provider mode,
+                   a snapshot of the configured price identifier, and the
+                   expiry the server REQUESTED from the provider
+  payment_events   an append-only ledger of provider messages, each recorded
+                   with its own API version, its normalised financial effect
+                   and a 32-byte digest of the exact bytes that verified
+  entitlements     the source of truth: the only thing a future paid scan may
+                   be admitted on
+
+Schema contract moved from m12c-0003 to m13-0004; the migration ledger from
+0000–0003 to 0000–0004. [S4]
+
+4. THE PRIVILEGES ARE THE SECURITY PROPERTY, NOT THE CODE
+
+The application database role was granted exactly what each table needs and
+nothing more:
+
+  payment_orders   SELECT, INSERT, UPDATE  — and NO DELETE
+  payment_events   SELECT, INSERT          — and NO UPDATE, NO DELETE
+  entitlements     SELECT, INSERT, UPDATE  — and NO DELETE
+
+"Append-only" is therefore enforced by the database, not by code discipline: a
+recorded provider event cannot be rewritten even by a defect in the
+application. A financial record is not the application's to remove, and the
+absence of the privilege is what makes that true rather than merely intended.
+The disposable-database acceptance proves the refusals by attempting them. [S4]
+
+A deliberate omission is recorded as a decision: there is NO foreign key from
+an entitlement to a domain authorisation. A cascade would destroy a paid
+entitlement when a user removes a domain, and a restriction would stop a user
+removing their own domain because they once bought something. Both are wrong,
+so authorisation is re-established by CALLING the M12C check at use, never by a
+referential link. [S2]
+
+5. TWO DEFECTS THE DATABASE FOUND BY BEING RUN
+
+This is the most useful evidence in the step, because both defects were in the
+DESIGN and only appeared when real PostgreSQL executed it. [S4]
+
+SQL'S THREE-VALUED LOGIC ACCEPTED WHAT THE DESIGN SAID IT REFUSED. Two
+coherence constraints were written as comparisons such as "reversal kind equals
+REFUND". A CHECK constraint PASSES when its expression evaluates to NULL, and a
+comparison against NULL is NULL — so a refunded order with NO reversal kind
+recorded evaluated to NULL and WAS ACCEPTED. That is precisely the "reversed
+order with no kind" the design's own prose said was impossible. Real PostgreSQL
+18.6 accepted the row in the acceptance run. Both constraints now guard each
+comparison with an explicit not-null test, which is a strict tightening that
+makes the database enforce exactly the stated rule. The same hole existed on the
+entitlement table's termination reason and was corrected the same way. [S4]
+
+THE ROLLBACK ERA RULE WAS TOO GENEROUS. The merged design's test for "no
+payment activity has ever happened here" excluded orders whose checkout had
+failed. That was wrong: a failed-looking order can stand for a Stripe session
+that really existed and could have been paid moments before it expired, with the
+message still in flight. The rule now requires all three payment tables to be
+completely empty. [S2,S4]
+
+The owner's review of this pull request made four further corrections, the
+sharpest being that every order in a money-taken state must carry a provider
+payment identifier, so a reversal can always find the order it belongs to. [S2]
+
+6. VALIDATION (SOURCE-RECORDED) [S4]
+
+Executed in a Linux cloud container against a disposable PostgreSQL 18.6
+database from a pinned image, destroyed afterwards. No production database was
+contacted.
+
+  migration 0004 applied cleanly to a 0003 database; grants idempotent
+  the application role holds exactly the 8 new privileges
+  DELETE on all three tables, and UPDATE on the ledger, REFUSED by the database
+  schema parity — documentation, declarative schema and committed SQL agree
+  readiness reports READY on contract m13-0004
+  full test suite  7,617 passed, 0 failed, 526 skipped of 8,143 across 207
+                   files; the skips are the guarded real-PostgreSQL suites,
+                   which ran separately
+
+The first full run FAILED two unit pins that this slice legitimately moves —
+the schema and privilege-count expectations — which is recorded rather than
+omitted, because it is the parity test doing its job. [S4]
+
+7. WHAT STEP 1 DELIBERATELY DID NOT DO
+
+No route. No provider client. No configuration. No user interface. No Stripe
+contact. No deployment. Migration 0004 was NOT applied to production, and the
+production schema contract remained m12c-0003 throughout. [S1,S4]
+
+8. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The implementation, the tests and the evidence record were produced by Claude,
+an AI coding assistant, under a task specification written by the project owner.
+The owner reviewed the pull request and directed four corrections.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The application is not allowed to delete a payment row, and that is
+     enforced by the database rather than by the program. Why is removing the
+     ability better than deciding not to use it?
+  2. A constraint that was supposed to reject bad data accepted it, because a
+     comparison with an empty value is neither true nor false. What does that
+     say about trusting a rule you have written but never executed?
+  3. The rule for "no payment has ever happened here" was deliberately made
+     stricter than seemed necessary. What would the cost of being wrong in the
+     other direction have been?
+
+9. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security read from the GitHub API: pull
+     request #34, its merge commit fc1e90de4c051c01dddc88f1acf6425409c701e0,
+     and continuous-integration run 37735082442.
+[S2] docs/M13_PAYMENTS_ENTITLEMENTS.md at main — the design, including the
+     corrections this step made to it.
+[S4] docs/evidence/M13_1_PAYMENTS_PERSISTENCE_2026-10-08.md at main — the
+     source evidence record for this step, from which every figure in section 6
+     is taken.
+
+No Stripe secret, key, webhook secret, Price identifier, price amount, hosted
+checkout URL, session or payment-intent identifier, customer data, database URL,
+connection string or raw payload appears in this note. The disposable database's
+credentials were generated for the acceptance run and are not recorded. The only
+long identifiers are Git commit SHAs.
+
+END OF EVIDENCE

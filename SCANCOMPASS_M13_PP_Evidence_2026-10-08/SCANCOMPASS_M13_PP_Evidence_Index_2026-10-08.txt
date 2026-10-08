@@ -1,0 +1,209 @@
+SCANCOMPASS — M13 PAYMENTS AND ENTITLEMENTS
+PERSONAL PROJECT EVIDENCE INDEX
+Six slices, M13-0 to M13-5, all merged; the first and only Stripe contact of
+the project, in TEST mode only; production deliberately untouched
+Review date: 8 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M13-0 THROUGH M13-5 ARE IMPLEMENTED AND MERGED INTO MAIN. M13 IS NOT COMPLETE:
+M13-6 — final review, the rollback floor, the production runbook and the two
+separate deployment decisions — HAS NOT STARTED. [S1,S2]
+
+NOTHING IN M13 REACHED PRODUCTION. Production was not contacted at any point in
+any of the six slices. Migration 0004 IS NOT APPLIED TO PRODUCTION; the
+production schema contract is still m12c-0003 with ledger 0000–0003, exactly as
+the R1 acceptance note records. Payments are disabled by default and the
+production default was never changed. [S1,S2]
+
+LIVE STRIPE MODE WAS NEVER USED. The only Stripe contact in the whole milestone
+was M13-5, in TEST mode, in the owner's Stripe SANDBOX account, against a
+disposable local PostgreSQL database that was destroyed afterwards. [S2,R1]
+
+M14, M15 and M16 have not started. [S1]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE IN THIS PACKAGE
+Three kinds of statement appear across these notes and are kept apart.
+
+  SESSION-VERIFIED Repository, pull-request and continuous-integration state
+                   read directly from the GitHub API while this package was
+                   being written. Marked [S1].
+  SOURCE-RECORDED  Figures taken from a committed source evidence document in
+                   the technical repository. Each document has its own locator,
+                   [S2] to [S7], listed in each note.
+  OWNER-OBSERVED   An action only the project owner could take — signing in to
+                   Stripe, creating a Stripe object, paying a hosted test
+                   checkout in a browser, issuing a test refund — reported by
+                   the owner and then verified by its durable effect in the
+                   disposable database. Marked [R1]. Used only in the M13-5
+                   note.
+
+THERE IS NO PRODUCTION OBSERVATION ANYWHERE IN THIS PACKAGE, because M13 made
+none. That is a difference from the R1 note, which rests on owner-observed
+production facts; here there is no production fact to rest on, and none is
+implied.
+
+These records are factual technical evidence summaries. They are NOT student
+reflections and are not written in the student's voice. Reflection prompts are
+carried unanswered at the end of each note.
+
+1. WHAT M13 IS, IN ONE PARAGRAPH
+
+M13 builds the commercial half of the product: a one-time purchase called an
+Extended Security Assessment, for one exact hostname the account has already
+proved it controls, recorded as orders, provider events and entitlements in the
+database. It does NOT build the extended scanner, does not consume an
+entitlement, and adds no paid scan route — that is M14. The central safety
+property is that an entitlement row is the ONLY thing a future scan may be
+admitted on, and that no Stripe object, message or metadata field is ever
+treated as authority for which account or which hostname a payment was for.
+[S2]
+
+2. THE SIX SLICES, AND WHERE EACH IS RECORDED
+
+  Step 0  M13-0  design lock, revised after two independent review passes
+                 SCANCOMPASS_M13_Step0_PP_Evidence_2026-10-07.txt
+  Step 1  M13-1  payment persistence: migration 0004, grants, readiness
+                 SCANCOMPASS_M13_Step1_PP_Evidence_2026-10-08.txt
+  Step 2  M13-2  configuration split, catalogue, Stripe provider boundary
+                 SCANCOMPASS_M13_Step2_PP_Evidence_2026-10-08.txt
+  Step 3  M13-3  checkout creation and authenticated domain eligibility
+                 SCANCOMPASS_M13_Step3_PP_Evidence_2026-10-08.txt
+  Step 4  M13-4  signed webhook, fulfilment, reversals, reconciliation, sweep
+                 SCANCOMPASS_M13_Step4_PP_Evidence_2026-10-08.txt
+  Step 5  M13-5  product UI and real Stripe TEST-mode acceptance
+                 SCANCOMPASS_M13_Step5_PP_Evidence_2026-10-08.txt
+
+3. THE MERGE CHAIN (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security. Each slice was one pull request, reviewed
+and merged before the next began, and each post-merge run of continuous
+integration on the main branch concluded SUCCESS.
+
+  PR #33  M13-0  merged 2026-10-07 22:50:56 UTC as abd1fe47…
+                 4 files, +3,063 / −1          CI run 37698743257  SUCCESS
+  PR #34  M13-1  merged 2026-10-08 05:58:18 UTC as fc1e90de…
+                 33 files, +7,892 / −78        CI run 37735082442  SUCCESS
+  PR #35  M13-2  merged 2026-10-08 08:32:26 UTC as c0d79853…
+                 25 files, +4,644 / −10        CI run 37750512375  SUCCESS
+  PR #36  M13-3  merged 2026-10-08 10:13:25 UTC as 630c1b77…
+                 24 files, +4,347 / −96        CI run 37762051417  SUCCESS
+  PR #37  M13-4  merged 2026-10-08 14:40:11 UTC as 15fb2bdf…
+                 36 files, +6,621 / −76        CI run 37794364064  SUCCESS
+  PR #38  M13-5  merged 2026-10-08 21:14:41 UTC as
+                 4afee87386d79ce11a671a4c75f996ccdbb21ac7
+                 15 files, +2,920 / −21        CI run 37845393073  SUCCESS
+
+Main head after M13: 4afee87386d79ce11a671a4c75f996ccdbb21ac7.
+The previous head, before M13 began, was
+bdbe282084be3554ac93ced40fc46044e8285f39 — the head the R1 production
+acceptance note ends on. [S1]
+
+4. WHY THIS MILESTONE WAS BUILT THE WAY IT WAS
+
+Three decisions shape the whole milestone and are worth stating once here
+rather than six times.
+
+PAYMENT IS NOT PERMISSION. A purchase is only possible for a hostname the
+account has already verified through M12C, and M14 must re-check that proof
+again at the moment the entitlement is used. Money never substitutes for
+ownership. [S2]
+
+NO STRIPE FIELD IS AUTHORITY. A verified webhook proves a message came from
+Stripe; it does not prove which account or which hostname the payment was for.
+Those two facts are read only from the order row the server itself created.
+[S2]
+
+CLOSED BY DEFAULT, AND SPLIT IN TWO. Payments are off unless an operator turns
+them on, and the configuration is split so that "stop selling, keep
+reconciling" is structural: selling can be switched off while refunds and
+disputes for past purchases are still recorded. Production ran with payments
+off for the whole of M13. [S2]
+
+5. THE SHAPE OF THE EVIDENCE, AND ONE DELIBERATE ASYMMETRY
+
+Slices 0 to 4 are SOURCE-ONLY work: every Stripe interaction in them is a
+deterministic local double or a locally signed fixture, and each note says so.
+Slice 5 is the only one with real provider contact, and it is also the only one
+with owner-observed actions, because only the owner may sign in to Stripe, pay
+a hosted checkout in a browser, or issue a refund.
+
+That asymmetry is the reason the M13-5 note is the longest in the package and
+the only one carrying an [R1] label.
+
+A SECOND ASYMMETRY, RECORDED SO A LATER READER DOES NOT MISREAD A TEST COUNT.
+Slices 0 to 4 ran in a Linux cloud container and report 0 test failures. Slice
+5 ran on the owner's macOS workstation, because it needed the owner's browser
+and the Stripe command-line tool, and it reports 8 failures — the same 8
+platform-specific failures in one deployment-package test file that the R1 note
+already records, in a file M13 never touches. The Linux continuous-integration
+run on the exact merge commit is the authority, and it is green. [S1,S7]
+
+6. WHAT REMAINED INTENTIONALLY UNFINISHED
+
+Carried honestly rather than quietly closed. Each is expanded in the M13-5
+note.
+
+  - M13-6 has not started: the rollback floor, the era-2 reconciliation
+    procedure, the production runbook, and two explicitly separate deployment
+    decisions — deploying migration 0004 with payments disabled, and only
+    later enabling payments — neither of which has been taken;
+  - every live-mode blocker remains open, including the final price, tax
+    treatment, published refund wording, a live restricted key, a live webhook
+    endpoint pinned to the expected API version, a verified pre-change backup,
+    and a monitoring owner for the two reconciliation queues;
+  - the two payment readiness statuses exist but NOTHING SURFACES THEM — no
+    boot log line and no health field — so "watched" has no mechanism yet;
+  - a provider-first deferred reversal was not practically exercised against
+    real Stripe, because provider delivery order is nondeterministic;
+  - the three-hour stale-checkout sweep timing was not exercised in real time;
+    the provider's own session-expiry path was;
+  - no dispute was exercised, because a chargeback cannot be raised on demand;
+  - no completed anonymous free scan was exercised in the disposable
+    acceptance environment.
+
+7. AI TRANSPARENCY
+
+The design, the implementation, the tests, the technical evidence records and
+the source material for this package were produced by Claude, an AI coding
+assistant, under task specifications written by the project owner. EVERY STRIPE
+CONSOLE ACTION, THE BROWSER TEST PAYMENT AND BOTH TEST REFUNDS ARE THE OWNER'S.
+No assistant session held production access at any point in M13, and no
+assistant session used live Stripe mode.
+
+8. SOURCE LOCATORS FOR THE PACKAGE
+
+[S1] GitHub state for stanciuks/site-security read from the GitHub API while
+     this package was written: pull requests #33, #34, #35, #36, #37 and #38;
+     the main branch commit list and its head
+     4afee87386d79ce11a671a4c75f996ccdbb21ac7; and the continuous-integration
+     conclusions for runs 37698743257, 37735082442, 37750512375, 37762051417,
+     37794364064 and 37845393073.
+[S2] docs/M13_PAYMENTS_ENTITLEMENTS.md — the authoritative M13 design, with its
+     own correction log.
+[S3] docs/evidence/M13_0_PAYMENTS_DESIGN_LOCK_2026-10-07.md
+[S4] docs/evidence/M13_1_PAYMENTS_PERSISTENCE_2026-10-08.md
+[S5] docs/evidence/M13_2_PAYMENT_PROVIDER_BOUNDARY_2026-10-08.md
+[S6] docs/evidence/M13_3_CHECKOUT_DOMAIN_ELIGIBILITY_2026-10-08.md
+     and docs/evidence/M13_4_WEBHOOK_FULFILMENT_REVERSAL_SWEEP_2026-10-08.md
+[S7] docs/evidence/M13_5_STRIPE_TEST_MODE_ACCEPTANCE_2026-10-08.md
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_R1_PRODUCTION_2026-10-07/           the production state M13 was
+                                                  built on top of and did not
+                                                  change
+  SCANCOMPASS_M12C_PP_Evidence_2026-10-05/        domain authorisation, which
+                                                  M13 requires before a
+                                                  purchase is possible
+  SCANCOMPASS_INTEGRATION_REHEARSALS_2026-10-05/  the M13-after-M12C rehearsal
+                                                  that preceded this milestone
+
+No Stripe secret key, restricted key, webhook signing secret, Price identifier,
+hosted checkout URL or capability, Stripe session or payment-intent identifier,
+Stripe account identifier, customer or card data, payer email address, raw
+webhook payload, test price amount, fixture password or local secret-file path
+appears anywhere in this package. The only long identifiers are Git commit
+SHAs. No screenshot accompanies this package; none was taken of the disposable
+acceptance environment and none is invented.
+
+END OF INDEX

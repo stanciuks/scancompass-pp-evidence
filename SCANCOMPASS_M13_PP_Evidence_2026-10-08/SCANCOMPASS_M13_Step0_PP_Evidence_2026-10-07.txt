@@ -1,0 +1,166 @@
+SCANCOMPASS — M13 STEP 0 PERSONAL PROJECT EVIDENCE
+Payments and entitlements design lock, revised after two independent review
+passes that found nine issues
+Review date: 7 October 2026
+Classification: Confidential project evidence
+
+STATUS
+DOCUMENTATION AND ARCHITECTURE ONLY. MERGED as PR #33. No migration was
+created, no runtime code was written, no database was contacted, and STRIPE WAS
+NOT CONTACTED AT ALL — no account, no sandbox, no API call, no dashboard, no
+webhook endpoint. Production, the VPS, SSH, DNS and Postmark were not touched.
+[S1,S3]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 7.
+
+1. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #33, "M13-0: payments & entitlements design lock — revised after
+              independent review (docs only — DRAFT, DO NOT MERGE)"
+Base: main at bdbe282084be3554ac93ced40fc46044e8285f39 — the head the R1
+      production acceptance note ends on
+Merged: 2026-10-07 22:50:56 UTC as abd1fe47818f4eda7e740230425d41d7edd8c8d7
+Diff: 4 files changed, 3,063 insertions, 1 deletion — all under docs/
+Post-merge continuous integration: run 37698743257, SUCCESS
+
+2. PURPOSE
+
+Decide, before any code existed, exactly what is being sold, what the database
+must hold, who is allowed to decide what, and what must be true for a payment
+never to produce either a lost purchase or a free product. The output is one
+authoritative design document that every later slice is checked against. [S2]
+
+3. WHAT ONE PURCHASE IS, DECIDED HERE
+
+An Extended Security Assessment is a ONE-TIME purchase that buys exactly one
+future completed extended assessment, for ONE EXACT HOSTNAME, for the
+authenticated account that paid. Ninety days of unused life from the moment
+payment is confirmed. Card only, euro, quantity fixed at one on the server.
+
+It is deliberately NOT a subscription, NOT a credit balance, NOT a bundle, NOT
+transferable, NOT ownership verification, and NOT permission to scan an
+arbitrary host. Buying for a domain buys nothing for its subdomains, and that
+narrow reading is a decision rather than an oversight. [S2]
+
+4. THE DECISION THAT MATTERS MOST
+
+A table in the design assigns every decision to exactly one authority, and the
+right-hand column is the point:
+
+  which account is buying      the session cookie — never the request body,
+                               a header, or any Stripe field
+  which hostname               the request body's domain, canonicalised, AND a
+                               current M12C authorisation — never Stripe
+                               metadata
+  which product, which price   compiled-in code and operator configuration —
+                               never the browser, under any circumstances
+  that a payment happened      a signature-verified Stripe event cross-checked
+                               against the server's own order — never a
+                               browser returning to a success page
+  that a payment has NOT been
+  reversed                     our own ledger, read inside the deciding
+                               transaction — never the mere ABSENCE of a
+                               reversal message, which may simply not have
+                               arrived yet
+
+The last row is the one a first draft got wrong, and section 5 explains why.
+[S2]
+
+5. NINE ISSUES FOUND BY INDEPENDENT REVIEW, AND WHY THAT IS THE EVIDENCE
+
+The design was reviewed twice before any code was written. SEVEN issues were
+found in the first pass and TWO more in the second, and the document records
+what each section claimed before, why it was wrong, and where the corrected
+answer now lives. Nothing was quietly rewritten to look as though it had always
+been right. [S2,S3]
+
+The most serious was a genuine time-of-check-to-time-of-use race that broke the
+design's central invariant. The first draft claimed that "at most one usable
+entitlement per account and hostname" held "by construction". Review produced
+the exact schedule that breaks it: a payment transaction inserting an
+entitlement, a checkout transaction reading entitlements a moment earlier and
+seeing none, and then the checkout's insert succeeding precisely because the
+first transaction had committed in between. The database index the draft relied
+on serialised ORDERS against ORDERS and never serialised the ENTITLEMENT READ.
+The fix is to serialise every payment transaction on the account row first, so
+the read happens after the commit, with the index kept only as a backstop that
+correct code never reaches. [S2]
+
+Four of the other eight are worth naming because each is a class of mistake
+rather than a typo:
+
+  - a stale-checkout cleanup rule keyed on row AGE could have freed a slot
+    while a real, still-payable Stripe session existed, allowing two
+    simultaneously payable sessions. It is now keyed on the expiry the server
+    actually requested, written down BEFORE the provider is called;
+  - webhook delivery ORDER had been assumed. Stripe does not guarantee it, so a
+    refund arriving before the payment it refunds had to be handled without
+    acknowledging it as final. The corrected design defers such a message,
+    records its normalised financial effect after a bounded window, and has
+    later payments consult that record;
+  - rollback had been described for one era only. Before any payment exists, an
+    older image is a safe rollback; after payment activity exists, an older
+    image has no webhook route, so every refund and dispute message Stripe
+    sends fails and is eventually LOST. The design now names a rollback floor;
+  - a paid-but-unreconciled payment did not block a repeat purchase, so a
+    customer owed a refund could be charged again.
+
+WHY THIS IS GOOD EVIDENCE RATHER THAN EMBARRASSING. Every one of these was
+found and fixed while the cost was a paragraph. Had the TOCTOU race shipped, the
+symptom would have been two usable purchases for one payment, discovered by a
+customer. The review passes are recorded in the design's own correction log and
+are the reason the later slices had a specification worth checking against.
+
+6. WHAT STEP 0 DELIBERATELY DID NOT DO
+
+No migration file. No runtime module. No Stripe contact of any kind. No
+database started, migrated or queried. No deployment. The only files that
+changed were documentation. A draft pull request from much earlier in the
+project, PR #15, was inspected READ-ONLY and nothing was cherry-picked from it;
+the design records which of its ideas were reused as concepts, which were
+discarded and why. [S2,S3]
+
+Three questions were deliberately left to the owner rather than decided by the
+assistant: the final price and whether to display one, the tax treatment, and
+the legal and refund wording. [S2]
+
+7. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The design, the research and the evidence record were produced by Claude, an AI
+coding assistant, under a task specification written by the project owner. The
+product decisions the design leaves open are recorded as the owner's.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The whole of this step produced no working software. What did it produce
+     that the following five slices could not have produced for themselves?
+  2. An independent review found nine issues in a document, including one that
+     would have let a single payment produce two usable purchases. What is the
+     difference in cost between finding that in a document and finding it in a
+     database?
+  3. The design says a verified message from Stripe proves only that Stripe
+     sent it, and not what it is about. Why is that distinction the foundation
+     of the whole milestone?
+  4. The corrected design keeps the wrong earlier wording visible beside the
+     fix. Why keep a record of having been wrong?
+
+8. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security read from the GitHub API: pull
+     request #33, its merge commit abd1fe47818f4eda7e740230425d41d7edd8c8d7,
+     and continuous-integration run 37698743257.
+[S2] docs/M13_PAYMENTS_ENTITLEMENTS.md at main — the authoritative design and
+     its independent-review correction log.
+[S3] docs/evidence/M13_0_PAYMENTS_DESIGN_LOCK_2026-10-07.md at main — the
+     source evidence record for this step.
+
+No Stripe secret, key, webhook secret, Price identifier, price amount, hosted
+checkout URL, session or payment-intent identifier, customer data or raw payload
+appears in this note; none existed at this step, because Stripe was never
+contacted. The only long identifiers are Git commit SHAs.
+
+END OF EVIDENCE

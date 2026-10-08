@@ -1,0 +1,176 @@
+SCANCOMPASS — M13 STEP 4 PERSONAL PROJECT EVIDENCE
+The signed webhook: exactly-once fulfilment, refunds and disputes that cannot
+depend on arrival order, and the one case where money is taken and no product
+is delivered
+Review date: 8 October 2026
+Classification: Confidential project evidence
+
+STATUS
+SOURCE IMPLEMENTED AND MERGED as PR #37. The second and last payment route
+exists, behind the payments surface flag ONLY — deliberately not behind the
+selling flag, so refunds can still be recorded when selling is switched off.
+NO REAL STRIPE CONTACT: every message in this step is a locally built payload
+signed with a test-only secret generated inside the test process. No schema
+change, no migration, no user interface. Production was not touched. [S1,S6]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 9.
+
+1. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #37, "feat(m13): M13-4 signed webhook, idempotent fulfilment,
+              reversals, reconciliation and payment sweep"
+Base: main at 630c1b77… (the M13-3 merge)
+Merged: 2026-10-08 14:40:11 UTC as 15fb2bdf80336ee628781f022082aa9a8278f9f2
+Diff: 36 files changed, 6,621 insertions, 76 deletions
+Post-merge continuous integration: run 37794364064, SUCCESS
+Route inventory: 20 → 21
+
+2. PURPOSE
+
+Receive Stripe's messages about what actually happened to a payment, and turn
+them into exactly one entitlement per payment — or, where a product cannot
+honestly be delivered, into a visible obligation instead. [S2,S6]
+
+3. THE SIGNATURE IS THE ENTIRE AUTHENTICATION
+
+This route has no session, no cookie, no origin check and no cross-site token,
+because Stripe is not a browser and holds none of them. The signature is
+therefore all there is, which is why it is checked over the EXACT BYTES
+RECEIVED — never a re-serialised copy — with a constant-time comparison, a
+bounded header, and a five-minute timestamp tolerance in both directions.
+
+A verification failure WRITES NOTHING. That is not cosmetic: if an unverified
+body could append a ledger row, an unauthenticated caller could fill an
+append-only table the application cannot delete from. [S2,S6]
+
+4. PAID AND FULFILLED ARE ONE TRANSACTION, BY DECISION
+
+There is deliberately no durable "paid but not yet fulfilled" state. The move
+to paid, the creation of the entitlement and the recording of the event all
+commit together or none of them do. The reasoning is recorded: a durable
+paid-but-unfulfilled state is money taken with an obligation tracked nowhere,
+and reconciling it would need a queue or a retry worker whose failure mode is
+silent. Stripe already retries until it receives a success, and the application
+only reports success AFTER the commit — so the retry mechanism exists and is
+the provider's. [S2]
+
+5. ARRIVAL ORDER IS NEVER ASSUMED, AND THAT IS THE HARD PART
+
+Stripe does not guarantee the order its messages arrive in. A refund can
+legitimately arrive BEFORE the payment it refunds. The naive handling —
+acknowledge the refund as unmatched and move on — would let the payment arrive
+later and grant a product for money that had already been returned.
+
+The implemented behaviour instead: an uncorrelatable refund or dispute is
+DEFERRED, with nothing written, so Stripe redelivers it. After a bounded window
+it is recorded with its NORMALISED FINANCIAL EFFECT rather than its message
+type, and any later payment for that same provider identifier consults that
+record and refuses to grant. Storing the effect rather than the type is what
+makes a one-off goodwill PARTIAL refund stop destroying a paid product while a
+FULL refund still blocks it. [S2,S6]
+
+The acceptance drives ELEVEN ordered-delivery cases and requires the final
+state to be the same whichever order the messages arrive in — full refund then
+payment, payment then full refund, partial refund first, and all three dispute
+orderings. [S6]
+
+6. THE HONEST FAILURE STATE: MONEY TAKEN, NO PRODUCT
+
+One case cannot be made to come out well, and the design refuses to pretend
+otherwise. If a payment arrives for a hostname whose single usable entitlement
+already came from a DIFFERENT order, granting a second would break the central
+invariant, and dropping the payment would lose real money.
+
+So the payment is recorded durably, NO second product is granted, the order is
+marked as requiring human reconciliation, and the message is acknowledged
+because the fact is durable and retrying would change nothing. It also BLOCKS
+further purchases for that hostname, so charges cannot accumulate against a
+refund the operator already owes. A database audit query lists every row in
+that state. No refund is issued automatically: that is a commercial decision and
+an outbound money movement triggered by a provider message, which this project
+will not do unattended. [S2]
+
+7. TWO FINDINGS FROM THE OWNER'S REVIEW, AND HOW THEY WERE CLOSED
+
+The implementation reported two residual issues rather than leaving them for
+someone to discover. Both were closed on the owner's direction. [S2,S6]
+
+A RACE NO ROW LOCK COULD CLOSE. Two transactions concerning the same payment
+could, in a narrow window, both commit — granting a product despite a recorded
+full refund — because they touch no row in common, so row locking cannot order
+them. The fix is a transaction-scoped advisory lock keyed on the payment
+identifier itself, taken as the transaction's FIRST statement, so the two are
+serialised by the thing they actually share. The key is derived by hashing and
+is never stored or compared.
+
+AN EDGE LIMIT THAT WOULD HAVE REFUSED LEGITIMATE MESSAGES. The web server
+configuration capped request bodies well below the size this route accepts, so a
+large but legitimate Stripe message would have been rejected before the
+application saw it. The repository's web-server template gained a dedicated
+location for the webhook with the correct limit, its own traffic bound, and
+refusals that tell Stripe to retry rather than to give up. IT IS A REPOSITORY
+TEMPLATE ONLY — no live web server was read, tested or reloaded, and this
+change is NOT installed on production. [S2,S6]
+
+8. VALIDATION (SOURCE-RECORDED) [S6]
+
+Executed in a Linux cloud container against a disposable PostgreSQL 18.6
+database from a pinned image, destroyed afterwards, with the application
+database role and the committed grants. Every message was a raw signed body
+driven through the real transport, composition and transaction.
+
+  the eleven ordered-delivery cases all reach the designed final state
+  the same message delivered twice concurrently yields ONE entitlement, ONE
+    ledger row, and the loser reports a duplicate
+  tampered body, stale timestamp, wrong secret and wrong API version each
+    write NOTHING
+  success is reported only AFTER the transaction commits
+  the duplicate-usable-entitlement audit query returns zero rows after every
+    concurrency case
+  the free scanning path provably reaches no payment module
+  new integration suite  49 passed, run three times consecutively
+  full test suite        8,433 passed, 0 failed, 609 skipped of 9,042 across
+                         223 files
+
+9. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The implementation, the tests and the evidence record were produced by Claude,
+an AI coding assistant, under a task specification written by the project owner.
+The two findings in section 7 were reported by the assistant and closed on the
+owner's direction after review.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. Messages from the payment provider can arrive in any order. Why is
+     designing for every order harder, and better, than assuming the usual one?
+  2. There is one case where somebody has paid and will not receive a product.
+     The system records it and tells a human instead of guessing. Why is a
+     visible obligation better than an automatic decision?
+  3. A small goodwill refund must not destroy a paid product, but a full refund
+     must. How does storing what a message MEANT, rather than what it was
+     CALLED, make that possible?
+  4. The implementation reported two problems it had not fixed. What would have
+     been lost by staying silent until someone asked?
+
+10. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security read from the GitHub API: pull
+     request #37, its merge commit 15fb2bdf80336ee628781f022082aa9a8278f9f2,
+     and continuous-integration run 37794364064.
+[S2] docs/M13_PAYMENTS_ENTITLEMENTS.md at main — the design, including this
+     step's implementation decisions and the two closed findings.
+[S6] docs/evidence/M13_4_WEBHOOK_FULFILMENT_REVERSAL_SWEEP_2026-10-08.md at
+     main — the source evidence record for this step, from which the figures in
+     section 8 are taken.
+
+No Stripe secret, key, webhook secret, Price identifier, price amount, hosted
+checkout URL, session or payment-intent identifier, customer data, payer email
+address, card data or raw webhook payload appears in this note. The test-only
+signing secret used by the fixtures was generated inside the test process and is
+not recorded. The only long identifiers are Git commit SHAs.
+
+END OF EVIDENCE
