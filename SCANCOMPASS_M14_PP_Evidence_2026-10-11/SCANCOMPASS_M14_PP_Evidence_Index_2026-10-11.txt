@@ -1,0 +1,243 @@
+SCANCOMPASS — M14 AUTHORISED EXTENDED ASSESSMENT
+PERSONAL PROJECT EVIDENCE INDEX
+Four accepted milestones: a design lock, the verification that preceded it, the
+persistence that implemented it, and the methodology decision that says what
+the paid product may actually do. Nothing is deployed and nothing is for sale
+Review date: 11 October 2026
+Classification: Confidential project evidence
+
+STATUS
+FOUR M14 MILESTONES ARE MERGED AND OWNER-ACCEPTED: the pre-implementation
+verification (PR #42), the design lock M14-0 (PR #40), the persistence slice
+M14-1 (PR #43) and the content decision OD-1 (PR #44). [S1]
+
+M14 IS NOT COMPLETE. Five slices remain unstarted: the extended profile
+content, the worker protocol change, the orchestration and routes, the user
+interface with off-production acceptance, and the final review and rollout
+readiness. M14-2 HAS NOT STARTED. [S1,S2]
+
+NOTHING IN M14 HAS REACHED PRODUCTION. Migration 0005 exists IN SOURCE ONLY and
+is NOT APPLIED to production, which still runs the previous milestone's accepted
+Decision A state: schema contract m13-0004, migration ledger 0000-0004,
+payments CLOSED, payment era ERA 1, and the second deployment decision not run.
+NO M14 MILESTONE CONTACTED PRODUCTION, the virtual private server, the
+production database, Stripe in either mode, the web server, DNS, the firewall
+or any production configuration file. [S1,S2]
+
+THERE IS STILL NOTHING FOR SALE, and no paid assessment has ever been performed.
+The ten extended checks are SPECIFIED AND LOCKED, NOT BUILT: no scanner module,
+check, catalogue entry, route or interface for them exists in code. [S2]
+
+TWO RELEASE-BLOCKING DEFECTS WERE FOUND BY REVIEW BEFORE MERGE ACROSS THIS
+PACKAGE, in two different milestones, and both were corrected before anything
+was accepted: a purchased report that could never have been shown to its owner,
+and a consumption that could commit without the durable report the design makes
+load-bearing. Neither reached a merged state. [S1,S2]
+
+FIVE OWNER DECISIONS REMAIN OPEN ACROSS THIS PACKAGE and are not approved by
+any note in it: the host-scope wording, the control-count presentation, the
+extended priority ordering, the customer-facing copy, and the exact public,
+legal and privacy wording. A RECOMMENDED OPTION IS NOT AN APPROVAL. [S2]
+
+THESE ARE RETROSPECTIVE RECORDS. All four notes and this index were written on
+2026-10-11. The work they describe ran from 2026-10-09 to 2026-10-11, and each
+note's own dates are the dates of the events, not of the writing. THE FILE-NAME
+DATE ON EVERY NOTE IN THIS PACKAGE IS THE DATE IT WAS WRITTEN, which is why the
+verification note carries 2026-10-11 although the work it records merged on
+2026-10-10. Each note states its own subject dates in its opening lines.
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE IN THIS PACKAGE
+Six kinds of statement appear across these notes and are kept apart. Each note
+lists the ones it uses, with its own locators.
+
+  SESSION-VERIFIED  Repository, pull-request, comment and continuous-integration
+                    state read directly from the GitHub API while each note was
+                    being written. Marked [S1].
+  SOURCE-RECORDED   Figures taken from a committed source evidence document or
+                    design record in the technical repository, read AT THE
+                    RELEVANT MERGE COMMIT rather than at today's revision,
+                    because later milestones have revised those files.
+  OWNER-RECORDED /  A decision, refusal or instruction written by the project
+  OWNER-DECIDED     owner, read in full from the GitHub API and cited by its
+                    comment identifier, or recorded as given in a committed
+                    document.
+  REVIEW-REPORTED   A finding from an independent review, as recorded in a
+                    committed correction ledger or in the owner comment that
+                    carried it.
+  OWNER-REPORTED    A result the project owner reported to the compiling
+                    session, which that session could NOT find in the
+                    repository or on GitHub. Marked [B1] in the notes that use
+                    it, and labelled as owner-reported in place.
+  HISTORICAL        Production facts carried from an earlier accepted record in
+                    this repository, named where used. NO M14 MILESTONE ADDED
+                    ONE.
+
+NO FORMAL GITHUB REVIEW WAS EVER SUBMITTED ON ANY OF THE FOUR PULL REQUESTS.
+Each pull request's formal reviews were queried and all four returned none. Pull
+requests #42 and #44 carry NO COMMENTS AT ALL. Every review described anywhere
+in this package was conducted in an assistant session and recorded either as an
+ordinary pull-request comment or inside a committed document. Where these notes
+say "review", that is what they mean, and never a GitHub approval. [S1]
+
+THERE IS NO PRODUCTION OBSERVATION ANYWHERE IN THIS PACKAGE, because no M14
+milestone made one. Every database figure in it comes from a DISPOSABLE
+PostgreSQL 18.6 container created from the production image digest and destroyed
+afterwards, never from the production database.
+
+NO TEST IN THIS PACKAGE WAS RUN BY THE SESSIONS THAT WROTE THESE NOTES, and
+none was run by the project owner. Every test count is an implementing or
+reviewing session's reported result, read from a committed document, confirmed
+by continuous integration, or owner-reported — and the three are never merged
+into one figure.
+
+These records are factual technical evidence summaries. They are NOT student
+reflections and are not written in the student's voice. Reflection prompts are
+carried unanswered at the end of each note.
+
+1. WHAT M14 IS, IN ONE PARAGRAPH
+
+M14 lets an authenticated account that has already proved it controls an exact
+hostname spend one purchased entitlement on one deeper assessment of that
+hostname, and keep the resulting report for ninety days. The preceding milestone
+built the commercial half — orders, provider events and entitlements — and
+deliberately stopped before anything could be consumed. M14 is the delivery
+half. Its central safety property is that THE ASSESSMENT TIER IS NEVER AN INPUT:
+it cannot be supplied in a body, query, header, cookie or debug flag, and is
+only ever the fact that execution reached a module reachable solely from an
+orchestrator holding a committed reservation. Its second property is that AN
+ENTITLEMENT IS NOT SCANNING AUTHORITY — using one requires the account, the
+exact hostname and a CURRENT domain authorisation, re-checked at reservation and
+again at consumption. [S2]
+
+2. THE FOUR ACCEPTED MILESTONES, IN PROJECT ORDER
+
+The order below is the order the work actually happened in, which is NOT the
+order the numbers suggest: the verification of the persistence slice merged
+BEFORE the design lock it verified, because its findings had to be absorbed
+into that design before the lock was allowed.
+
+  2026-10-10  PR #42   PRE-IMPLEMENTATION VERIFICATION, documentation only.
+              merged   The designed migration tested against a real database
+              74c88a3  before any of it was built: one blocker and eight
+                       corrections, two of the design's claims DISPROVED BY
+                       REPRODUCING the failure.
+    SCANCOMPASS_M14_PRE_IMPLEMENTATION_VERIFICATION_PP_Evidence_2026-10-11.txt
+
+  2026-10-11  PR #40   M14-0 DESIGN LOCK, documentation only. Seven heads and
+              merged   four refusals: ten findings from an adversarial review,
+              1fdca88  then two owner blockers, then the verification's blocker
+                       and corrections, then an internal contradiction, then one
+                       stale sentence. Sixteen decisions approved in a batch;
+                       three left explicitly open.
+                       SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt
+
+  2026-10-11  PR #43   M14-1 PERSISTENCE. Migration 0005 created IN SOURCE,
+              merged   the store and authorisation changes, the operator SQL
+              851255e  package. One release-blocking consumption defect found
+                       by independent review and corrected on the same pull
+                       request, proven by seven injected faults.
+                       SCANCOMPASS_M14_Step1_PP_Evidence_2026-10-11.txt
+
+  2026-10-11  PR #44   OD-1 CONTENT DECISION, documentation only. The paid
+              merged   profile locked as DEPTH, not access: ten further
+              e7d96c9  conclusions from observations the free scan already
+                       makes, plus two DNS lookups, with the security score
+                       unchanged. Three independent reviews corrected the
+                       surrounding claims and left the decision standing.
+                       SCANCOMPASS_M14_OD1_DECISION_PP_Evidence_2026-10-11.txt
+
+3. THE FIVE SLICES THAT HAVE NOT STARTED [S2]
+
+  M14-2  the extended profile content in code — UNBLOCKED by OD-1 on the
+         content question, NOT STARTED. Three open owner decisions are inputs
+         it needs before the affected work begins.
+  M14-3  the worker protocol change, including enforcing MEMBERSHIP of the
+         closed probe list at the protocol boundary and bounding the resolver
+         tail
+  M14-4  the orchestration and routes, including the authorisation-callback
+         guard and the account-erasure path
+  M14-5  the user interface and off-production acceptance, gated on the public
+         wording decision
+  M14-6  the final review and rollout readiness, including the real-database
+         guarded-suite release gate, the production-shape migration timing and
+         the floor restatement
+
+4. WHAT IS PROVEN ACROSS THIS PACKAGE, AND WHAT IS NOT
+
+PROVEN, on a disposable PostgreSQL 18.6 and reported by the implementing
+sessions: that the migration is additive and widening and applies cleanly; that
+its measured catalogue equals the figures the design predicted BEFORE anything
+was measured; that no runtime write path of the preceding milestone fails
+against it, and that the older rollback image's write path, readiness and
+retention pass too, with a control; that the referential behaviour holds under
+the application role with a privilege revoked; that a real dump and restore
+round trip survives it; that the designed purge pass DEADLOCKS and the shipped
+non-waiting form does not, with the deadlock kept as a negative control; and
+that consumption cannot commit without the whole durable report, proven by
+seven injected faults that each rolled back.
+
+NOT PROVEN, AND NOT CLAIMED ANYWHERE IN THIS PACKAGE: the migration's timing
+against a restored production-shaped copy — no safe off-production copy was
+available, and production was NOT contacted to obtain one; an explicit
+real-database run of the guarded suites as a release gate, which ordinary
+continuous integration SKIPS; the authorisation-callback guard, which cannot be
+pinned until a caller exists; probe-list MEMBERSHIP, as distinct from identifier
+shape; and every claim about the ten extended checks, which DO NOT EXIST IN
+CODE.
+
+5. SOURCE LOCATORS FOR THE PACKAGE
+
+Each note carries its own numbered locators. The sources behind the package are:
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     these notes were written: pull requests #40, #42, #43 and #44, their heads
+     and merge commits 74c88a3625e1f6915d26cb423d918423c3e7137d,
+     1fdca88b0a08222bd284f24de456ec2d4109534c,
+     851255ed1d702a580280f49509ebd67a7ff513e6 and
+     e7d96c994454838322ab42216535307019c414e0; the changed-file lists and line
+     counts of each merge diff; the continuous-integration conclusions for
+     every run cited in the four notes; the ABSENCE of any formal review on all
+     four pull requests, and of any comment on #42 and #44; and the owner
+     comments on #40 and #43.
+[S2] The committed source documents in the technical repository, each read AT
+     THE RELEVANT MERGE COMMIT: the M14 design record, the scanning
+     methodology's locked profile section, the milestone record, and the three
+     evidence documents — the pre-implementation verification, the persistence
+     record and the OD-1 decision memo. Each note names the ones it uses.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/ the production state every
+                                                    M14 milestone was built on
+                                                    and none of them changed
+  SCANCOMPASS_M13_PP_Evidence_2026-10-08/           the payments and
+                                                    entitlements milestone
+                                                    whose invariants, lock
+                                                    order and entitlement
+                                                    states M14 inherits
+  SCANCOMPASS_M12C_PP_Evidence_2026-10-05/          the domain authorisation
+                                                    that M14 re-checks twice
+                                                    per paid run
+  SCANCOMPASS_R1_PRODUCTION_2026-10-07/             the rollback image whose
+                                                    write path was run against
+                                                    migration 0005
+  SCANCOMPASS_BASELINE_RELIABILITY_2026-10-05/      the batch-bound fix whose
+                                                    two-statement, non-waiting
+                                                    shape the purge pass reuses
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data, raw
+provider payload, host identifier, private target hostname, nameserver address,
+production environment value, production filesystem path, backup location,
+email address or server detail appears anywhere in this package. No check or
+probe identifier, header name, record name or source file path is reproduced in
+the content-decision note; its subjects are described by purpose only, so that
+the package carries no scanning recipe. No unsanitised transcript or command
+output is included; owner comments and independent reviews are summarised and
+cited by identifier. The only long identifiers are Git commit SHAs, one
+migration file SHA-256, and GitHub pull-request, comment and workflow-run
+numbers. NO SCREENSHOT ACCOMPANIES THIS PACKAGE: no M14 milestone changed
+anything a user can see, the disposable test environments were destroyed, and
+none is invented.
+
+END OF INDEX

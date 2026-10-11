@@ -1,0 +1,658 @@
+SCANCOMPASS — M14 OD-1 METHODOLOGY DECISION
+PERSONAL PROJECT EVIDENCE
+What the paid assessment is actually allowed to do: a depth-only profile of ten
+further conclusions and two extra DNS lookups, decided by the owner, then
+corrected by three independent reviews that found the surrounding claims
+overstated while leaving the decision itself intact
+Review date: 11 October 2026
+Classification: Confidential project evidence
+
+THIS IS A RETROSPECTIVE RECORD, written on 2026-10-11, after the milestone it
+describes had been accepted and merged the same day. Every date inside is the
+date of the event. Nothing here was observed by the session that compiled it.
+
+STATUS
+OD-1 IS DECIDED AND LOCKED, MERGED AS PR #44 ON 2026-10-11. The named blocker
+that stood in front of the next slice is CLOSED for the content question.
+[S1,S2,S3]
+
+NOTHING WAS IMPLEMENTED. The merge changed FIVE DOCUMENTATION FILES and not one
+line of scanner code, check module, catalogue entry, scoring rule, schema,
+migration, route, test, deployment file, dependency or configuration. THE TEN
+CHECKS THIS NOTE DESCRIBES DO NOT EXIST IN CODE. They are specified and locked,
+not built. [S1,S2]
+
+M14-2 HAS NOT STARTED. This decision unblocks it; it does not begin it. [S2]
+
+MIGRATION 0005 WAS NOT TOUCHED AND IS STILL NOT DEPLOYED. Production continues
+to run the previous milestone's accepted state with payments CLOSED. No
+production host, virtual private server, Stripe account, database, web server,
+DNS record, firewall rule or production configuration file was read or changed.
+[S2]
+
+THE DECISION IS A DEPTH DECISION, NOT AN ACCESS DECISION. For the same input,
+the paid assessment issues NO ADDITIONAL HTTP REQUEST, NO ADDITIONAL TLS
+HANDSHAKE, no additional path, no additional host, no additional port and no
+additional method beyond what the free scan would already have used. Its only
+extra traffic is TWO DNS TXT QUERIES, which go to a resolver and never to the
+assessed host. [S2]
+
+THE SECURITY SCORE DOES NOT CHANGE. Every extended check is structurally
+non-scoring, and a free score and a paid score for the same observations are
+THE SAME NUMBER produced by the same rules. [S2]
+
+THREE INDEPENDENT REVIEWS CORRECTED THE MEMO AND LEFT THE DECISION STANDING.
+Five high-priority and ten medium-priority findings, then three further
+high-priority and four grouped lower-priority findings. NONE of them changed
+the content of the approved profile; what they changed was the ACCURACY OF THE
+CLAIMS AROUND IT. Three of them surfaced NEW OWNER QUESTIONS THAT ARE NOT
+DECIDED. [S2]
+
+FIVE DECISIONS REMAIN OPEN AND ARE NOT APPROVED BY THIS MILESTONE: the
+host-scope wording, the control-count presentation, the extended priority
+ordering, the customer-facing copy and the exact public, legal and privacy
+wording. A RECOMMENDED OPTION IS NOT AN APPROVAL, and section 9 states each one
+as open. [S2]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Five kinds of statement appear in this note and are kept apart throughout.
+
+  SESSION-VERIFIED  Repository, pull-request and continuous-integration state
+                    read directly from the GitHub API while this note was being
+                    written. Marked [S1].
+  SOURCE-RECORDED   Figures and statements taken from the committed source
+                    decision memo and the locked methodology section, at the
+                    merge commit. Marked [S2].
+  OWNER-DECIDED     An owner decision with a traceable source: the seven
+                    lettered decisions are recorded in the committed memo as
+                    given, and the earlier owner decisions this milestone rests
+                    on are traceable to pull-request comments on the design.
+                    Marked [S3].
+  REVIEW-REPORTED   A finding from one of the three independent reviews, as
+                    recorded in the memo's own correction ledger WITH A
+                    FILE-AND-LINE CITATION. Marked [S4]. These reviews were
+                    conducted in assistant sessions and recorded in the
+                    document; NONE IS A GITHUB REVIEW OBJECT.
+  OWNER-REPORTED    A result the project owner reported to the session that
+                    compiled this note, which that session could NOT find in
+                    the repository or on GitHub. Marked [B1] and labelled as
+                    owner-reported wherever it appears.
+
+PULL REQUEST #44 CARRIES NO COMMENTS AND NO FORMAL GITHUB REVIEW. The session
+that wrote this note queried both and found none. Every review below is
+recorded inside the committed memo, not on GitHub. [S1]
+
+TWO NAMESPACES OF LETTERED ITEMS EXIST IN THIS MILESTONE AND MUST NOT BE
+CONFUSED. The OWNER'S DECISIONS are written H-1 to H-7, with a hyphen, in
+section 3. The FIRST TWO REVIEWS' FINDINGS are written H1 to H5 and M1 to M10,
+without a hyphen, in section 7. The THIRD REVIEW'S findings are C1 to C7 in
+section 8. The memo itself keeps them apart this way and so does this note.
+
+NO TEST RESULT IN THIS NOTE WAS PRODUCED BY THE SESSION THAT WROTE IT. Every
+figure is source-recorded, GitHub-verified or owner-reported, as marked.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 11.
+
+1. THE QUESTION THIS MILESTONE ANSWERED [S2]
+
+The design lock had left one named blocker standing in front of everything the
+paid product would actually DO: there were NO EXTENDED CHECKS AT ALL. The
+scanner's catalogue had 42 checks, no tier flag, and a tier enumeration that
+existed in the source and was referenced nowhere. What a paid assessment
+contained was therefore not an engineering question but a PRODUCT AND
+METHODOLOGY question, and the design refused to answer it, fixing only the
+ENVELOPE that any candidate had to fit inside.
+
+The design also recorded why answering it mattered commercially rather than
+merely technically: if nothing beyond the free profile were approved, the
+project "must not sell an extended assessment that is the free scan
+relabelled". [S2]
+
+2. THE PULL REQUEST AND ITS MERGE (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #44, "docs(m14): lock OD-1 — extended-assessment-v1 content"
+Opened: 2026-10-11 10:41:40 UTC
+Merged: 2026-10-11 15:15:26 UTC as
+        e7d96c994454838322ab42216535307019c414e0, by squash
+Diff: 5 files changed, 1,799 insertions, 42 deletions — ALL UNDER docs/:
+      the decision memo (new, 1,251 lines), the scanning methodology, the M14
+      design, the milestone record and the roadmap
+Reviewed final head: 508764af985141efa92ebc6a2a9c42de6a4904fa
+Pre-merge continuous integration: run 38148098944 (CI #64), event
+      pull_request, SUCCESS
+Post-merge continuous integration on the merge commit: run 38150519264
+      (CI #65), event push, SUCCESS
+
+FIVE HEADS, IN ORDER — the decision, then one correction, then a merge of the
+persistence milestone into the branch, then two correction rounds:
+
+  636ee94fc1b86da9a3a8342fb52926f3f8a83a4e  the OD-1 content lock
+  f3e843a897d3328ef2fb7b4f335de1f1c2404c10  a DNS-reads correction carried into
+                                            the design's envelope table
+  749eb4e5621e9fb84d56a2949ffc7de5790773df  main merged in, bringing the
+                                            persistence milestone (PR #43)
+                                            INTO the decision branch
+  ea57700b3ac2cde58cd1a6fc4c6cb57ed6af9eb8  corrected after TWO independent
+                                            reviews
+  508764af985141efa92ebc6a2a9c42de6a4904fa  corrected after the THIRD
+                                            independent review; the head that
+                                            was merged
+
+THE DOCUMENTATION-ONLY SCOPE IS VERIFIABLE FROM THE DIFF ITSELF: all five
+changed paths are under docs/, so no code, test, migration or deployment file
+could have changed. The session that wrote this note confirmed the file list
+from the GitHub API rather than relying on the memo's own claim. [S1]
+
+3. THE OWNER'S DECISIONS, AS GIVEN [S2,S3]
+
+Seven decisions are recorded in the committed memo as the owner gave them. They
+are the authority for everything in sections 4 to 6.
+
+  H-1  THE TEN-CHECK PROFILE — APPROVED, with two corrections the owner made to
+       it. First, the header-consistency check must NOT treat differing
+       multiple content-security-policy headers as a warning merely because
+       they differ: multiple enforced policies may legitimately coexist and are
+       cumulative, so the check judges CONFLICTING DUPLICATE transport-security
+       and frame-options headers ONLY, and policy multiplicity may be recorded
+       as an observation but is never itself a defect. Second, a preload check
+       was RENAMED AND REFRAMED to report only the local prerequisites
+       observable from the response, and must NEVER claim the domain is
+       preload-eligible, submitted, accepted or present in any browser list.
+       Certificate-authority mapping stays conservative: unmapped, ambiguous or
+       wildcard semantics become undetermined, NEVER A FABRICATED MISMATCH.
+  H-2  SCORING TREATMENT — APPROVED, option (c): the scoring configuration
+       COMPLETELY UNCHANGED; extended checks non-scoring; decided corrective
+       extended findings may enter the priority action plan carrying zero
+       recoverable points; free-tier priority eligibility stays fail-closed and
+       behaviour-identical. The owner added a VERSIONING REQUIREMENT: because
+       changing priority eligibility is a methodology change, free reports keep
+       their priority methodology version BYTE-IDENTICAL and extended reports
+       carry their own, selected by profile. The public report document shape
+       is unchanged.
+  H-3  A METHODOLOGY WORDING CORRECTION — APPROVED: DNS reads may occur at the
+       exact hostname OR at the mail-assessment domain the free profile ALREADY
+       derives, through the same existing resolver bounds. NO NEW NETWORK
+       CONNECTION MAY BE MADE TO ANOTHER HOST.
+  H-4  DEPTH-ONLY FOR VERSION 1 — APPROVED. Sensitive-file probing, additional
+       ports, subdomain and alias observation, owner-supplied mail selectors,
+       reputation providers and every other access-expanding technique stay OUT
+       and are NOT RE-OPENED by this decision.
+  H-5  EVIDENCE ADDITIONS — APPROVED: bounded counts, booleans, enumerated
+       values and bounded hostnames only. NEVER URL paths, header values,
+       reporting destinations, policy identifiers, crawler-directive lines or
+       equivalent target content.
+  H-6  COPY CONSTRAINTS — APPROVED AS REQUIRED CONSTRAINTS, NOT AS FINAL
+       CUSTOMER WORDING. Four statements are mandatory: extended findings do not
+       change the security score in version 1; mail-transport policy MODE is
+       not assessed; external reporting-destination authorisation is not
+       verified; and publication of a signing delegation is NOT validation of
+       it. THE CUSTOMER-COPY DECISION REMAINS OPEN until final copy review.
+  H-7  AN OPTIONAL EXACT-VERSION TRANSPORT PROBE — DECLINED.
+
+THE DECISION RESTS ON EARLIER OWNER APPROVALS with their own traceable sources:
+the batch approval and the purge decision recorded on the design pull request,
+cited in the design-lock note named at the end of this one. [S3]
+
+4. THE LOCKED PROFILE: TEN FURTHER CONCLUSIONS [S2]
+
+The profile reaches ten further conclusions FROM OBSERVATIONS THE FREE SCAN
+ALREADY MAKES AND CURRENTLY DISCARDS, plus the two DNS lookups. The ten sit in
+the SIX EXISTING CATEGORIES and introduce NO NEW CATEGORY:
+
+  certificate and authority-record consistency          no new network work
+  active mixed content                                  no new network work
+  insecure form target                                  no new network work
+  security-header consistency                           no new network work
+  preload prerequisites (informational)                 no new network work
+  third-party script integrity (informational)          no new network work
+  mail-authentication reporting                         no new network work
+  mail-transport policy declared (informational)        ONE DNS TXT query
+  transport-reporting configured (informational)        ONE DNS TXT query
+  signing-delegation published (informational)          no new network work
+
+FIVE OF THE TEN ARE INFORMATIONAL and five may be priority-eligible. The
+totals, as the memo records them: ZERO additional HTTP requests, ZERO additional
+TLS handshakes, TWO additional DNS queries. [S2]
+
+THE COMPARISON WITH THE FREE PROFILE, AXIS BY AXIS: checks 42 to 52 — the same
+42 WITH IDENTICAL SEMANTICS plus the ten; HTTP fetch operations, requests,
+paths, hosts, ports, methods, request headers, body and header and redirect
+caps, address policy and rebind re-check ALL IDENTICAL; HTML parsing on
+IDENTICAL BYTES with additional facts extracted; the registry lookup identical
+with one more field parsed from the same response; the scan budget unchanged;
+the scoring configuration unchanged; and the score, grade and coverage for the
+same observations ARITHMETICALLY IDENTICAL to the free result. DNS record
+queries rise from at most 33 to at most 35. [S2]
+
+WHAT CHANGES INSTEAD IS RETENTION AND OWNERSHIP: a paid assessment is
+account-owned, kept under the paid retention class, carries its audit row, and
+NEITHER READS NOR WRITES THE SHARED RESULT CACHE. [S2]
+
+TWO SETS OF VERSION STRINGS, NOT ONE BUMPED SET. The owner's versioning
+requirement produced a rule the memo states repeatedly: the catalogue, content,
+methodology-cache and priority version literals become PROFILE-SELECTED AND ARE
+NEVER GLOBALLY BUMPED, so the free profile's existing literals and its exact
+cache key stay as they are and free reports keep their priority version
+byte-identical. The public report document version is unchanged and gains no new
+key. [S2]
+
+THE AUDIT PROBE IDENTIFIERS were fixed as a closed, worker-owned, versioned list
+of fourteen compact lower-case slugs, naming only WHAT WAS ASKED and never
+anything the target returned, and DELIBERATELY DISJOINT in spelling from check
+identifiers so the two can never be mistaken for one another. The memo states
+the distinction as a rule: a probe identifier names a RETRIEVAL OPERATION; a
+check identifier names a CONCLUSION. [S2]
+
+5. WHAT WAS CONSIDERED AND REJECTED [S2]
+
+The memo records rejections with reasons, in two groups: candidates a HARD
+CONSTRAINT forbids, and candidates rejected ON MERIT while being permissible.
+The second group matters more, because it is where the decision could have been
+looser and was not. Four candidates were DEFERRED rather than discarded —
+crawler-directive disclosure, a brand-indicator record, cookie scope and a
+dangling-alias takeover indicator, the last needing both a new resolver
+primitive and a boundary ruling — and the memo keeps them so they are "deferred
+rather than lost". The declined exact-version probe is recorded with the reason
+nothing was lost by declining it. [S2]
+
+6. WHAT THE DECISION DELIBERATELY DID NOT CHANGE [S2]
+
+No binding invariant of the two preceding milestones, no network-safety control,
+no timeout, no lease, no budget and no port. The scoring configuration is
+untouched. The authorisation model — one exact hostname — is unchanged. No
+scanning permission was broadened, and NO RUNTIME REDIRECT-POLICY CHANGE IS
+AUTHORISED by anything in the decision.
+
+The unresolved sensitive-file methodology review REMAINS UNRESOLVED AND WAS NOT
+RE-OPENED; it stays a standing project hard gate and is explicitly out of scope.
+[S2]
+
+7. THE FIRST TWO INDEPENDENT REVIEWS: FIVE HIGH AND TEN MEDIUM FINDINGS [S2,S4]
+
+Two independent read-only reviews ran on the then-current heads of the
+persistence pull request and this one. Every factual observation was
+RE-CHECKED AGAINST THE MERGED TREE before being recorded, on the stated
+principle that "a finding verified on an unmerged head is not automatically true
+of the branch that ships". Each finding in the memo's ledger carries a
+FILE-AND-LINE CITATION. [S2]
+
+THE FIVE HIGH-PRIORITY FINDINGS, and what each one actually saved:
+
+  H1  FREE REPORT COMPOSITION WOULD BREAK THE INSTANT THE TEN ENTRIES EXISTED.
+      The report builder iterates the WHOLE catalogue and THROWS on a missing
+      result, so making scoring tier-aware would not have been enough: every
+      free report would have failed to compose. Recorded as a new hazard, with
+      both iteration sites named plus "any other complete-catalogue iteration",
+      and a stop condition.
+  H2  GLOBAL VERSION BUMPS WOULD HAVE CHANGED FREE REPORTS, stored values,
+      rendered output AND cache keys. The planned global catalogue bump was
+      WITHDRAWN, and the profile-selected rule of section 4 put in its place.
+  H3  THE PROBE IDENTIFIERS AS FIRST WRITTEN FAILED THE SHIPPED VALIDATOR —
+      ZERO OF FOURTEEN PASSED. The first revision used upper-case dotted names;
+      the persistence code validates compact lower-case slugs. The consequence
+      was concrete: a paid consumption carrying such a summary would have
+      thrown and returned an unknown outcome, and a release would have failed
+      the same way. All fourteen were rewritten and re-tested against the real
+      expression. THIS IS A CROSS-MILESTONE CONFLICT CAUGHT ONLY BECAUSE THE
+      TWO PULL REQUESTS WERE REVIEWED AGAINST EACH OTHER.
+  H4  A CLAIM ABOUT WHICH HOSTS ARE CONTACTED WAS FALSE AS AN ABSOLUTE. The
+      memo had said requests never reach any host but the exact authorised
+      hostname. The existing free transport ALREADY FOLLOWS BOUNDED
+      SAME-REGISTRABLE-SITE REDIRECTS within a cap of five and assesses what it
+      lands on. The claim was RESTATED AS A COMPARISON WITH THE FREE PROFILE
+      rather than as an absolute. THE OWNER QUESTION THIS RAISED IS OPEN —
+      section 9.
+  H5  A PARTLY PARSED PAGE COULD HAVE PRODUCED A CONFIDENT "NOTHING THERE".
+      The parser reads only the first 128 KiB, and that cap is INDEPENDENT of
+      the 512 KiB body cap, so a body between the two is partly parsed while
+      the body-truncation flag reads false — and three checks could have passed
+      on unexamined HTML. A parser-truncation rule, an explicit status
+      precedence and a required truncation flag were added, with a stop
+      condition.
+
+THE TEN MEDIUM-PRIORITY FINDINGS, in substance: four network-budget figures
+were wrong and were corrected against source — the handshake ceiling UP from at
+most 14 to at most 19, the registry lookup DOWN from at most 6 to exactly 1, and
+two connection-path DNS queries per lookup rather than one — and an "almost no
+added latency" claim was WITHDRAWN once the retry-tail mechanism was understood
+(M1); a broken table in the design was repaired and the decision record
+relocated (M2); the ten non-scoring checks were found to MOVE PUBLISHED CONTROL
+COUNTS, which became an open owner question (M3); the stated priority comparator
+was wrong and the eligibility gate's real signature was different, which became
+a second open owner question (M4); the mixed-content check ignored two relevant
+policy directives (M5); a certificate field was found to be usually an
+INTERMEDIATE rather than a certificate authority, producing an eight-item
+mandatory conservatism list (M6); a claim about how header occurrences are read
+was false, and the real evidence bound was smaller than stated, so nested
+evidence shapes are unrepresentable (M7); two status values were found NOT TO
+EXIST in the enumerations the memo assigned them to (M8); "needs zero test
+changes" was shown impossible against two tests that pin exact counts (M9); and
+the catalogue split and a claimed precedent for retaining a hostname list were
+both wrong — the precedent DOES NOT EXIST, so retaining such a list is a NEW
+decision (M10). [S2,S4]
+
+SIX LOW-PRIORITY ITEMS were dispositioned individually, including one dismissed
+as not a defect, one contradiction about whether the profile is implemented
+fixed to say ONCE AND UNAMBIGUOUSLY that it is specified and locked but NOT
+implemented, one claim narrowed to match a standard's mandatory form, and one
+item RECORDED AND DELIBERATELY NOT CHANGED because it is pre-existing free-tier
+behaviour that no extended check depends on — with the rule that the free
+parsing must not be altered to accommodate an extended check. One item was
+INDEPENDENTLY MEASURED EXACT against the real database rather than reasoned
+about. [S2,S4]
+
+8. THE THIRD INDEPENDENT REVIEW: VERDICT CORRECT, WITH THREE MORE P1 FINDINGS
+   [S2,S4]
+
+The third review was read-only, on a scratch worktree against PostgreSQL 18.6.
+It CONFIRMED the pull request documentation-only, and migration 0005 and the
+persistence implementation UNCHANGED, and reported a full test run of 8,677
+passed, 658 skipped, 0 failed. Its verdict was CORRECT, with three
+high-priority findings and four grouped lower-priority ones. The earlier
+findings were RE-VERIFIED AS SOUND AND PRESERVED rather than re-opened. [S2]
+
+  C1  THE STATUS PRECEDENCE STILL ALLOWED A WRONG ABSENCE ANSWER. A page over
+      the parse cap with a form in its UNEXAMINED TAIL could still be published
+      as "not tested — no relevant subject", which contradicted the honesty
+      rule elsewhere in the same documents. The precedence was rewritten as six
+      explicit steps making COMPLETENESS A PRECONDITION OF EVERY ABSENCE
+      ANSWER, requiring both truncation flags to be consulted, FORBIDDING a
+      positive finding in the parsed prefix from being downgraded by
+      truncation, and tying a pass to sufficiently complete evidence. Three
+      tables gained the error rows they were missing, each saying explicitly
+      that A FAILURE IS NEVER READ AS ABSENCE. This is documentation; the
+      parser work belongs to the next slice.
+  C2  AN OPEN QUESTION WAS READING AS SETTLED POLICY. The methodology sections
+      and the design's envelope table presented the host-scope reading as
+      locked while the memo itself marked it open. An explicit PENDING OWNER
+      DECISION label was added in all three places, with the reviewer's
+      recommended wording recorded AS A RECOMMENDATION AND EXPLICITLY NOT
+      APPROVED. The design's envelope cell was reconciled with actual transport
+      behaviour: it now prohibits a connection THE PROFILE ITSELF INITIATES to
+      another host, and states that a host reached only by the authorised
+      host's own same-site redirect chain under the UNCHANGED free-tier policy
+      is not such a connection. The authorisation model, the scanning
+      permissions and the redirect policy are all unchanged.
+  C3  A CONTROL-COUNT BASELINE WAS SIMPLY FALSE. The memo had claimed the free
+      profile's "not applicable" bucket is zero. The eligibility code routes
+      three distinct reasons to that bucket and free checks emit ALL THREE, so
+      the count is DATA-DEPENDENT. Verifying it turned up two further baseline
+      errors — one test dimension is evaluated BEFORE another, so two bucket
+      figures were wrong, and the figures the tests pin are CATALOGUE counts
+      rather than eligibility buckets — and that the count structure has seven
+      buckets plus a total, not six. The section was rewritten around three
+      fixed numbers and 28 data-dependent ones with code citations, and the
+      previously recommended option was WITHDRAWN in favour of a
+      supplement-only option that preserves every bucket and number. STILL NOT
+      APPROVED — section 9.
+  C4  A FAILURE DESCRIPTION OVERSTATED ITS CONSEQUENCE, implying an insecure
+      active reference necessarily loads insecurely in a modern browser. The
+      description now distinguishes five separate things and keeps the failure
+      as a MARKUP DEFECT, never as "your traffic is being intercepted".
+  C5  CROSS-REFERENCES POINTED AT THE WRONG NUMBERING. One document was citing
+      the memo's stop-condition numbers as if they were the design's, which
+      number independently. Every reference was re-pointed and explicitly
+      qualified. The stop conditions themselves are SUBSTANTIVELY UNCHANGED.
+  C6  FOUR FOLLOW-UPS HAD NO OWNING SLICE. They existed only as notes in the
+      memo. All four were PINNED TO SLICES WITH STOP CONDITIONS in the
+      authoritative design — the authorisation-callback guard and account
+      erasure to the orchestration slice, and the real-database guarded-suite
+      release gate and the production-shape migration timing to the final slice
+      (section 10). NONE IMPLEMENTED HERE.
+  C7  A CONSISTENCY SWEEP across the five files found a list of stale or
+      contradictory statements. Each was checked individually against source
+      and then corrected, superseded or MARKED HISTORICAL. Two items the
+      reviewer could not have checked from the documents alone were verified in
+      code and ADDED TO THE NEXT SLICE'S INVENTORY: a third complete-catalogue
+      iteration site, and a place where a global catalogue version is stamped
+      into the score model and must become profile-selected.
+
+AN HONEST DETAIL FROM THAT SWEEP, worth recording because it shows the
+convention being applied rather than described: where the owner's own decision
+wording used a status word that is NOT a valid value in the code's enumeration,
+the implementable form was specified AND THE OWNER-DECISION RECORD KEPT THE
+OWNER'S OWN WORD, ANNOTATED RATHER THAN REWRITTEN. [S2,S4]
+
+9. THE FIVE DECISIONS THAT REMAIN OPEN — NOT APPROVED [S2]
+
+THE MEMO RECORDS THESE AS OPEN AND THIS NOTE DOES NOT UPGRADE ANY OF THEM. A
+RECOMMENDED OPTION IS NOT AN OWNER APPROVAL.
+
+  HOST-SCOPE WORDING — OPEN, OWNER DECISION. The constraint as originally
+  approved read "exact authorised hostname only". The verified behaviour is the
+  exact authorised hostname PLUS bounded same-registrable-site redirect
+  continuation, which is existing, reviewed free-tier behaviour and IS NOT
+  CHANGED. The owner is asked which of two readings is the approved one: that
+  the constraint always meant "no host we were not led to by the authorised
+  host's own published redirects" — RECOMMENDED, because it is what the code
+  has always done — or that it meant literally one hostname, in which case a
+  NARROWER-THAN-FREE extended transport becomes a new requirement and the next
+  slice must not start. NEITHER READING IS APPROVED HERE. Needed before the
+  transport and scope tests are written.
+
+  CONTROL-COUNT PRESENTATION — OPEN, OWNER DECISION. Ten non-scoring checks
+  move published control counts, and a corrective extended failure would appear
+  under a bucket that reads as "not applicable". The recommended option after
+  the third review preserves every bucket and number, keeps the strict report
+  schema unchanged with no new key, and adds a separately derived supplementary
+  sentence IN THE EXTENDED RENDERER ONLY, derived from actual extended finding
+  identifiers and never from a fabricated baseline or a subtraction, never
+  implying that every inapplicable item was assessed or failed, with the free
+  renderer and its bytes untouched. RECORDED AS LATER-SLICE WORK AND NOT
+  APPROVED. Needed before report presentation is built.
+
+  EXTENDED PRIORITY ORDERING — OPEN, OWNER DECISION. The real comparator was
+  found to be different from the one the memo stated, and ranking findings that
+  carry zero recoverable points needs a rule. A severity-first recommendation
+  and an explicit catalogue-lookup requirement are recorded. NOT APPROVED.
+  Needed before the priority plan is built.
+
+  CUSTOMER-FACING COPY — OPEN. The owner's four copy constraints are now
+  REQUIRED, but they are constraints, not final wording. This closes at final
+  copy review.
+
+  THE EXACT PUBLIC, LEGAL AND PRIVACY WORDING — OPEN, unchanged by this
+  decision. The memo notes that its load statement is a CANDIDATE INPUT to that
+  wording and "is not itself approved public copy".
+
+THE MEMO STATES THE BOUNDARY EXPLICITLY: no blocker remains that prevents the
+next slice from starting ON THE CONTENT QUESTION, the three owner questions
+above are INPUTS THAT SLICE NEEDS BEFORE THE AFFECTED WORK STARTS, and NONE OF
+THEM RE-OPENS THE CONTENT DECISION. [S2]
+
+ALSO STILL OPEN AND NOT OWNER DECISIONS: the unresolved sensitive-file review,
+the four deferred candidates, and whether any extended check should ever score —
+the last to be taken later with calibration evidence. [S2]
+
+10. THE FOUR TECHNICAL FOLLOW-UPS THIS MILESTONE PINNED, AND A PROVENANCE
+    CORRECTION [S2]
+
+The third review's sixth finding turned four loose notes into assigned work
+with enforceable stop conditions. All four concern the PERSISTENCE AND RELEASE
+side rather than content, and NONE IS IMPLEMENTED:
+
+  the authorisation re-check inside consumption still receives the live
+    transaction and records its shared lock before the caller proves it took
+    it. No runtime caller exists yet. Assigned to the ORCHESTRATION SLICE,
+    preferably as a store-controlled reader bound to the account and domain,
+    WITH ADVERSARIAL LOCK-ORDER TESTS.
+  account erasure across the new refusing foreign-key chain fails closed rather
+    than cascading, and needs an operational path. Implementation assigned to
+    the orchestration slice, VERIFICATION to the final slice.
+  AN EXPLICIT REAL-DATABASE GUARDED-SUITE RUN IS A MANDATORY RELEASE GATE,
+    assigned to the final slice, with the rule written down that a green
+    ordinary continuous-integration run is NEVER accepted as evidence those
+    suites passed.
+  the production-shape timing of migration 0005 on a restored production copy
+    REMAINS PENDING, assigned to the final slice. It gates DEPLOYMENT, not the
+    next slice.
+
+A PROVENANCE CORRECTION THAT THIS MILESTONE MAKES POSSIBLE, recorded here
+rather than by amending an earlier note. The persistence record in this package
+was written while this pull request was still OPEN. It therefore recorded the
+independent re-review's result — all 49 of the guarded persistence tests
+passing against a disposable PostgreSQL 18.6 — as OWNER-REPORTED, and stated
+that the session could not find it in the repository or on GitHub, and that the
+assignment of the two follow-ups to later slices was written in a pull request
+still under review and so was not cited as settled. THAT WAS CORRECT WHEN
+WRITTEN AND IS NOT AMENDED, which is the convention this repository already
+uses. With this merge, both facts are now SOURCE-RECORDED ON MAIN: the memo
+states that all 49 of 49 passed against a disposable PostgreSQL 18.6, INCLUDING
+the dump-and-restore and post-restore section the persistence record had listed
+as skipped, and that the suites run serially gave 672 passed, 1 failed and 3
+skipped, the single failure being a scratch-worktree dependency-status artefact
+rather than a code defect. The memo also records WHY the gate exists: in the
+persistence pull request's green ordinary run, only 1 OF THE 49 TESTS IN THAT
+FILE EXECUTED, so the seven injected-fault proofs for the blocker the owner
+caught DO NOT RUN IN ORDINARY CONTINUOUS INTEGRATION. [S1,S2]
+
+THOSE FIGURES REMAIN ANOTHER SESSION'S REPORTED RESULTS. They are now committed
+to the repository, which is a stronger provenance than a message, but the
+session that wrote this note DID NOT REPRODUCE THEM and does not present them
+as its own. [S2]
+
+11. THE FINAL REVIEW AND THE MERGE — ONE OWNER-REPORTED LINK
+
+The owner reports that a final independent review of the merged-head candidate
+found NO NEW HIGH-PRIORITY OR BLOCKING FINDINGS and RECOMMENDED MERGE. THE
+SESSION THAT WROTE THIS NOTE COULD NOT FIND THAT REVIEW. Pull request #44 has
+no comments and no formal GitHub review, and no record of a fourth review
+appears in the merged documents. It is therefore recorded here as
+OWNER-REPORTED, labelled as such, and is NOT presented as source-recorded or
+session-verified. [B1]
+
+What the session DID verify independently is what any acceptance would have to
+rest on: that the reviewed final head's continuous integration was green, that
+the pull request was merged at the stated time as the stated commit, and that
+the post-merge run on the merge commit is green (section 2). [S1]
+
+12. WHAT THIS MILESTONE DID NOT DO
+
+No scanner module, check, catalogue entry, scoring rule, schema change,
+migration, route, test, deployment file, dependency or configuration was
+created or changed — which the all-documentation diff of section 2 proves
+independently. Migration 0005 was NOT TOUCHED and is still NOT DEPLOYED. No
+production host, virtual private server, Stripe account, database, web server,
+DNS record, firewall rule or production configuration file was read or changed.
+THE NEXT SLICE WAS NOT STARTED. No open owner decision was decided, and the
+three new questions the reviews raised were recorded rather than resolved.
+[S1,S2]
+
+13. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The research memo, the locked methodology text, the design amendments and the
+corrections were produced by Claude, an AI coding assistant, under task
+specifications written by the project owner. THE SEVEN DECISIONS OF SECTION 3,
+INCLUDING THE TWO CORRECTIONS TO THE PROFILE AND THE ONE DECLINED CANDIDATE,
+AND THE MERGE, ARE THE OWNER'S. The three independent reviews were conducted in
+assistant sessions and are recorded in the committed memo; NONE IS A GITHUB
+REVIEW OBJECT, and pull request #44 carries no comments at all. The final
+review described in section 11 is owner-reported and was not found by this
+session. This Personal Project note was compiled by Claude from the sources in
+section 14; IT RAN NO TEST AND REPRODUCED NO MEASUREMENT. No assistant session
+held production access at any point.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The paid product was defined as reaching more conclusions from the same
+     observations, rather than as looking at more things. What does that choose
+     to protect, and what does it give up commercially?
+  2. The reviews found the ten checks correct and the claims around them
+     repeatedly overstated — a false "zero", a false "never contacts another
+     host", a withdrawn latency figure, a precedent that did not exist. Why is
+     a document's surrounding prose so much easier to get wrong than its
+     decision?
+  3. Fourteen identifiers failed a validator that a DIFFERENT pull request had
+     shipped days earlier. What has to be true of a review process for that to
+     be caught before both merge?
+  4. One finding showed that making scoring tier-aware would still have broken
+     every free report, because a different file iterates the whole catalogue
+     and throws. What does that say about where a change's real blast radius
+     lives?
+  5. A page can be too big to parse fully, and the honest answer is then "we do
+     not know" rather than "there is nothing there". Why was it worth rewriting
+     a precedence rule twice to get that right?
+  6. Three recommended options in this milestone are explicitly NOT approved.
+     Why keep writing the recommendation down instead of just waiting for the
+     decision?
+  7. Where the owner's decision used a word that does not exist in the code's
+     vocabulary, the record kept the owner's word and annotated it. Why not
+     simply correct the quotation?
+
+14. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #44, its five heads
+     636ee94fc1b86da9a3a8342fb52926f3f8a83a4e,
+     f3e843a897d3328ef2fb7b4f335de1f1c2404c10,
+     749eb4e5621e9fb84d56a2949ffc7de5790773df,
+     ea57700b3ac2cde58cd1a6fc4c6cb57ed6af9eb8 and
+     508764af985141efa92ebc6a2a9c42de6a4904fa, and its merge commit
+     e7d96c994454838322ab42216535307019c414e0; the five changed file paths and
+     line counts of the merge diff; the continuous-integration conclusions for
+     runs 38148098944 and 38150519264; and the absence of any formal
+     pull-request review or comment on it.
+[S2] docs/evidence/M14_OD1_DECISION_MEMO_2026-10-11.md at e7d96c9 — the source
+     decision memo, from which the owner decisions as given, the locked ten,
+     the probe list, the rejected and deferred candidates, the
+     free-profile comparison, the network budget, the scoring and priority
+     treatment, the open items and the three reviews' correction ledgers are
+     taken; together with docs/SCANNING_METHODOLOGY.md section 8.5 at the same
+     commit, the locked methodology text, and
+     docs/M14_AUTHORIZED_EXTENDED_ASSESSMENT.md at the same commit for the
+     owner-decision record and the slice and stop-condition assignments of
+     section 10.
+[S3] The owner's seven decisions, recorded as given in [S2] and in the design's
+     own decision record. The earlier owner approvals this decision rests on
+     are traceable to pull request #40 comments 6107035748 and 6107077907, read
+     in full from the GitHub API and recorded in the design-lock note of this
+     package.
+[S4] Independent review findings, as recorded in [S2]'s correction ledgers with
+     a file-and-line citation for each. The reviews were conducted in assistant
+     sessions and recorded in the document; none is a GitHub review object.
+[B1] The project owner's task statement to the session that compiled this note,
+     2026-10-11, for the final review's verdict of no new blocking findings and
+     its merge recommendation. OWNER-REPORTED, NOT REPRODUCED HERE, and NOT
+     FOUND in the repository or on GitHub.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_PP_Evidence_Index_2026-10-11.txt  the index for this package
+  SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt  the design lock that left
+                                                    this content question as
+                                                    its named blocker, and
+                                                    fixed the envelope every
+                                                    candidate had to fit
+  SCANCOMPASS_M14_Step1_PP_Evidence_2026-10-11.txt  the persistence slice whose
+                                                    shipped validator caught
+                                                    the probe-identifier
+                                                    conflict of section 7, and
+                                                    whose 49-test result this
+                                                    milestone's merge turned
+                                                    from owner-reported into
+                                                    source-recorded
+  SCANCOMPASS_M14_PRE_IMPLEMENTATION_VERIFICATION_PP_Evidence_2026-10-11.txt
+                                                    the verification that
+                                                    measured the resolver tail
+                                                    referred to by the
+                                                    withdrawn latency claim
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/ the production state this
+                                                    decision did not change
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data,
+host identifier, private target hostname, nameserver address, production
+environment value, production filesystem path, email address or server detail
+appears in this note. No check identifier, probe identifier, header name,
+record name or source file path is reproduced; the ten checks and the fourteen
+probes are described by PURPOSE ONLY, deliberately, so that this note carries
+no scanning recipe. No unsanitised transcript or command output is included.
+The only long identifiers are Git commit SHAs and GitHub pull-request, comment
+and workflow-run numbers. No screenshot accompanies this note: this milestone
+implemented nothing and changed nothing a user can see.
+
+END OF EVIDENCE

@@ -1,0 +1,660 @@
+SCANCOMPASS — M14 STEP 0 PERSONAL PROJECT EVIDENCE
+The design lock for the authorised extended assessment: a documentation-only
+milestone that designed migration 0005 without creating it, and that was
+refused twice by review before the owner allowed it to be called a lock
+Review date: 11 October 2026
+Classification: Confidential project evidence
+
+THIS IS A RETROSPECTIVE RECORD. It was written on 2026-10-11, after the
+milestone it describes had already been accepted and merged. The work it records
+ran from 2026-10-09 to 2026-10-11. Every date inside this note is the date of
+the event, not the date this note was written. Nothing here was observed by the
+session that compiled it.
+
+STATUS
+M14-0 IS A DESIGN LOCK, MERGED AS PR #40 ON 2026-10-11. IT IMPLEMENTED NOTHING.
+It changed three documentation files and not one line of code, schema,
+migration, test, deployment file or configuration. [S1,S2]
+
+MIGRATION 0005 WAS DESIGNED HERE AND DELIBERATELY NOT CREATED. At the moment
+M14-0 merged there was no file in db/migrations matching 0005, no change to the
+schema definition, and no M14 runtime module of any kind. The persistence that
+implements this design is M14-1, a later and separate milestone. NOTHING IN
+THIS NOTE SHOULD BE READ AS SAYING THAT M14-1'S CODE EXISTED AT M14-0. [S1,S2]
+
+PRODUCTION WAS NOT TOUCHED AND NOTHING WAS DEPLOYED. At the M14-0 merge,
+production ran the M13 Decision A state: schema contract m13-0004, migration
+ledger 0000-0004, payments CLOSED, payment era ERA 1, Decision B not run. M14-0
+changed none of that. No Stripe contact in either mode, no virtual private
+server, no production database, no web server, no DNS, no firewall and no
+production configuration file. [S2]
+
+THE DESIGN WAS REFUSED TWICE BEFORE IT WAS ALLOWED TO MERGE. An independent
+adversarial review of the first draft found ten defects. The owner's review then
+found TWO DESIGN BLOCKERS and required a privacy decision, and said in terms: do
+not merge yet. A later owner re-review found a further internal contradiction
+and again refused the merge. A final merge review found one documentation
+inconsistency and refused once more. The design that merged is the seventh head
+of the pull request, not the first. [S1,S3,S4]
+
+ONE OWNER DECISION WAS TAKEN DURING THE MILESTONE AND ONE BATCH OF SIXTEEN WAS
+APPROVED. THREE DECISIONS WERE LEFT EXPLICITLY OPEN and were not invented:
+the extended assessment's content, the customer-facing copy, and the exact
+public, legal and privacy wording. [S3]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Four kinds of statement appear in this note and are kept apart throughout.
+
+  SESSION-VERIFIED  Repository, pull-request, comment and continuous-integration
+                    state read directly from the GitHub API while this note was
+                    being written. Marked [S1].
+  SOURCE-RECORDED   Figures and design statements taken from the committed
+                    design document AS IT STOOD AT THE M14-0 MERGE COMMIT, not
+                    as it reads today. Marked [S2].
+  OWNER-RECORDED    A decision or refusal written by the project owner in a
+                    pull-request comment, read in full from the GitHub API, and
+                    cited by its comment identifier. Marked [S3].
+  REVIEW-REPORTED   A finding from an independent review, as recorded in the
+                    design document's own correction log or in the owner's
+                    comment that carried it. Marked [S4] and attributed in
+                    place.
+
+THE DESIGN DOCUMENT HAS BEEN REVISED BY LATER MILESTONES. Every quotation and
+figure in this note was read from the document AT COMMIT 1fdca88, the M14-0
+merge, so that this note records what was locked THEN and not what the document
+says now. [S1,S2]
+
+NO GITHUB REVIEW OBJECT WAS EVER SUBMITTED ON THIS PULL REQUEST. The session
+that wrote this note queried the pull request's formal reviews and found NONE.
+Every review described below was conducted in an assistant session and recorded
+either as an ordinary pull-request comment or inside the design document. Where
+this note says "review", it means that, and not a GitHub approval. [S1]
+
+THERE IS NO TEST RESULT AND NO DATABASE FIGURE IN THIS NOTE, because M14-0 ran
+no test and created no database. The continuous-integration runs cited below
+prove only that a documentation-only change left the repository green.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 13.
+
+1. THE PULL REQUEST, ITS SEVEN HEADS AND ITS CHRONOLOGY (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #40, "M14-0: lock authorised extended assessment design"
+Opened: 2026-10-09 10:11:37 UTC
+Merged: 2026-10-11 08:44:49 UTC as
+        1fdca88b0a08222bd284f24de456ec2d4109534c, by squash
+Diff: 3 files changed, 2,163 insertions, 3 deletions — ALL UNDER docs/:
+      M14_AUTHORIZED_EXTENDED_ASSESSMENT.md, MILESTONES.md and ROADMAP.md
+Base at the start: main at 54774b5f4d5334f562be9a3e0a24223ffcbe1f2c, the M13-6
+      merge. The branch was later brought up to main at 74c88a3 — the
+      pre-implementation verification record — without conflict. [S2]
+
+SEVEN HEADS, IN ORDER. Each one is a correction demanded by a review, and the
+pull request stopped for re-review after each:
+
+  f76a783391dc53e64d2a7df198b6acb4ddc9d573
+      the first draft. An independent adversarial review found ten defects
+      (section 9).
+  7953ac0774ac29ed5d5cca1605612eac19a6018c
+      the ten corrections. CI run 37916084500 (#47), SUCCESS. THE OWNER'S
+      REVIEW REFUSED THIS HEAD — two blockers (section 10).
+  cc4e1bf6b3f100359c7922365929f582e666afd2
+      the two blocker corrections. This is the head the pre-implementation
+      verification was run against (section 11).
+  2274638a52655b314aec3f8a15c07d8c0010a5a1
+      a merge of main into the branch, after the verification record merged.
+  49e357dd385fb8aa6035dc7e1eb8ca4243482832
+      the C-1 decision and the verification's corrections. CI run 38091215730
+      (#54), SUCCESS. THE OWNER'S RE-REVIEW REFUSED THIS HEAD TOO — one
+      remaining contradiction (section 11).
+  adb33d091604b86fa6772926d639b2d76c2b7170
+      the owner's decisions recorded. CI run 38124613683 (#55), SUCCESS. THE
+      FINAL MERGE REVIEW REFUSED THIS HEAD — one documentation inconsistency
+      (section 12).
+  55ec80efe95002bac42c5dc53206724a2f9fa836
+      the inconsistency corrected. CI run 38125472854 (#56), SUCCESS. THIS IS
+      THE HEAD THAT WAS MERGED.
+
+Post-merge continuous integration on the merge commit: run 38125893975 (CI
+#57), event push, SUCCESS. The owner's instruction to begin M14-1 required that
+exact run to be green before implementation could start. [S1,S3]
+
+SEVEN OWNER COMMENTS carry the whole review history and are cited individually
+below: 6095441232, 6102701145, 6102736390, 6107035748, 6107077907, 6107192612
+and 6107259155. [S1]
+
+2. WHAT THE DESIGN IS FOR, AND WHAT IT PUT OUT OF SCOPE [S2]
+
+The milestone it designs lets an authenticated account that has ALREADY PROVED
+it controls an exact hostname spend one purchased entitlement on one deeper
+assessment of that hostname, and keep the resulting report for a bounded time.
+
+The design's own non-goals are stated as firmly as its goals, and they matter
+more than the goals for judging what was locked:
+
+  no change whatever to the anonymous free scan, its admission, cache,
+    denylist handling, rate limits, worker protocol or report lifecycle —
+    payment and entitlement state never reach it
+  no new payment behaviour: M14 creates no order, calls no provider, issues no
+    refund and does not alter the webhook
+  no subscription, bundle, credit, balance or transfer — one entitlement, one
+    assessment
+  NO WIDENING OF HOSTNAME IDENTITY: the exact canonical hostname only, with no
+    subdomain coverage bought by purchasing a registrable domain
+  no sensitive-file exposure probing, which an unresolved methodology review
+    and a standing project hard gate forbid; the design neither implements nor
+    promises it
+  no port beyond 80 and 443 and no change to the scanner's egress firewall
+  no technique from the methodology's forbidden class IN ANY TIER —
+    "authorisation widens what is observed, never the class of technique"
+  no automatic re-run, no renewal and no extension of a lease or an entitlement
+  no production action and neither deployment decision
+
+3. THE CENTRAL SAFETY RULE: TIER IS NOT AN INPUT [S2]
+
+The design's load-bearing security property is that the assessment tier is
+DERIVED SERVER-SIDE FROM VERIFIED AUTHORISATION and can never be supplied by
+anyone. It is inherited as a binding invariant from the project's existing
+security model: never from a body, query, header or cookie, and no debug flag
+grants the extended tier.
+
+The design makes that structural rather than merely asserted. The builder for
+the extended command is to live in ONE module reachable ONLY from the M14
+orchestrator, which reaches it ONLY after a reservation it holds has committed.
+Boundary tests are specified to assert that the import closure of the free scan
+route, the report routes, the launch controls and the result cache contains
+neither the extended module nor any payment module; that the M14 request body
+schema is strict and HAS NO FIELD that could name a tier, profile, depth,
+product, entitlement, reservation, price or budget; and that no environment
+variable, header, query or debug flag reaches the profile choice.
+
+The design states the consequence plainly: "Tier is therefore not a value
+anyone supplies: it is the fact that execution reached the extended command
+builder." [S2]
+
+4. AUTHORISATION AND ENTITLEMENT KEPT SEPARATE [S2]
+
+The design inherits sixteen binding invariants from the two preceding
+milestones and lists them before it designs anything. The first is the one the
+whole milestone turns on: AN ENTITLEMENT IS NOT SCANNING AUTHORITY. Using one
+requires the authenticated account, the exact canonical hostname AND a current
+domain authorisation, re-checked at reservation AND AGAIN at consumption.
+
+Three further boundaries were designed rather than assumed:
+
+  THE AUTHORISATION MUST OUTLAST THE LEASE at reservation time, so that a run
+  near the authorisation's own expiry is refused up front instead of being
+  performed and then discarded.
+
+  THE RE-CHECK MUST HAPPEN INSIDE THE TRANSACTION. The existing authorisation
+  function takes a pool-level connection and does one non-locking read, so
+  calling it before the transaction would leave a revocation able to commit
+  between the check and the consumption. The design therefore specifies a new
+  in-transaction variant taking a SHARED LOCK on the authorisation row,
+  sharing one private rule with the existing function, taking NO clock
+  parameter and reading its clock AFTER the locking read. This departs from the
+  letter of the earlier milestone's instruction, and the design says so and
+  puts it to the owner rather than deciding it.
+
+  WHAT IS DELIBERATELY NOT RE-CHECKED is listed too, so the omissions are
+  visible rather than accidental.
+
+The design also records the residual window it cannot close: a revocation after
+the reservation commits does not stop a worker already running, so traffic
+continues for up to the budget plus the uncancellable name-resolution tail.
+NOTHING IS CLAIMED TO BE RETROACTIVELY UNAUTHORISED. [S2,S4]
+
+5. THE THREE TRANSACTIONS, AND THE LOCK ORDER [S2]
+
+Three database transactions were designed in step-numbered detail, with a
+fourth hygiene pass:
+
+  RESERVATION (R). Under the account lock, reap any lapsed lease FIRST by the
+  exact existing rule, re-check authorisation under a shared lock, insert the
+  durable audit row for the run, and only then set the lease — so the audit
+  record exists BEFORE any outbound paid work. A fresh fencing token, the
+  reservation time and the lease expiry are written together.
+
+  FENCED EARLY RELEASE (L). Returns a LIVE lease when the run provably produced
+  nothing and provably cannot still be producing anything. The design flags
+  this as a departure: the earlier milestone's state diagram labels that
+  transition only for a LAPSED lease. It is put to the owner as its own
+  decision rather than slipped in.
+
+  CONSUMPTION (C). Moves the entitlement to consumed IN THE SAME TRANSACTION
+  that persists the durable paid report, fenced on the row identity, the
+  reserved state and the exact reservation token, and DELIBERATELY NOT on the
+  lease expiry. Zero rows matched means fail closed and NEVER RETRY.
+
+  HYGIENE. A later pass closes runs that never reported back, once their lease
+  has lapsed.
+
+THE LOCK ORDER WAS EXTENDED RATHER THAN REDEFINED, with a cycle proof, and with
+one rule the first draft got wrong: re-writing a row the transaction ALREADY
+HOLDS is not a new acquisition. Without that rule a literal enforcement would
+have refused the design's own writes (section 9, finding 4).
+
+The closed set of outcomes for a run — consumed, two kinds of release,
+authorisation lapsed, two kinds of lost fence, and abandoned — is specified as
+a database constraint, and the design states that adding an outcome is a
+reviewed migration. [S2]
+
+6. THE LEASE AND THE FENCING REQUIREMENTS [S2]
+
+The lease was sized from the bounds that already existed rather than chosen:
+
+  extended scan budget            25,000 ms, the same as the free scan, so the
+                                  synchronous request stays inside the existing
+                                  web-server read timeout and no timeout or
+                                  worker ceiling changes
+  orchestrator execution deadline 120,000 ms, a monotonic hard deadline from
+                                  the committed reservation to the START of
+                                  consumption
+  LEASE                           600,000 ms (10 minutes), A COMPILED CONSTANT
+  renewal                         NONE
+
+The ten minutes are justified in both directions: long enough that a legitimate
+run is never refused at consumption for a lapsed lease — the expensive failure,
+where the work is done and the report thrown away — and that any zombie worker
+execution is long over before a new reservation can start; short enough that a
+crashed run returns the purchase within minutes.
+
+WHY A CONSTANT AND NOT CONFIGURATION, in the design's own reasoning: the lease
+is a correctness parameter tied to compiled bounds, and a configuration value
+can be set below them, "turning every slow run into a discarded result".
+Compile-time assertions are specified to tie the lease to the deadline, the
+write budget and the worker timer.
+
+Fencing is required at every point where a lease could be mistaken for another:
+the reservation token is the run's identity and the audit row's primary key, so
+"the lease and its audit row cannot drift"; consumption and release both match
+on the exact token; and replaying a stale run's completion is listed in the
+abuse model as a threat the token answers. [S2]
+
+7. THE MIGRATION THAT WAS DESIGNED AND NOT CREATED [S2]
+
+The design reserves the name and the contract string, and states in its own
+heading that the migration is NOT CREATED in M14-0.
+
+THREE SHAPES WERE CONSIDERED FOR THE PAID ARTIFACT AND TWO WERE REJECTED WITH
+REASONS. The obvious one — a column on the entitlement pointing at the scan —
+was rejected because EVERY POSSIBLE REFERENTIAL ACTION FAILS: refusing the
+delete would abort the retention batch in this image and in every older image
+on rollback; cascading would delete financial history with the table owner's
+privileges; nulling it would destroy the very fact the column exists to prove.
+Duplicating the report tables for paid reports was rejected as duplication for
+no safety gain. The chosen shape puts report CONTENT in the existing tables, so
+it is retention-deleted like any report, and puts the commercial and audit fact
+in a new table NOTHING IN THE APPLICATION CAN DELETE.
+
+The planned change, as designed: one new table whose row is the durable audit
+record of one lease; a widened check on the scan tier; a new check coupling the
+tier to its retention class; one unique index on the entitlements table; and
+three foreign keys, two of them composite, one nulling its reference on delete
+and two refusing it. The design also records what the migration DELIBERATELY
+DOES NOT CONTAIN: no new entitlement state, no change to the payment tables, no
+trigger, no data migration, and no destructive change but the one check
+constraint it immediately replaces with a superset.
+
+The predicted catalogue counts were written down BEFORE anything was measured,
+which is what later let a verification confirm them rather than derive them
+(section 11). The design states the additive-and-widening property as something
+"to be proven, not assumed". [S2]
+
+8. WORKER PROTOCOL VERSION 2, RETENTION AND OWNER ACCESS [S2]
+
+THE SCANNER ISOLATION BOUNDARY WAS NOT WIDENED. A second worker service was
+considered and rejected: the existing worker already IS the isolation boundary,
+and both tiers must obey identical network policy. A client-visible tier
+parameter was forbidden outright. What was chosen is a second protocol version
+on the existing worker command, adding one REQUIRED profile field with no
+default, whose value the web tier sets from the code path that admitted the run.
+The worker maps the profile to a WORKER-OWNED check set and budget ceiling, so
+the command still carries no path, port, resolver, timeout or check list. Both
+protocol versions are to be accepted during the milestone so the web and worker
+images can roll independently and the free path need not change in the same
+slice.
+
+RETENTION AND OWNERSHIP. The paid report is to be kept 90 days and owned
+THROUGH the new audit table, because the scans table has no account column and
+"gets none". The design works out what survives what — retention, a denylist
+purge, a reversal after consumption, an account deletion, a database restore —
+in a table, and it states the uncomfortable consequence rather than burying it:
+once a paid assessment exists for a hostname, a denylist purge NO LONGER
+REMOVES EVERY SCAN-DERIVED RECORD for it. That consequence became the privacy
+decision of section 10.
+
+OWNER ACCESS WENT THROUGH TWO FULL REDESIGNS inside this milestone (sections 9,
+10 and 11) and ended as a single authenticated route with a strict three-value
+action enum: view, download as HTML, download as PDF. Its final shape, and the
+reason the two earlier shapes failed, are recorded in section 11.
+
+9. THE INDEPENDENT ADVERSARIAL REVIEW OF THE FIRST DRAFT [S2,S4]
+
+An independent read-only review of the first draft, against the preceding
+milestone's contract and the real code, found NO BLOCKER and TEN DEFECTS, all
+corrected in place. It also VERIFIED several things the draft had claimed,
+including the lock-cycle proof, the lock modes the new keys would produce, the
+behaviour of the coherence check under a nulled reference, and the insert order.
+
+The ten, in the design's own correction log, are worth recording because several
+are errors of over-claiming rather than mechanism:
+
+  1  Release was described as "the reap applied early" adding no new
+     transition. It is not: the existing rule moves a lease back only when it
+     has LAPSED, and release does it to a LIVE one. Rewritten as a new guard
+     on an existing edge and put to the owner as its own decision.
+  2  The draft said no binding earlier decision was contradicted, and that the
+     authorisation check used the same rule "at the transaction's now". Both
+     were wrong: three departures existed and are now listed in the header,
+     and a clock read before a locking read can be stale — which is exactly
+     what the existing module exists to forbid.
+  3  "It changes nothing for M13 code" was false, because existing FIXTURES
+     hand-insert leases the new key would refuse. The carve-out is now
+     explicit, and the stop condition was narrowed to RUNTIME write paths.
+  4  "The lock order is enforced at runtime" would have refused the design's
+     own writes; the held-row exemption was added.
+  5  A claim about sharing shortening a long retention was wrong in mechanism;
+     the real effect is that a paid report cannot be shared or emailed after
+     its ninetieth day, in every image.
+  6  The audit row did not actually satisfy the inherited "what was retrieved"
+     requirement; a bounded, content-free retrieval summary was added.
+  7  Access re-mints were called "harmless" because of an existing cap. The cap
+     counts EVERY token ever minted, so about a hundred re-opens would have
+     LOCKED THE OWNER OUT of their own paid report. (This fix was itself later
+     found not implementable — section 10.)
+  8  "Nothing is retroactively unauthorised" was too strong; the residual
+     window is now stated.
+  9  The new key was said to make the durable-report guarantee a database fact.
+     It proves a run row exists, not that it completed; the other half is
+     "code + audit".
+  10 Ten smaller internal inconsistencies, each corrected.
+
+10. THE OWNER'S REVIEW: TWO BLOCKERS AND A PRIVACY DECISION [S3]
+
+The owner's review of head 7953ac0 (comment 6095441232) recorded that the
+continuous integration was green and the documentation-only scope clean, called
+the design "strong overall", and said: DO NOT MERGE YET.
+
+  BLOCKER 1 — AN INVARIANT WAS FALSE AS STATED. The design called "a paid
+  report exists if and only if its entitlement is consumed" a GUARANTEE, while
+  another section deliberately deletes paid report content at retention or on a
+  purge while the entitlement stays consumed. The owner's objection was not a
+  wording nit and said so: "it changes the invariant the schema is meant to
+  prove." The required correction was to state the contract in THREE TIERS — at
+  the consume commit a durable report is persisted atomically with the state
+  change; historically, consumed proves a report WAS committed, through the
+  retained audit row; after retention or purge the report may be gone while the
+  entitlement and the audit row remain — and to keep "no consumption without a
+  durable report at commit" as the actual atomic guarantee.
+
+  BLOCKER 2 — A DESIGNED TRANSACTION COULD NOT BE IMPLEMENTED ON THE EXISTING
+  SCHEMA. The access transaction was specified to revoke previously
+  ACCESS-MINTED management tokens while preserving a distinct consumption
+  token. The owner checked the real table and found it has NO PURPOSE OR SOURCE
+  COLUMN, so "access-minted" rows cannot be identified: "Do not leave a
+  non-implementable middle state." The owner's recommended minimal design —
+  revoke ALL unrevoked tokens for that paid scan under the scan lock and mint
+  exactly one — was adopted, which needs no schema change.
+
+  OWNER DECISION — PRIVACY. The owner required that the purge consequence of
+  section 8 be made explicit and reconciled with the project's existing public
+  promises before implementation: audit the current public and operator
+  wording, state exactly what is retained and why, and "if current public
+  wording promises full deletion, mark the wording change as an
+  owner/legal/privacy blocker RATHER THAN SILENTLY VIOLATING IT". The retrieval
+  summary was also to be narrowed to the minimum content-free audit facts.
+
+The same comment listed NINE AREAS IT FOUND NO BLOCKER IN, which is recorded
+here so the acceptance is not mistaken for silence: the reserve-before-outbound
+shape, fencing and consume atomicity, the refund and dispute races, the lock
+order, the referential-action concept — still to be proven on the real database
+under the application role — provider-mode isolation, free-scan isolation, the
+honest non-exactly-once contract, and the ten-minute lease as a default. [S3]
+
+11. THE VERIFICATION'S BLOCKER, THE OWNER'S DECISION, AND A SECOND REFUSAL
+
+M14-0 DID NOT MERGE NEXT. Between the corrections and the merge, a separate
+documentation-only milestone verified the design against the real repository
+and a real database; it has its own Personal Project record, named at the end
+of this note, and it merged FIRST, on 2026-10-10. Its one blocker and eight
+corrections then had to be absorbed into this design before the lock was
+allowed. [S1,S2]
+
+THE BLOCKER, C-1 — THE PURCHASED REPORT COULD NOT BE SHOWN. The verification
+found that in the existing code a management token can do exactly three things:
+create a share, revoke a share it created, and request an email. VIEWING, HTML
+DOWNLOAD AND PDF ALL TAKE A SHARE TOKEN. The access route returned only a
+management token, so the owner's own page had no way to display the paid report
+without creating a share — and the share cap counts EVERY share ever created,
+revoked ones included. After at most five re-opens the purchased report could
+never be displayed, downloaded or printed again for the rest of its retention.
+The verification DID NOT REDESIGN IT; it laid out three options and stopped.
+[S2,S4]
+
+THE OWNER INDEPENDENTLY CONFIRMED THE BLOCKER BEFORE DECIDING. Comment
+6102701145 records the owner spot-checking it against current source and
+concluding "C-1 is real". The owner then decided it in comment 6102736390:
+OPTION B APPROVED — the authenticated access route becomes the owner's access
+surface with a strict server-controlled action enum; view returns the verified
+report plus one fresh management token under a revoke-all-and-mint-one rule;
+the two download actions render the retained frozen report with the EXISTING
+renderers and CREATE NO SHARE ROW. The owner added two constraints that read as
+refusals of the easy fix: "do NOT add extra route files solely for owner
+viewing/download", and "Do not raise the five-share cap merely to make owner
+access work." [S3]
+
+THE SAME OWNER COMMENT REQUIRED EIGHT FURTHER CORRECTIONS, C-2 TO C-9, to be
+incorporated into the design. Their substance belongs to the verification
+record and is summarised there; what matters for this note is that they changed
+the LOCKED DESIGN, not just an evidence file: the purge pass was respecified in
+a non-waiting form because the designed form was proven to deadlock; the
+commit-outcome rule was replaced with "every exception from reserve or consume
+is outcome unknown" because the design's version was NOT IMPLEMENTABLE on the
+database layer in use; the operator SQL was reassigned to a new M14 package
+because the existing audit intentionally fails on the new schema; the test
+change list was completed; the name-resolution tail was replaced with a
+MEASURED figure; audit-level count pins were added; a referential behaviour the
+design said "must be proven" was recorded as PROVEN; and the migration's lock
+footprint and a timing requirement were added. [S2,S3]
+
+A SECOND OWNER REFUSAL, FOR AN INTERNAL CONTRADICTION. The owner's re-review of
+head 49e357d (comment 6107035748; CI run 38091215730 green) accepted the three
+access implementation choices with reasons — no account lock on access,
+because ownership is the immutable account on the audit row; a separate
+download limiter, because downloads create no durable row; and native form
+submissions for downloads, matching the existing shape — and found the nine
+corrections coherent. But it refused the merge over a contradiction BETWEEN TWO
+SECTIONS of the design: one said the purge decision was still open while
+another already instructed the next milestone to BUILD the unapproved option.
+The owner's reasoning is the reason this is worth recording: "That would let
+M14-1 silently make an owner/privacy choice that the same document says is
+unapproved." [S3]
+
+12. WHAT THE OWNER APPROVED, AND THE LAST REFUSAL BEFORE THE MERGE [S3]
+
+BATCH APPROVAL (comment 6107077907). The owner approved, as recommended by the
+design: sixteen decisions covering live re-confirmation of the domain record
+before every reservation, the 90-day paid retention, whether a partial result
+consumes, report access after authorisation lapses, the absence of a failed-
+attempt cap, the rollout order, the lease and its lack of renewal, the client
+disconnect rule, the independent feature gate, the authorisation-outlasts-lease
+rule, the budget, the two route files, the durable-linkage shape, the
+in-transaction authorisation variant, the fenced release of a live lease, and
+the minimal retrieval summary.
+
+THE PURGE DECISION WAS APPROVED AS AN ENGINEERING CHOICE ONLY, and the owner
+drew that line explicitly: retain the financial and audit row, erase the
+retrieval summary on purge, stamp when it was erased, use the verified
+non-waiting pass and "never use the deadlocking plain multi-row UPDATE form" —
+then, in the owner's own emphasis, "this approves the engineering/data-retention
+choice only. B-6 remains open for the exact public/legal/privacy wording. Do
+not change legal.ts or public privacy copy until that exact wording is
+separately reviewed and approved."
+
+THREE ITEMS WERE LEFT OPEN AND MUST NOT BE READ AS APPROVED:
+
+  the extended assessment's CONTENT — named a real blocker for the next slice,
+    and decided later in a separate milestone with its own record
+  the CUSTOMER-FACING COPY — downstream of the content decision and of the
+    wording decision
+  the EXACT PUBLIC, LEGAL AND PRIVACY WORDING — open, and explicitly separate
+    from the approved engineering choice
+
+THE FINAL REFUSAL (comment 6107192612). The merge review of head adb33d0 found
+the decision corrections coherent, the access choices correctly recorded, the
+purge choice cleanly separated from the wording blocker, the files
+documentation-only and CI run 38124613683 green — and still refused to merge,
+over ONE STALE SENTENCE ELSEWHERE IN THE REPOSITORY: a roadmap row still said
+the previous milestone was not deployed and its deployment "prepared", which
+had stopped being true when that deployment was accepted the day before. The
+owner required the correction and added a constraint on HOW: "Do not erase the
+fact that Decision B remains unrun/blocked." The seventh head made exactly that
+correction, and the design merged. [S1,S3]
+
+THE MERGE, AND THE INSTRUCTION THAT FOLLOWED IT (comment 6107259155). The owner
+recorded the merge commit, required the post-merge run on that exact commit to
+be green before implementation began, restated the repository-only scope, listed
+the locked decisions and the three open ones — "Still open and must not be
+invented here" — and set the hard stop conditions for the next slice. [S3]
+
+13. WHAT M14-0 DID NOT DO, AND WHAT REMAINED UNRESOLVED
+
+NOT DONE, from the design's own gate list and verified independently against
+the merge diff: no migration file; no change to the schema definition; NO FILE
+UNDER src/, tests/, db/, deploy/, scripts/ OR .github/; no package or lockfile
+change; no route; no Stripe contact; no production, remote-shell, web-server,
+DNS, firewall or production configuration action; neither deployment decision;
+no later-milestone work; and no change to this Personal Project evidence
+repository. The design was not merged by the session that wrote it. [S1,S2]
+
+UNRESOLVED AT THE MOMENT OF THE MERGE, recorded as named blockers rather than
+left implicit: the extended content did not exist and had to be decided by a
+methodology review; the sensitive-file methodology review remained unresolved
+and was deliberately NOT re-opened; production acceptance of a paid run would
+need a real live purchase, because provider mode is immutable and no entitlement
+may be fabricated; the public wording blocker stayed open; and one documentation
+drift about the worker was noted for a later slice. One earlier verification
+blocker was closed by the pre-implementation work and is recorded as closed
+rather than quietly dropped. [S2]
+
+ALSO NOT PROVEN, AND NOT CLAIMED: everything the design says must be
+demonstrated on a real database. The migration's additive-and-widening
+property, the forward tolerance of the previous milestone's image, the
+referential behaviour under the application role and the absence of deadlocks
+were DESIGN ARGUMENTS at this point. Their proof is the next two milestones'
+work and is recorded in their own notes. [S2]
+
+14. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The design document, its corrections and the milestone records were produced by
+Claude, an AI coding assistant, under task specifications written by the project
+owner. THE INDEPENDENT ADVERSARIAL REVIEW, THE OWNER'S REVIEW THAT FOUND TWO
+BLOCKERS, THE INDEPENDENT CONFIRMATION OF THE ACCESS BLOCKER, THE DECISION ON
+IT, THE BATCH APPROVAL, THE TWO FURTHER REFUSALS AND THE MERGE ARE THE OWNER'S,
+and are traceable to the seven comment identifiers in section 1. Each review
+was conducted in an assistant session and recorded as a comment or in the
+design; NO FORMAL GITHUB REVIEW WAS EVER SUBMITTED. This Personal Project note
+was compiled by Claude from the sources named in section 15, and it ran no test
+and observed no production system. No assistant session held production access
+at any point in M14-0.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The design called an invariant "guaranteed" when it was only true at one
+     instant. Why is a three-tier contract that admits the report may later be
+     gone more useful than a clean-sounding "if and only if"?
+  2. A transaction was fully designed before anyone checked whether the
+     existing table had the column it needed. What is the cheapest point at
+     which that could have been caught?
+  3. The owner refused a merge because two sections of the same document
+     disagreed about whether a privacy decision was open. Why is an internal
+     contradiction a blocker rather than an editing job?
+  4. Approving the engineering choice while keeping the public wording open
+     split one decision into two. What does that separation protect?
+  5. A fix from the first review — revoking previous access tokens — turned out
+     not to be implementable, and the record keeps it marked as superseded
+     instead of deleting it. What is gained by keeping a wrong answer visible?
+  6. The design rejected the obvious schema shape by working through what every
+     possible referential action would break. Why write the rejected options
+     down at all?
+  7. Nothing was implemented in this milestone, and it still took seven heads
+     and four refusals. What was actually being produced?
+
+15. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #40, its seven heads
+     f76a783391dc53e64d2a7df198b6acb4ddc9d573,
+     7953ac0774ac29ed5d5cca1605612eac19a6018c,
+     cc4e1bf6b3f100359c7922365929f582e666afd2,
+     2274638a52655b314aec3f8a15c07d8c0010a5a1,
+     49e357dd385fb8aa6035dc7e1eb8ca4243482832,
+     adb33d091604b86fa6772926d639b2d76c2b7170 and
+     55ec80efe95002bac42c5dc53206724a2f9fa836, and its merge commit
+     1fdca88b0a08222bd284f24de456ec2d4109534c; the files and line counts of
+     the merge diff; the continuous-integration conclusions for runs
+     37916084500, 38091215730, 38124613683, 38125472854 and 38125893975; the
+     absence of any formal pull-request review; and the seven owner comments
+     of [S3].
+[S2] docs/M14_AUTHORIZED_EXTENDED_ASSESSMENT.md AT COMMIT 1fdca88 — the design
+     as locked, including its own correction log sections for the independent
+     review, the owner review, the verification corrections and the owner's
+     decisions, and its scope, invariant, transaction, lease, migration,
+     worker-protocol, retention, abuse-model, rollout, decision, blocker,
+     slice and stop-condition sections. NOT the current revision of that file,
+     which later milestones have changed.
+[S3] Pull request #40 comments, read in full from the GitHub API and cited
+     individually above: 6095441232 (the owner review: two blockers and the
+     privacy decision), 6102701145 (the owner's re-review and the C-1
+     recommendation), 6102736390 (C-1 option B approved), 6107035748 (the
+     re-review accepting the three access choices and refusing the merge),
+     6107077907 (the batch approval and the purge decision), 6107192612 (the
+     final merge review and its one blocker) and 6107259155 (the merge and the
+     instruction for the next slice).
+[S4] Independent review findings, as recorded in [S2]'s correction log and in
+     the owner's comments that carried them. The reviews were conducted in
+     assistant sessions; none is a GitHub review object.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_PP_Evidence_Index_2026-10-11.txt  the index for this package
+  SCANCOMPASS_M14_PRE_IMPLEMENTATION_VERIFICATION_PP_Evidence_2026-10-11.txt
+                                                    the verification that
+                                                    merged BEFORE this design
+                                                    lock and supplied its one
+                                                    blocker and eight
+                                                    corrections
+  SCANCOMPASS_M14_Step1_PP_Evidence_2026-10-11.txt  the persistence slice that
+                                                    implemented this design and
+                                                    created migration 0005 in
+                                                    source
+  SCANCOMPASS_M14_OD1_DECISION_PP_Evidence_2026-10-11.txt
+                                                    the content decision this
+                                                    design left open as its
+                                                    named blocker
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/ the production state M14-0
+                                                    did not change, and whose
+                                                    stale description in the
+                                                    roadmap caused the final
+                                                    refusal of section 12
+  SCANCOMPASS_M13_PP_Evidence_2026-10-08/           the milestone whose
+                                                    invariants, lock order and
+                                                    entitlement states this
+                                                    design inherits
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data,
+host identifier, private target hostname, production environment value,
+production filesystem path, email address or server detail appears in this
+note. No unsanitised transcript is included; the owner's comments are
+summarised and quoted only in short, and cited by comment identifier. The only
+long identifiers are Git commit SHAs and GitHub pull-request, comment and
+workflow-run numbers. No screenshot accompanies this note: M14-0 changed
+nothing a user can see, created no environment to photograph, and none is
+invented.
+
+END OF EVIDENCE

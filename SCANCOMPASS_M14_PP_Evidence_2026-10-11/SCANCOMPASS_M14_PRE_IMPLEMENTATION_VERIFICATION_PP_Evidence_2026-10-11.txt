@@ -1,0 +1,594 @@
+SCANCOMPASS — M14 PRE-IMPLEMENTATION VERIFICATION
+PERSONAL PROJECT EVIDENCE
+A documentation-only milestone that tested a design against a real database
+before any of it was built, found one blocker and eight corrections, and
+proved two of the design's own claims wrong by reproducing the failures
+Review date: 11 October 2026
+Classification: Confidential project evidence
+
+THIS IS A RETROSPECTIVE RECORD. It was written on 2026-10-11, after the
+milestone it describes had already been accepted and merged. THE WORK IT
+RECORDS WAS DONE AND MERGED ON 2026-10-10, the day before. Every date inside
+this note is the date of the event, not the date this note was written. Nothing
+here was observed by the session that compiled it.
+
+STATUS
+THIS MILESTONE IS A VERIFICATION, MERGED AS PR #42 ON 2026-10-10. IT BUILT
+NOTHING. It added exactly ONE FILE — an evidence document — and changed nothing
+else in the repository. [S1,S2]
+
+IT MERGED BEFORE THE DESIGN IT VERIFIED. The design lock it examined was still
+an open pull request when this record merged, and that design was then CORRECTED
+by this verification's findings before it was itself allowed to merge the next
+day. The order matters and is easy to get backwards: verification first, design
+lock second, implementation third. [S1,S2]
+
+NO MIGRATION EXISTED AND NONE WAS CREATED. The migration this work tested was a
+HAND-WRITTEN SCRATCH DRAFT, kept in a session scratchpad and in two throwaway
+copies of the repository, NEVER PLACED IN THE REPOSITORY'S MIGRATIONS
+DIRECTORY. IT IS NOT THE MIGRATION THAT WAS LATER SHIPPED. The shipped migration
+was generated from the schema definition in a later milestone and is a different
+file with a different digest. This distinction is preserved everywhere below.
+[S2]
+
+PRODUCTION WAS NOT CONTACTED. Every database figure comes from a disposable
+PostgreSQL 18.6 container created from the production image digest and destroyed
+at the end of the session, together with every scratch database and copy. No
+virtual private server, no production database, no Stripe in either mode, no web
+server, no DNS, no firewall and no production configuration file. [S2]
+
+THE VERIFICATION FOUND ONE BLOCKER AND EIGHT CORRECTIONS, and it DID NOT FIX
+THE BLOCKER: it analysed it, laid out three options and stopped for the owner.
+TWO OF THE DESIGN'S CLAIMS WERE DISPROVED BY REPRODUCING THE FAILURE rather
+than by argument. [S2,S3]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Four kinds of statement appear in this note and are kept apart throughout.
+
+  SESSION-VERIFIED  Repository, pull-request and continuous-integration state
+                    read directly from the GitHub API while this note was being
+                    written. Marked [S1].
+  SOURCE-RECORDED   Figures taken from the committed source evidence document
+                    produced by the verifying session, at the merge commit.
+                    Marked [S2]. EVERY TEST RESULT, MEASUREMENT AND DATABASE
+                    FIGURE BELOW IS OF THIS KIND.
+  OWNER-RECORDED    A decision or instruction written by the project owner in a
+                    pull-request comment, read in full from the GitHub API and
+                    cited by its comment identifier. Marked [S3].
+  HISTORICAL        Production facts carried from an earlier accepted record,
+                    named where used. THIS MILESTONE ADDED NONE.
+
+NO TEST IN THIS NOTE WAS RUN BY THE SESSION THAT WROTE THIS NOTE, and none was
+run by the project owner. Every figure is the verifying assistant session's own
+reported result, read from the document it committed. The session that compiled
+this note verified the pull request, its merge and its continuous integration,
+and nothing else. [S1,S2]
+
+NO GITHUB REVIEW OBJECT WAS SUBMITTED ON THIS PULL REQUEST, and it carries NO
+COMMENTS AT ALL — the session that wrote this note queried both and found none.
+The owner's acceptance of this work is recorded on the DESIGN pull request
+instead, in the two comments cited in section 10. [S1]
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 11.
+
+1. THE PULL REQUEST AND ITS MERGE (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #42, "M14-1 pre-implementation verification (docs only)"
+Opened: 2026-10-10 10:12:56 UTC
+Merged: 2026-10-10 22:08:36 UTC as
+        74c88a3625e1f6915d26cb423d918423c3e7137d, by squash
+Diff: 1 FILE CHANGED, 811 insertions, 0 deletions — the evidence document
+      docs/evidence/M14_1_PRE_IMPLEMENTATION_VERIFICATION_2026-10-10.md
+Head: 410b954bbacf0f1382648bf64c80a10bb44e4e26
+Pre-merge continuous integration: run 38044127551 (CI #52), event
+      pull_request, SUCCESS
+Post-merge continuous integration on the merge commit: run 38090299976
+      (CI #53), event push, SUCCESS
+
+A ONE-FILE, ADDITION-ONLY DIFF IS ITSELF EVIDENCE OF THE SCOPE: nothing under
+src/, tests/, db/, deploy/ or scripts/ could have changed, because nothing
+outside that one file changed at all. The session that wrote this note confirmed
+the file list from the GitHub API rather than taking the document's word for it.
+[S1]
+
+2. THE CONTROLLED ENVIRONMENT AND THE METHOD [S2]
+
+  base repository state     main at the previous milestone's acceptance
+                            record, 81b80ae4da2d910469ded450480e15c0cea5799e
+  design under test         the design document AT PULL REQUEST #40's THEN-HEAD
+                            cc4e1bf — an OPEN pull request, NOT ON MAIN. Every
+                            section reference in the source record points at
+                            that revision.
+  database                  PostgreSQL 18.6 from the PRODUCTION IMAGE DIGEST,
+                            reported server version number 180006, in a local
+                            disposable container
+  database setup            the repository's OWN role and schema template, its
+                            own migration runner and its own grants template —
+                            not a hand-made approximation
+  privilege level           every write checked AS THE APPLICATION ROLE unless
+                            stated otherwise
+  toolchain                 Node 24.21.0, pnpm 11.21.0, the repository's frozen
+                            lockfile
+
+THE SCRATCH DRAFT, AND WHY IT IS NOT A MIGRATION. The thing applied to the
+database was a hand-written draft of the design's schema section, including the
+approved purge column. The source record states where it lived — the session
+scratchpad and two throwaway archive copies of main — states that it was NEVER
+in the repository's migrations directory, gives its own SHA-256 so the work is
+reproducible, and says in terms that it is NOT the next milestone's migration,
+which "must generate that from the schema definition". THE SHIPPED MIGRATION IS
+A DIFFERENT FILE WITH A DIFFERENT DIGEST, generated later; its digest is
+recorded in the persistence note named at the end of this one. Nothing in this
+note should be read as saying the shipped migration was tested here. [S2]
+
+CLEANUP WAS RECORDED, NOT ASSUMED. At the end of the session the container and
+every scratch database were removed, both archive copies were deleted, and no
+image, container, volume or copy was left behind; the working tree contained
+only the one new file. [S2]
+
+3. THE VERDICTS, AS THE SOURCE RECORD STATES THEM [S2]
+
+  proposed migration: legality, circular keys, the nulling
+    referential action under the application role, grants, counts     PASS
+  forward compatibility of the previous milestone's rollback floor    PASS for
+                            RUNTIME; operator tooling and test fixtures need
+                            changes, each listed
+  commit-outcome semantics                                           PASS, with
+                            a REQUIRED RESTATEMENT of the design's contract
+  lock graph for reserve, release, consume, hygiene and access        PASS —
+                            BUT THE DESIGNED PURGE PASS DEADLOCKS
+  owner access to a paid report                                       BLOCKER
+  the purge retention choice                                         PASS as
+                            implementable; the public wording stays an owner
+                            and legal decision
+  the production checkout and the operator runbook                   RESEARCH
+                            ONLY, with one finding
+  re-review of the design                                            ONE
+                            BLOCKER AND EIGHT CORRECTIONS
+
+The record states its own stopping rule plainly: the blocker "is analysed and
+reported in §5, and NOT redesigned". [S2]
+
+4. THE MIGRATION DESIGN WAS FEASIBLE, AND THAT WAS SHOWN RATHER THAN ARGUED
+   [S2]
+
+LEGALITY. The whole draft applied as the migration role, IN ONE TRANSACTION, on
+a database the repository's own runner had brought to the current schema and
+whose existing operator audit printed a clean pass FIRST. Every statement
+succeeded: the new table, one unique index on an existing table, three foreign
+keys, five indexes of which two are partial unique, and the drop-and-replace of
+one check constraint plus one new one.
+
+One finding of detail that mattered later: a composite foreign key referencing a
+plain UNIQUE INDEX rather than a unique constraint IS ACCEPTED by PostgreSQL
+18.6, and the record notes the generator "may prefer to emit a unique
+constraint instead; either is legal". The next milestone hit a related ordering
+problem in the real generator, which this verification could not have seen
+because it hand-wrote its draft.
+
+TWENTY-FOUR SCRIPTED ASSERTIONS, ALL PASSED, AS THE APPLICATION ROLE, each
+recorded WITH ITS SQL STATE AND CONSTRAINT NAME rather than with a message. In
+substance they prove that the audit-first write order is STRUCTURAL and not
+merely conventional — setting a lease before its run row exists is refused —
+and that the schema itself refuses a run naming another account or another
+domain than its entitlement, one account's lease on another's run, a second
+running run, an authorisation expiring before the lease, a mismatched tier and
+retention class, a completed run with no retrieval summary, an oversize summary,
+a deletion of an audit row by the application role, and a change to the scope an
+existing run references. They also prove the shared-lock read works as the
+application role WITH NO NEW GRANT, that deleting a scan leaves the run row
+intact with a nulled reference, and that the previous milestone's own revocation
+and reaping of leased rows still succeed.
+
+THE NULLING REFERENTIAL ACTION WAS PROVEN WITH THE REAL COMMAND LINE, NOT A
+HAND-WRITTEN QUERY — and proven the hard way. The update privilege on the new
+table was REVOKED from the application role, an expired paid scan was linked to
+a completed run, and the repository's own retention command was run AS THE
+APPLICATION ROLE. It deleted the scan and exited clean; the run survived as
+completed with a nulled reference and its retention stamp intact, and its
+capability cascaded away. The conclusion the record draws is the useful one:
+THE REFERENTIAL ACTION RUNS WITH THE TABLE OWNER'S PRIVILEGES, so the update
+grant the design asks for is needed only for the milestone's OWN writes. That
+turned a design to-do into a proven fact and corrected the reason the grant
+exists.
+
+CIRCULAR KEYS, DUMP AND RESTORE. The insert order is ENFORCED rather than
+conventional, because the reverse is refused. A database holding rows of every
+lifecycle shape was dumped exactly as the project's own backup script does and
+restored exactly as the previous milestone's deployment rehearsal did: exit 0,
+identical row counts, and all three new foreign keys validated. The record
+explains why circularity costs nothing — the dump places foreign keys after
+both tables are loaded — and concludes that no deferrable constraint is needed.
+The previous milestone's post-restore SQL was then run on the restored database
+and left no lease behind, and the design's one additional statement closed the
+still-running rows. [S2]
+
+5. SCHEMA AND GRANT COUNTS: DRAFT EXPECTATIONS, NOT THE SHIPPED NUMBERS [S2]
+
+THE COUNTS BELOW WERE MEASURED AGAINST THE SCRATCH DRAFT, and the record titles
+them "re-derived from source and measured — NOT TAKEN FROM" the design. They
+were derived from the repository's own contract module and then measured on the
+disposable database before and after the draft and its one new grant.
+
+  readiness contract: relations 18 to 19, data tables 16 to 17, table
+    privileges 51 to 54, total privileges 53 to 56
+  measured catalogue: tables 17 to 18; non-owner privileges 52 to 55;
+    constraints 246 to 274, broken down as checks 43 to 54, foreign keys 17 to
+    20, primary keys 17 to 18, unique keys 10 to 12 and not-null 159 to 170;
+    indexes 60 to 69, of which eight are on the new table and one is the new
+    index on the existing table
+  the one new grant: select, insert and update on the new table, and NO DELETE
+
+TWO CHECKS ON THOSE NUMBERS ARE WHAT MAKE THEM MEAN ANYTHING. The pre-draft
+column EQUALS THE PRODUCTION AUDIT recorded at the previous milestone's
+deployment — 17 tables, 52 privileges, 246 constraints — so the fixture was
+production-shaped rather than merely plausible. And the design's four contract
+numbers, written down BEFORE any measurement, were CONFIRMED by it; the
+audit-level numbers were new and were handed to the next milestone to pin.
+
+THESE ARE DRAFT EXPECTATIONS. The later persistence milestone measured the same
+figures against the REAL generated migration and reported the same values; that
+is a separate, independent measurement recorded in its own note, and the
+agreement is a result rather than an assumption. NOTHING HERE SHOULD BE CITED
+AS A MEASUREMENT OF THE SHIPPED MIGRATION. [S2]
+
+THE MIGRATION'S LOCK FOOTPRINT WAS RECORDED, with the consequence spelled out:
+the migration takes the strongest table lock on the scans table for the check
+constraint work, a lighter lock on the entitlements table for the index, and a
+row-level share lock on both ends of each foreign key; validation scans the
+table once inside that lock. With the application running, free-scan persistence
+WAITS, and a wait longer than the application's statement timeout degrades to a
+scan that is not persisted — NEVER TO A FAILED SCAN. The record calls this
+acceptable on production-sized tables but requires the migration to be TIMED ON
+A RESTORED PRODUCTION COPY before deployment. That timing was still pending at
+the time this note was written. [S2]
+
+6. FORWARD COMPATIBILITY OF THE PREVIOUS MILESTONE'S FLOOR [S2]
+
+WHY IT HOLDS, BY CONSTRUCTION AND NOT BY LUCK. The readiness check IGNORES
+extra relations, columns and constraints and never reads the migration ledger,
+so it is one-directional by design. The new constraints admit everything the
+previous milestone writes, because its runtime only ever CLEARS a lease — and a
+null never fails a foreign key — and because the write path has only ever
+written one tier and retention-class pair since it was created. Nothing in the
+previous milestone writes the new table at all.
+
+PROVEN BY RUNNING ITS OWN SUITES THREE WAYS, which is the part that makes the
+claim worth something. Every guarded integration suite, eighteen files, was run
+against the real database as a BASELINE on unchanged main, then with the draft
+present as a sixth migration, then with the SAME STATEMENTS APPENDED TO THE
+EXISTING MIGRATION so the ledger stayed unchanged — the third run existing
+precisely to separate real incompatibilities from ledger-pin noise. The baseline
+reproduced the previous milestone's recorded counts exactly, which is what
+licenses comparing against it.
+
+THE RESULT: EVERY RUNTIME BEHAVIOUR STILL PASSED — checkout eligibility, the
+provider event transaction, fulfilment, refunds, disputes, reconciliation, the
+payment-intent mutex, the sweep, retention and the denylist purge, the report
+write path, capabilities, shares and email, accounts and sessions, domain
+authorisation and readiness. NO RUNTIME WRITE PATH FAILED. Every failure fell
+into one of five TEST-ONLY classes.
+
+THE FIVE CLASSES, ENUMERATED CASE BY CASE rather than summarised, because the
+design had previously carried an incomplete carve-out: fixtures that hand-insert
+leases the new key refuses; the truncate harness, which the new foreign key makes
+PostgreSQL refuse outright and whose failure cascaded to a dozen cases; a
+synthetic scan row whose placeholder retention class now violates the new
+coupling check; six ledger pins that assert the exact list of applied
+migrations; and catalogue pins that assert exact table and constraint counts.
+The record names the affected test and often the line for each, and states the
+fix for each class without changing any assertion's meaning. That enumeration
+became a binding constraint on the next milestone: anything outside these five
+classes was declared a STOP.
+
+OPERATOR TOOLING WAS FOUND INCOMPATIBLE, WHICH IS NOT A RUNTIME PROBLEM BUT HAD
+TO BE PLANNED. The previous milestone's operator audit pins its ledger, table
+list, grant set, keys and indexes BY EXACT EQUALITY, so on the new schema it
+fails — the record quotes the four failing lines it measured and predicts FIVE
+of eighteen once the migration is applied by the real runner, because that adds
+a ledger row. Its preflight is inapplicable by then anyway. The record states
+what STILL WORKS: the payment-era test greps a line the audit prints regardless
+of other failures, and the older rollback image remains forward-compatible
+because it writes only free, anonymous scans. The consequence — that the next
+milestone must ship its own operator package and the runbook must choose the
+audit by schema era — became correction C-4. [S2]
+
+7. TRANSACTION-OUTCOME SEMANTICS: THE DESIGN ASKED FOR SOMETHING IMPOSSIBLE
+   [S2]
+
+The design required the implementation either to classify a commit of unknown
+outcome, or to treat errors "surfacing from COMMIT" as unknown. The verification
+read both transaction paths in the repository and found that NEITHER IS
+POSSIBLE ON THE ONE THE MILESTONE USES.
+
+The project's older write path has an explicit phase machine and CAN tell the
+difference, but it is coupled to a write circuit breaker, so a LOGICAL refusal —
+a fence failure or a key violation — would be recorded as a database-health
+failure. The record concludes the new transactions should NOT use it.
+
+The path the payment code actually uses wraps a library transaction that, on a
+commit failure over a broken socket, runs a rollback on the SAME DEAD
+CONNECTION, and THAT error REPLACES THE ORIGINAL. The caller therefore receives
+an exception with NO PHASE INFORMATION: a pre-commit failure, a server-rejected
+commit and a lost acknowledgement are all simply "an error". This was CONFIRMED
+EMPIRICALLY by terminating the database backend from inside a transaction, not
+inferred from reading the library.
+
+WHAT THE VERIFICATION PUT IN ITS PLACE is stronger than what it removed,
+because it starts from what the milestone actually needs. Every post-failure
+action is already FENCED AND IDEMPOTENT: release matches only the exact
+reservation, consumption matches only a reserved row with that exact token and
+a live lease, run closures match only running rows. So no phase-accurate commit
+knowledge is needed FOR SAFETY. The implementable rule became: EVERY EXCEPTION
+FROM RESERVE OR CONSUME IS OUTCOME UNKNOWN — never dispatch after an uncertain
+reserve, never retry and never return a capability after an uncertain consume,
+and read the truth later from the fenced database state. The record also states
+the honest limit: NO COMPONENT MAY CLAIM EXACTLY-ONCE. The scanner may run more
+than once per entitlement over time, never concurrently, and THE DATABASE
+COMMITS AT MOST ONE CONSUMPTION.
+
+A PRE-EXISTING OBSERVATION WAS RECORDED AND DELIBERATELY NOT FIXED. Tracing the
+connection-pool and client libraries showed that a connection dying between
+statements while a client is checked out raises an unhandled error event, which
+affects the three preceding milestones TODAY and is not this milestone's doing.
+The record works out the real consequence in each context — the production web
+server logs it and survives, so the transaction simply fails on its next
+statement and becomes "unknown" by the rule above, while the retention command
+would exit non-zero and is re-runnable — and leaves it for the owner as a
+possible later hardening. NOT CHANGED HERE. [S2]
+
+8. THE DEADLOCK FINDING, AND WHY THE NON-WAITING FORM WAS CHOSEN [S2]
+
+The design asserted that the purge minimisation pass "holds no other lock, so it
+cannot join a cycle", and that all users of the new table are disjoint. THE
+VERIFICATION FOUND THAT FALSE FOR A MULTI-ROW UPDATE, and did not stop at the
+argument.
+
+THE MECHANISM: such an update HOLDS THE ROWS IT HAS ALREADY UPDATED WHILE IT
+WAITS for the next one, and a retention or denylist batch does exactly the same
+thing through its cascaded nulling of references. Two bounded workloads, each
+holding what the other needs next.
+
+REPRODUCED, NOT ARGUED. Retention deleted one scan, locking its run row, while
+the purge pass updated a second run row; then retention deleted the second scan
+while the purge reached the first — AND POSTGRESQL DETECTED A DEADLOCK and
+aborted the purge. The record gives the SQL state.
+
+THE NON-WAITING FORM, ALSO MEASURED. Selecting candidate rows with a
+locking read that SKIPS ALREADY-LOCKED ROWS, then updating exactly those
+identifiers, NEVER WAITS. On the same schedule it updated the free row, skipped
+the locked one, and retention then completed. The record is careful about what
+was and was not at stake: NOTHING IS CORRUPTED EITHER WAY, because both
+commands are re-runnable — what the plain form costs is an aborted maintenance
+pass, not data. But the design's claim and its disjointness argument had to be
+corrected, and the next milestone was required to implement the non-waiting
+form, repeated until no candidate remains. The owner later wrote the stronger
+version of that into the approval: "never use the deadlocking plain multi-row
+UPDATE form." [S2,S3]
+
+THE NEXT MILESTONE WAS ALSO REQUIRED TO KEEP THE FAILURE AS A TEST — a
+NEGATIVE CONTROL proving the naive form really does deadlock — so that the
+reason for the awkward two-statement shape cannot be lost later. [S2]
+
+9. THE RESOLVER TAIL, AND OTHER MEASURED LIMITS [S2]
+
+The design described name resolution as not cancellable with a tail "measured in
+seconds", and carried that as an unmeasured item. IT WAS MEASURED.
+
+Against ONE SILENT NAMESERVER, the resolver as configured — with its retry count
+left at the library default — took 40,011 ms. With the retry count set to one,
+4,001 ms. The consequence the record draws: a zombie extended execution can
+OUTLIVE ITS 25-SECOND BUDGET BY ABOUT 40 SECONDS PER CONFIGURED NAMESERVER,
+because the stop is cooperative and there is no hard kill.
+
+THE STOP CONDITION PASSED ANYWAY, and the record says why rather than just
+concluding it: even with two silent nameservers the total is about two minutes,
+far inside the ten-minute lease — more than seven times the margin — so THE
+LEASE DOES NOT CHANGE. Two consequences were handed forward instead: a later
+slice must bound the tail explicitly for the extended profile, by lowering the
+retry count or cancelling the resolver at the deadline; and an existing source
+comment calling the timeout "a hard ceiling" IS WRONG FOR THIS TAIL and must be
+corrected. The free profile's resolver settings were left alone.
+
+A SECOND, SMALLER MEASUREMENT: the existing cap on a report-sharing capability
+counts every one ever created, and the existing index serves the time-windowed
+count the design's access rule needs, SO NO SCHEMA CHANGE IS REQUIRED for the
+daily re-open bound. [S2]
+
+10. THE BLOCKER, THE OWNER'S DECISION, AND THE RESEARCH-ONLY SECTION
+
+THE BLOCKER, C-1 — A PURCHASED REPORT COULD NOT BE SHOWN TO ITS OWNER. The
+verification checked the design's access rule against the REAL report code and
+confirmed six of its claims individually: existing shares stay resolvable after
+every management capability is revoked; a revoked capability can neither create
+a share nor request an email, each refused under the scan lock; a new capability
+cannot revoke shares made by an older one; the daily bound is servable from
+existing data with no schema change; the free scan's semantics stay untouched
+provided the revoke-all path is reachable only for the paid tier; and the one
+privilege the rule needs is already granted.
+
+AND THEN FOUND THE WHOLE SURFACE UNUSABLE. In the existing code a management
+capability can ONLY create a share, revoke a share and request an email.
+VIEWING, HTML DOWNLOAD AND PDF ALL REQUIRE A SHARE CAPABILITY. The free scan
+avoids the problem by returning its report inline. The access route as designed
+returned only a management capability, so the owner's own page had NO WAY TO
+DISPLAY THE PAID REPORT without first creating a share — and the share cap
+counts EVERY SHARE EVER CREATED, revoked ones included. After at most five
+re-opens, the purchased report could NEVER BE DISPLAYED, DOWNLOADED OR PRINTED
+AGAIN for the rest of its retention. The record lists the three places in the
+design this contradicts, and states: "NOT REDESIGNED HERE." Three options were
+laid out with their costs, and the work stopped. [S2]
+
+THE OWNER CONFIRMED IT INDEPENDENTLY BEFORE DECIDING. Comment 6102701145 on the
+design pull request records the owner spot-checking the blocker against current
+source — that the download path resolves a share capability while a management
+capability authorises only management operations — and concluding "C-1 is real".
+The owner recommended the minimal-surface option and then approved it in comment
+6102736390, requiring the eight other corrections to be incorporated. THE
+DECISION AND ITS CONSTRAINTS BELONG TO THE DESIGN MILESTONE and are recorded in
+its own note. [S1,S3]
+
+THE PURGE RETENTION CHOICE WAS FOUND IMPLEMENTABLE, AND THAT WAS CAREFULLY NOT
+TREATED AS APPROVAL. The verification listed the minimum changes at each layer
+and, separately, EVERY CURRENT PUBLIC AND OPERATOR STATEMENT THAT WOULD NEED
+AMENDING — the public opt-out text, two retention passages, two runbook
+procedures and two design principles — and noted one page that does NOT
+conflict. Its conclusion is a boundary, not a recommendation: the wording
+remains an owner, legal and privacy decision. The owner's later approval drew
+the same line (section 12 of the design note). [S2,S3]
+
+ONE SECTION WAS RESEARCH ONLY, AND IS SUMMARISED HERE WITHOUT OPERATIONAL
+DETAIL. The verification examined how the production application checkout
+relates to the committed tree and the operator runbook. ITS FINDING: the
+nightly scheduled units EXECUTE FILES FROM THAT CHECKOUT, so a divergence there
+is not merely unused history — two of its files run every night. The previous
+deployment had verified one of those files against its committed form but NOT
+the other, and the record requires that the next read-only production session
+hash the remaining files before anything else. A reconciliation was PROPOSED as
+a future owner-run operation with its own review, and runbook repairs were
+proposed as text for the owner to approve. NOTHING WAS RUN AGAINST PRODUCTION,
+nothing was changed, and no path, host or production value is reproduced in this
+Personal Project note. [S2]
+
+11. THE NINE FINDINGS AS NUMBERED IN THE SOURCE, AND WHAT EACH BECAME [S2]
+
+  C-1  BLOCKER. The re-open route could not show the report. Owner decided it
+       (section 10).
+  C-2  The purge pass's no-cycle claim was false; the deadlock was reproduced.
+       Respecified in the non-waiting form, with the disjointness argument
+       narrowed (section 8).
+  C-3  The design's commit-outcome classification is not implementable on the
+       library in use. Replaced by "every exception from reserve or consume is
+       outcome unknown" (section 7).
+  C-4  The existing operator audit intentionally fails on the new schema. The
+       next milestone ships its own package; the runbook chooses by schema era
+       (section 6).
+  C-5  The design's fixture carve-out was INCOMPLETE. Replaced by the full
+       five-class enumeration, which became a stop condition (section 6).
+  C-6  The resolver tail was unmeasured. MEASURED at about 40 seconds per
+       silent nameserver; the lease still covers it; a later slice must bound
+       it and correct a wrong source comment (section 9).
+  C-7  The design's four contract numbers CONFIRMED; audit-level pins added
+       (section 5).
+  C-8  A referential behaviour the design said "must be proven" was PROVEN, and
+       the reason the grant exists was corrected (section 4).
+  C-9  The migration's lock footprint was recorded and a timing against a
+       restored production copy was REQUIRED before deployment (section 5).
+
+AND ONE EXPLICIT NEGATIVE FINDING: "No contradiction with a binding M13
+decision was found." That is recorded here because its absence would have been a
+stop. [S2]
+
+THE VERIFICATION ALSO WROTE THE NEXT MILESTONE'S OBLIGATIONS — eleven
+implementation implications and ten groups of tests it must contain, including
+every one of the twenty-four assertions as a PERMANENT test with its SQL state,
+the dump-and-restore round trip, the four-way agreement on lapsed leases, the
+lock probes WITH the negative control, and the parity of the old and new
+authorisation functions. The persistence note named at the end of this one
+records which of those were delivered. [S2]
+
+12. WHAT THIS MILESTONE DID NOT DO
+
+It implemented nothing. No migration was created; nothing under src/, tests/,
+db/, deploy/ or scripts/ and no package file was changed — which the one-file
+diff of section 1 proves independently. The design pull request it examined was
+NEITHER MODIFIED NOR MERGED by this work. Production, the virtual private
+server, Stripe, the web server, DNS, the firewall and the production
+configuration were not contacted. The second deployment decision was not run.
+The blocker it found was NOT redesigned, and the retention wording was NOT
+decided. [S1,S2]
+
+13. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The verification, every test and measurement in it, and the source evidence
+record were produced by Claude, an AI coding assistant, under a task
+specification written by the project owner. THE INDEPENDENT CONFIRMATION OF THE
+BLOCKER, THE DECISION ON IT, THE INSTRUCTION TO INCORPORATE THE EIGHT OTHER
+CORRECTIONS AND THE MERGE ARE THE OWNER'S, and are traceable to the two comment
+identifiers in section 10. No formal GitHub review was submitted on this pull
+request and it carries no comments. This Personal Project note was compiled by
+Claude from the sources named in section 14; IT RAN NO TEST AND REPRODUCED NO
+MEASUREMENT. No assistant session held production access at any point.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. This milestone tested a design before any of it was built, and found a
+     blocker that would have reached customers as an unusable purchased report.
+     What made it worth spending a whole milestone on checking a document?
+  2. Two of the design's claims were disproved by REPRODUCING the failure
+     rather than by reasoning. Why is a reproduced deadlock worth more than a
+     correct argument about locks?
+  3. The design asked the implementation to tell a failed commit from a lost
+     acknowledgement, and the library cannot. The answer was not to find a
+     cleverer library but to show that safety never needed the distinction.
+     What does that suggest about requirements that look impossible?
+  4. The verification found the blocker and deliberately did not fix it. When is
+     stopping the more useful thing to do?
+  5. The migration applied here was a hand-written draft, and this record keeps
+     insisting it is not the real one. What would be lost if the two were
+     allowed to blur together?
+  6. The resolver tail turned out to be forty seconds, not "a few". The lease
+     survived anyway. Why measure something that was going to pass?
+  7. The counts measured here were later measured again by a different session
+     against the real migration, and agreed. Why is the second measurement
+     still worth doing?
+
+14. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #42, its head
+     410b954bbacf0f1382648bf64c80a10bb44e4e26, its merge commit
+     74c88a3625e1f6915d26cb423d918423c3e7137d, its ONE-FILE diff and line
+     counts, the continuous-integration conclusions for runs 38044127551 and
+     38090299976, and the absence of any formal review or comment on it; and,
+     on pull request #40, the two owner comments of [S3].
+[S2] docs/evidence/M14_1_PRE_IMPLEMENTATION_VERIFICATION_2026-10-10.md at
+     74c88a3 — the source evidence record for this milestone, from which every
+     verdict, assertion, measurement, count, deadlock result, resolver figure,
+     test class, finding and requirement above is taken, together with its
+     method, cleanup and appendix sections and the SHA-256 of the scratch
+     draft.
+[S3] Pull request #40 comments 6102701145 (the owner's independent
+     confirmation of the blocker and the recommended option) and 6102736390
+     (the decision, and the instruction to incorporate the eight other
+     corrections), read in full from the GitHub API.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_PP_Evidence_Index_2026-10-11.txt  the index for this package
+  SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt  the design lock this work
+                                                    verified, which merged the
+                                                    DAY AFTER this record and
+                                                    absorbed its blocker and
+                                                    eight corrections
+  SCANCOMPASS_M14_Step1_PP_Evidence_2026-10-11.txt  the persistence slice that
+                                                    generated the real
+                                                    migration, re-measured
+                                                    these counts and turned
+                                                    these assertions into
+                                                    permanent tests
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/ the production audit whose
+                                                    figures the pre-migration
+                                                    column of section 5 equals
+  SCANCOMPASS_BASELINE_RELIABILITY_2026-10-05/      the earlier batch-bound fix
+                                                    whose two-statement,
+                                                    non-waiting shape the purge
+                                                    pass of section 8 reuses
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data,
+host identifier, private target hostname, nameserver address, production
+environment value, PRODUCTION FILESYSTEM PATH OR CHECKOUT STATE, backup
+location, email address or server detail appears in this note. The research-only
+production section is summarised in section 10 WITHOUT its operational detail
+deliberately. No unsanitised transcript or command output is reproduced. The
+only long identifiers are Git commit SHAs and GitHub pull-request, comment and
+workflow-run numbers. No screenshot accompanies this note: this milestone
+changed nothing a user can see, and the disposable database it used was
+destroyed.
+
+END OF EVIDENCE
