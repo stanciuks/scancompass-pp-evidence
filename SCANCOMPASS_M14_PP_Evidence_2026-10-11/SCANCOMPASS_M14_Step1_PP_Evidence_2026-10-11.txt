@@ -1,0 +1,655 @@
+SCANCOMPASS — M14 STEP 1 PERSONAL PROJECT EVIDENCE
+Extended-assessment persistence and migration 0005 in source; one
+release-blocking consumption defect found by an independent review, corrected
+on the same pull request, and verified against a disposable PostgreSQL before
+the milestone was accepted
+Review date: 11 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M14-1 IS IMPLEMENTED IN SOURCE, MERGED AS PR #43 AND OWNER-ACCEPTED. IT IS NOT
+DEPLOYED. Migration 0005 exists in the repository only. PRODUCTION STILL RUNS
+M13 DECISION A on schema contract m13-0004 with migration ledger 0000-0004, and
+PAYMENTS REMAIN CLOSED. [S1,S2,S3,B1]
+
+NOTHING A USER CAN SEE CHANGED, because M14-1 added no route, no orchestrator,
+no worker protocol change, no scanner content and no interface. It is the
+database and store layer of the authorised extended assessment and nothing
+else. There is still nothing for sale. [S2,S3]
+
+NO PRODUCTION CONTACT OF ANY KIND IN THIS SLICE — no virtual private server, no
+production database, no Stripe in either mode, no web server, no DNS, no
+firewall and no production configuration file. Migration 0005 HAS NOT BEEN
+APPLIED ANYWHERE BUT A DISPOSABLE CONTAINER. [S2,S3]
+
+ONE RELEASE-BLOCKING DEFECT WAS FOUND BY AN INDEPENDENT REVIEW BEFORE THE MERGE:
+P0, consumption could commit without the durable frozen report the design makes
+load-bearing. The review refused the merge. The defect was corrected on the same
+pull request and the correction was proven by injected-fault tests. The
+pre-correction head was never merged. [S1,S2,S4]
+
+TWO GATES REMAIN OPEN AND ARE NOT CLAIMED CLOSED: the timing of migration 0005
+against a restored production-shaped copy, and an explicit real-PostgreSQL run
+of the guarded suites as a release gate. [S2,B1]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Five kinds of statement appear in this note and are kept apart throughout.
+
+  SESSION-VERIFIED  Repository, pull-request and continuous-integration state
+                    read directly from the GitHub API while this note was being
+                    written. Marked [S1].
+  SOURCE-RECORDED   Figures taken from a committed source evidence document or
+                    design record in the technical repository, at the merge
+                    commit. Marked [S2] and [S3].
+  REVIEW-REPORTED   A finding from the independent review of the pull request,
+                    read from the review comment itself through the GitHub API.
+                    Marked [S4] and attributed in place.
+  OWNER-REPORTED    A result the project owner reported to the session that
+                    wrote this note, which the session DID NOT REPRODUCE and
+                    could not read from the repository or from GitHub. Marked
+                    [B1] and labelled as owner-reported wherever it appears.
+  HISTORICAL        Production facts carried from an earlier accepted record in
+                    this repository, named where used. M14-1 ADDS NONE.
+
+THERE IS NO PRODUCTION OBSERVATION IN THIS NOTE, because M14-1 made none. Every
+database figure below comes from a DISPOSABLE PostgreSQL 18.6 container created
+and destroyed by the implementing session, never from the production database.
+
+NO TEST IN THIS NOTE WAS RUN BY THE SESSION THAT WROTE THIS NOTE. Every test
+count is either source-recorded from the implementing session's own record [S2],
+confirmed by continuous integration [S1], or owner-reported [B1]. The three are
+never merged into one figure.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 16.
+
+1. REVIEWED VERSION, PULL REQUEST, MERGE AND CONTINUOUS INTEGRATION
+   (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #43, "feat(m14): M14-1 extended-assessment persistence
+              (migration 0005)"
+Base: main at 1fdca88b0a08222bd284f24de456ec2d4109534c — the M14-0 design-lock
+      merge (PR #40), whose own post-merge run 38125893975 (CI run #57)
+      concluded SUCCESS
+Merged: 2026-10-11 12:12:51 UTC as
+        851255ed1d702a580280f49509ebd67a7ff513e6, by squash
+Diff: 47 files changed, 9,336 insertions, 171 deletions
+
+THE PULL REQUEST HAD TWO HEADS, AND ONLY THE SECOND WAS MERGED:
+
+  head 7dc548469f6e456df4c44ef0f72636d20c4e0edf
+       the first implementation. Run 38129955379 (CI #58), SUCCESS. THE
+       INDEPENDENT REVIEW REFUSED THIS HEAD (section 7). IT WAS NOT MERGED.
+  head a3c602c0180c3f6cd42ea82a8aa1b4220b8d0f82
+       the corrected head, and the reviewed final head. Run 38134109950
+       (CI #61), event pull_request, SUCCESS. THIS IS THE HEAD THAT WAS
+       MERGED.
+
+Post-merge continuous integration on the merge commit
+851255ed1d702a580280f49509ebd67a7ff513e6: run 38138413391 (CI #62), event push,
+SUCCESS.
+
+WHAT THE GREEN CONTINUOUS-INTEGRATION RUN DOES AND DOES NOT PROVE. The ordinary
+run reported 8,677 tests passed, 0 failed and 658 skipped. THE 658 SKIPS ARE THE
+DATABASE-GATED INTEGRATION SUITES, which the workflow has no PostgreSQL scratch
+database for and therefore skips by design. A GREEN ORDINARY RUN IS THEREFORE
+NOT EVIDENCE THAT THE REAL-POSTGRESQL PROOFS IN THIS NOTE RAN. They were run
+separately, and are reported separately in sections 9 and 10. [S1,S2]
+
+2. WHAT M14-1 IS, AND WHAT IT IS NOT
+
+IT IS the database schema, the migration, the store statements and the operator
+SQL package for an authorised extended assessment — the slice that makes a paid
+assessment recordable. [S2,S3]
+
+IT IS NOT the assessment. No route, no orchestrator, no worker protocol change,
+no scanner content, no interface, no owner access surface and no web-server
+template were added; those are M14-2 to M14-6. THE CONTAINMENT IS PINNED BY A
+TEST, not merely asserted: a boundary block named "M14-1 persistence is
+contained". The new store statements are deliberately NOT reachable through the
+interface the M13 payment callers hold, so no existing caller can reserve or
+consume anything. [S2,S3]
+
+The public legal and privacy copy was NOT touched, because the owner decision
+that governs that wording is still open. Three owner decisions were NOT
+invented: the extended assessment's content, the customer-facing copy, and the
+public wording. [S2]
+
+3. MIGRATION 0005 (SOURCE-RECORDED) [S2,S3]
+
+Generated by the schema tool from the schema definition, not hand-written. A
+second generation run reports "No schema changes, nothing to migrate", so the
+committed snapshot agrees with the schema.
+
+ONE TOOLING DEFECT WAS FOUND AND REPRODUCED. The generator emits a new table's
+foreign keys BEFORE the unique key it adds to an existing table, in either form
+of that key. PostgreSQL 18.6 refuses the result:
+
+  ERROR:  there is no unique constraint matching given keys for referenced
+          table "entitlements"
+
+The committed file is the generated file with EXACTLY ONE STATEMENT MOVED — the
+unique index, to directly after the table creation — so the same 13 statements
+are present byte for byte, which was checked by sorting both files. A test pins
+the ordering property: the scope key precedes every foreign key that targets it.
+
+  committed migration file, SHA-256
+    284da2f081875fb4e652eeff9f99e30f4c732a2387948d52fe68358f8fe5f613
+
+The SESSION THAT WROTE THIS NOTE independently recomputed that digest from the
+merge commit and it matches. [S1]
+
+Migrations 0000 to 0004 and their snapshots are BYTE-IDENTICAL to the base
+branch, and that is pinned. [S2]
+
+THE THIRTEEN STATEMENTS, by kind: one new table (17 columns, 10 checks, two
+uniqueness keys); one unique index on an existing table; one existing check
+constraint dropped and re-added as a SUPERSET of itself, which is the only drop
+in the file; one new coupling check; three foreign keys, one of which deliberately
+nulls a reference on delete while two refuse the delete; and five indexes on the
+new table, two of them partial backstops. NO COLUMN WAS ADDED TO AN EXISTING
+TABLE, there is no data migration, no trigger and no grant inside the file. [S2]
+
+4. CONTRACT, GRANTS AND MEASURED CATALOGUE
+   (SOURCE-RECORDED, DISPOSABLE POSTGRESQL 18.6) [S2,S3]
+
+The schema contract string moves from m13-0004 to m14-0005. Measured on a
+disposable database, after 0005, against the design's predicted figures:
+
+  tables in the application schema       18
+  relations / data tables / total        19 / 17 / 56
+  non-owner privileges                   55
+  constraints                            274 — CHECK 54, foreign key 20,
+                                         primary key 18, UNIQUE 12,
+                                         NOT NULL 170
+  indexes                                69
+
+EVERY MEASURED FIGURE EQUALS THE DESIGN'S PREDICTION. NO COUNT WAS ADJUSTED TO
+MAKE THEM AGREE; the design's table was written before the measurement, in the
+M14-0 lock. [S2]
+
+The grants template gains EXACTLY ONE LINE: select, insert and update on the one
+new table for the application role. The shared-lock read the new authorisation
+path needs required NO NEW GRANT, which was checked as the application role
+rather than assumed. [S2]
+
+5. RUNTIME CODE (SOURCE-RECORDED) [S2,S3]
+
+The change is persistence only. Its substance:
+
+  AUTHORISATION. The existing domain-ownership rule was factored into one
+  module-private decision helper plus one canonicaliser, used by BOTH the
+  existing public check — whose behaviour is unchanged, proven by its own tests
+  passing UNMODIFIED — and one new in-transaction variant that reads under a
+  shared lock, takes its clock AFTER the locking read, and answers only
+  authorised or not authorised. A read failure propagates and the enclosing
+  transaction rolls back as unknown rather than as a denial.
+
+  A SECOND TOOLING DEFECT, REPRODUCED. The query builder emits the shared-lock
+  clause naming a schema-qualified table, which PostgreSQL refuses because that
+  clause must name an unqualified relation. The reader therefore aliases the
+  table, which is exactly the SQL the design specifies.
+
+  THE STORE. Reserve, fenced release, consumption and abandoned-run hygiene
+  statements live on the existing payment store, behind its existing account
+  lock, and are bound to each locked account through a module-private map rather
+  than published on the interface the M13 callers hold. The M13 test doubles of
+  that interface are therefore UNCHANGED.
+
+  LOCK ORDER. The declared payment lock order gains an M14 sub-stage beside the
+  M13 stage, so NO M13 TRANSITION CHANGES MEANING. An entitlement must be
+  acquired before the authorisation lock, before any run write and before any
+  artifact work; re-writing a row already held is exempt; a run row may be
+  written only for a held entitlement; and M13 entitlement writes are refused
+  once authorisation or run work has begun.
+
+  THE OUTCOME RULE. Reserve and consume wrap their whole body: ANY exception
+  becomes an explicit "outcome unknown" answer carrying a cause, because the
+  database layer gives no commit phase to inspect. The cause distinguishes the
+  code's own invariant violations, lock-order violations and input faults from
+  ordinary database faults. It is used for logging only.
+
+  HYGIENE AND MINIMISATION. The retention command gains a pass that closes
+  lapsed runs, and the per-host purge gains a pass that erases the stored
+  retrieval summary for a purged host. That pass uses the TWO-STATEMENT,
+  SKIP-LOCKED form established by this project's own batch-bound fix of
+  2026-10-05, so it NEVER WAITS ON A LOCK and a query plan cannot re-execute its
+  limit. Completion requires both a zero-row batch and a non-locking read
+  finding no candidate; otherwise it pauses, retries a bounded number of times,
+  and reports that the rows are locked rather than claiming success.
+
+6. OPERATOR SQL PACKAGE (SOURCE-RECORDED, DISPOSABLE POSTGRESQL 18.6) [S2]
+
+Three new operator files were added and exercised in both schema states:
+
+  preflight        PASS, 13 checks, on a pre-0005 database; each of its two
+                   refusal cases was run rather than reasoned about. FAILS on a
+                   database that already has 0005.
+  audit            PASS, 22 checks, on a 0005 database after the grant; FAILS
+                   before the grant and FAILS on any extra grant. On a pre-0005
+                   database it stops with an error and never returns a pass.
+  post-restore     the M13 statements plus closing still-running rows; PASS,
+                   and run after a real dump and restore rather than simulated.
+
+THE M13 AUDIT NOW FAILS 5 OF ITS 18 CHECKS on a 0005 database, which is
+EXPECTED AND DESIGNED: the M14 package owns the newer schema. Its payment-era
+line still prints. The M14-1 pre-implementation verification record predicted
+this, and the prediction held. [S2]
+
+7. THE P0 DEFECT, AND WHY THE FIRST HEAD WAS NOT MERGED
+
+THE INDEPENDENT REVIEW. An independent owner-side review of head 7dc5484 was
+recorded on PR #43 as comment 6108125086 on 2026-10-11 at 10:34:43 UTC. Its
+verdict: the continuous-integration and PostgreSQL evidence were substantial,
+but it found ONE RELEASE-BLOCKING INVARIANT VIOLATION plus several corrections,
+and it said in terms: DO NOT MERGE PR #43 YET. [S1,S4]
+
+THE DEFECT. The design's load-bearing guarantee is that an entitlement may not
+move to consumed without the durable frozen report existing AT THAT SAME COMMIT.
+The first implementation did not enforce it. The artifact writer received the
+RAW TRANSACTION and could write anything; after it returned, the verification
+re-read ONLY the scan row's metadata. The integration suite's own success writer
+wrote a scan row and a capability row but NO FROZEN REPORT AND NO FINDINGS — and
+the test then expected, and got, a consumed entitlement. As the review put it,
+the code PROVED THE OPPOSITE of the invariant it was supposed to establish.
+[S4]
+
+This is a defect of the most expensive kind for this project, because the money
+is already taken by the time consumption runs: the end state would be a
+consumed entitlement with no report to show for it.
+
+THE REVIEW REQUIRED A STRUCTURAL FIX, NOT A CHECK. It asked that the write be
+made structurally incapable of committing an incomplete artifact — a
+store-owned, restricted write primitive reusing the existing pure row builders
+in preference to an arbitrary raw-transaction callback — that the whole artifact
+be verified before consumption, that NEGATIVE real-PostgreSQL tests be added for
+each missing piece, that the happy-path fixture be changed to actually write the
+report it claimed to test, and that no callback be allowed to become a bypass
+around the declared lock order. [S4]
+
+THE CORRECTION, ON THE SAME PULL REQUEST, AT HEAD a3c602c. The callback was
+REMOVED. Consumption now takes the paid artifact AS ROWS, built before the
+transaction opens by a new module that calls the existing M11 builders, so the
+store owns every statement. It refuses a foreign or incomplete artifact BEFORE
+ANY LOCK IS TAKEN. It then inserts the scan row, every findings chunk, the
+frozen report and the initial capability WITH EACH STATEMENT'S ROW COUNT
+CHECKED, and before it may consume it RE-READS THE WHOLE ARTIFACT THROUGH THE
+COMPLETED RUN: the scan facts, exactly one report whose stored document
+PostgreSQL ITSELF RE-HASHES to the expected digest and size, and exactly one
+live capability with the expected digest. Anything else is a defect and the
+whole transaction rolls back. NO GRANT WAS ADDED to make this possible. [S2]
+
+PROVEN BY INJECTED FAULTS, NOT BY ASSERTION. Seven faults were injected into a
+real PostgreSQL 18.6 database using database-level triggers created by the
+administrative connection and scoped to the one scan under test: a missing
+report row; a missing capability row; one missing finding; the report re-pointed
+at another scan; and three that ONLY THE PRE-CONSUMPTION RE-READ CATCHES — a
+document corrupted after insert, a capability revoked after insert, and a second
+capability. EACH ONE ROLLED BACK AND NEVER REACHED CONSUMED. A further fault
+injected inside the transaction while the scan row was being written also rolled
+back, and a second consumption after a committed one lost its fence and changed
+no row. [S2]
+
+The new guarded suite grew from 44 tests at the refused head to 49 at the merged
+head. One existing boundary pin had to move as a consequence — the module list
+permitted to name the capability table gains the store — and that movement was
+FLAGGED FOR THE OWNER rather than made quietly, with the one permitted insert
+pinned to its place inside the corrected code. [S2]
+
+8. THE REVIEW'S OTHER FINDINGS, AND WHAT EACH BECAME [S2,S4]
+
+  P1  A release with no worker result accepted a MISSING retrieval summary,
+      although the design says such a release carries one. Corrected to a
+      two-directional rule: not-started means exactly no summary, no-result
+      means a valid summary. Pinned in both directions, and the refusal happens
+      before any statement is issued.
+
+  P1  THE DESIGN TEXT WAS WRONG AND THE CODE WAS RIGHT. The post-restore SQL
+      returns EVERY restored reservation lease, not only lapsed ones, because
+      after a restore the process that held the lease no longer exists. The
+      implementing session had already noticed the contradiction and recorded
+      it. The review's disposition was to CORRECT THE AUTHORITATIVE DESIGN
+      rather than leave code and design knowingly divergent, and to make the
+      test actually execute the restore case on LIVE leases instead of only on
+      lapsed ones. Both were done. This is the one finding where the evidence
+      record's own observation, written before the review, was upheld.
+
+  P1  A SECURITY CLAIM WAS TOO STRONG AND WAS NARROWED. The validator accepts
+      only a lower-case slug form, and the review pointed out that SYNTAX IS
+      NOT MEMBERSHIP: target-derived text can still be encoded as a legal slug.
+      The claim that nothing could be smuggled through was therefore WITHDRAWN
+      and restated as a shape check, with membership of the closed probe list
+      assigned to the protocol boundary of a later slice. No regular expression
+      was changed to make the claim true; the claim was changed to match the
+      code. The probe identifier format was also aligned with the parallel
+      content decision before either pull request merged.
+
+  P2  A PROMISED COMPATIBILITY PROOF HAD BEEN OMITTED AND WAS NOT ALLOWED TO BE
+      DROPPED SILENTLY. The design calls for the earlier rollback image's write
+      path to be exercised against the new migration, and the first head showed
+      only the current floor. The review's instruction was to run it or amend
+      the design with a reviewed reason — not to quietly leave it out. It was
+      run, with a control (section 10).
+
+FOUR MATTERS WERE EXPLICITLY ACCEPTED BY THE REVIEW AS NOT BLOCKERS, and are
+recorded here so that the acceptance is not mistaken for an omission: the extra
+fixture change belonged to an already-declared class; the migration statement
+reorder was justified by the reproduced PostgreSQL failure; the table alias in
+the locking read was justified; the M13 audit failing on the newer schema was
+expected; and the production-shape timing gate was allowed to REMAIN PENDING
+with an explicit instruction NOT TO FABRICATE IT AND NOT TO CONTACT PRODUCTION
+FOR IT. [S4]
+
+9. REAL POSTGRESQL 18.6 VERIFICATION (SOURCE-RECORDED) [S2]
+
+Server: PostgreSQL 18.6, reported server version number 180006, from a
+digest-pinned image in a LOCAL DISPOSABLE CONTAINER, destroyed afterwards. The
+guarded suites run one file at a time against throwaway databases. No production
+database was contacted.
+
+Every guarded suite on the merged branch:
+
+  payments-checkout 27 · payments-webhook 56 · account-acceptance 34 ·
+  account-credentials 12 · account-invite 14 · account-reset 26 ·
+  account-session 58 · accounts 25 · domain-authorization 77 · email 27 ·
+  EXTENDED-ASSESSMENTS (NEW) 49, and twice more at 49 · migrations 31 ·
+  payments 69 · readiness 16 · restore-resurrection 41 · retention 45 ·
+  session 30 · write 36
+
+THE M13 COUNTS EQUAL THE M13-6 AND PRE-IMPLEMENTATION BASELINE EXACTLY —
+payments 69, webhook 56, checkout 27, migrations 31, readiness 16, retention 45,
+domain authorisation 77 — so the new migration moved no existing payment
+behaviour. [S2]
+
+WHAT THE 49 NEW TESTS COVER, by area rather than by case: the upgrade of a live
+pre-0005 database and both preflight refusals; the schema's refusals asserted BY
+SQL STATE AND CONSTRAINT NAME rather than by message text, including a lease
+without its run, a run without its lease, a wrong account or hostname, one
+account's lease on another's run, a second running and a second completed run,
+authorisation cover, the lease window, state and outcome coherence, the
+tier-and-retention coupling, and the refusal of writes the application role must
+not be able to make; the retention command run AS THE APPLICATION ROLE WITH ITS
+UPDATE PRIVILEGE REVOKED, deleting an expired paid scan and leaving the run
+intact with a null reference; reserve, release and consume end to end with their
+refusal reasons, including a refund mid-run and a fence lost exactly at the
+lease end; the injected-fault proofs of section 7; lock behaviour under
+concurrency, INCLUDING A NEGATIVE CONTROL in which the naive form of the
+minimisation pass deadlocks exactly once against retention while the shipped
+skip-locked form does not; four separate ways a lapsed lease can be returned,
+agreeing with one another; the real purge command erasing summaries for a host
+and its subdomains while leaving another host and a running row untouched, and
+being idempotent on a second run; and a REAL DUMP AND RESTORE round trip with
+reserved and consumed rows, coming back with identical counts and all three new
+foreign keys validated. [S2]
+
+The migration applied in 37.5 milliseconds on the disposable fixture database.
+THAT IS NOT A PRODUCTION-SHAPE TIMING AND IS NOT OFFERED AS ONE — see section
+14. [S2]
+
+10. COMPATIBILITY IN BOTH DIRECTIONS (SOURCE-RECORDED) [S2]
+
+THE M13 FLOOR'S OWN CODE AGAINST THE REAL NEW MIGRATION. The base commit was
+checked out in a separate worktree with the new migration added, and its own
+suites run against a separate scratch database. EVERY FAILURE BELONGS TO ONE OF
+THE FIVE DECLARED TEST-CHANGE CLASSES OR CASCADES FROM ONE — fixtures that
+hand-insert a lease, the truncate harness, a synthetic scan row, ledger pins and
+catalogue pins. NO M13 RUNTIME WRITE PATH FAILED. The floor's readiness check
+reports ready on the new schema, 16 of 16. [S2]
+
+THE EARLIER ROLLBACK IMAGE AGAINST THE REAL NEW MIGRATION — the proof the review
+required. The production rollback target's source was run against the new
+migration AND AGAINST A CONTROL of the migration production actually runs today,
+so that pre-existing failures could be told apart from new ones. Its write path
+36, readiness 16 and retention 45 pass in BOTH columns. Of its failures, the 77
+in the control column are its own older-era pins — present on the database
+production runs today, and therefore not caused by this work. THE NEW MIGRATION
+ADDS EXACTLY SIX, ALL OF ONE CLASS: synthetic test fixtures refused by the new
+coupling check. NO RUNTIME PATH OF THE ROLLBACK IMAGE FAILS, because its writer
+only ever stores values the new check accepts. [S2]
+
+Separately, the rollback image's own retention command was run as the application
+role against a fresh new-schema database holding a paid order, a consumed
+entitlement, a completed run and an expired paid scan: it deleted the expired
+scans and the capability, left the run completed with a null scan reference and
+its summary kept, left the entitlement consumed, and the M14 audit still passed
+22 of 22. AN IMAGE-BASED ROLLBACK THEREFORE REMAINS POSSIBLE ACROSS THIS
+MIGRATION. [S2]
+
+11. VALIDATION GATES (SOURCE-RECORDED AT THE MERGED HEAD) [S2]
+
+On Linux, Node 24.21.0, pnpm 11.21.0.
+
+  whitespace check              clean
+  typecheck                     clean
+  lint                          clean
+  build                         success; route inventory UNCHANGED at 21
+  full test suite               8,677 passed, 0 failed, 658 skipped
+                                across 231 files
+  boundary suite                1,669
+  migration regeneration        "No schema changes, nothing to migrate"
+  guarded PostgreSQL suites     section 9 — all pass
+
+The 658 skips are the database-gated suites, which were run SEPARATELY as
+reported in section 9 and are NOT claimed as having run inside the full suite.
+THE LINUX CONTINUOUS-INTEGRATION RUN ON THE MERGE COMMIT IS THE AUTHORITY FOR
+THE ORDINARY GATES, and it is green (section 1). [S1,S2]
+
+New test files and blocks: the guarded extended-assessment suite 49; a store unit
+suite 27; an artifact-row unit suite 3; an authorisation unit suite 6; a
+minimisation unit suite 11; an operator-package unit suite 17; a schema block 9;
+and a containment block 7. [S2]
+
+12. THE INDEPENDENT RE-REVIEW AND THE ACCEPTANCE (OWNER-REPORTED) [B1]
+
+THE FOLLOWING PARAGRAPH IS OWNER-REPORTED AND WAS NOT REPRODUCED BY THE SESSION
+THAT WROTE THIS NOTE. It could not be read from the repository or from the
+GitHub API: no formal pull-request review and no further pull-request comment
+records it. It is recorded here on the project owner's statement of 2026-10-11,
+labelled as such, and is NOT presented as a session-verified or source-recorded
+figure.
+
+The owner reports that an independent review executed the 49-test
+extended-assessment persistence suite against a disposable PostgreSQL 18.6
+database and obtained 49 of 49 passed, INCLUDING the restore verification, and
+that the review ACCEPTED M14-1 subject to two named follow-ups carried forward
+rather than closed: the authorisation re-check inside consumption still receives
+the enclosing transaction and must be guarded when the orchestrator that calls
+it exists, and an explicit real-PostgreSQL run of the guarded suites is required
+as a release gate. [B1]
+
+The session that wrote this note DID verify, independently, the two facts that
+acceptance would have to rest on: that the corrected head's continuous
+integration is green, and that the pull request was merged (section 1). [S1]
+
+The concrete assignment of those two follow-ups to later slices is written in a
+pull request that is STILL UNDER INDEPENDENT REVIEW. It is therefore NOT cited
+in this note as settled, and nothing here records it as accepted.
+
+13. WHAT M14-1 DID NOT TOUCH
+
+No production system, no virtual private server, no production database, no web
+server, no production configuration file, no deployment, NO MIGRATION AGAINST
+PRODUCTION, no Stripe contact in either mode, no event destination, no DNS, no
+firewall and no mail provider. [S2,S3]
+
+MIGRATION 0005 IS IN SOURCE ONLY. Production remains on schema contract
+m13-0004 with migration ledger 0000-0004, where M13 Decision A left it on
+2026-10-10 with payments closed, as recorded in this repository's own Decision A
+note. M14-1 CHANGED NOTHING ABOUT THAT. [S2,S3, and the Decision A record named
+at the end of this note]
+
+No owner decision was taken on the extended assessment's content, on the
+customer-facing copy or on the public legal and privacy wording. No M14-2 to
+M14-6 work was done. The pull request was NOT merged by the session that wrote
+it, and the session that wrote THIS note merged nothing and ran no test. [S2]
+
+14. PENDING GATES AND STATED LIMITATIONS
+
+  MIGRATION 0005 HAS NOT BEEN TIMED AGAINST A RESTORED PRODUCTION-SHAPED COPY.
+  No safe off-production restored copy was available, and production was NOT
+  contacted to obtain one. The recorded lock footprint stands as the
+  pre-implementation verification recorded it: the check-constraint swap and its
+  validation scan take the strongest table lock on the scans table. THE 37.5
+  MILLISECONDS OF SECTION 9 IS A FIGURE FROM AN ALMOST-EMPTY DISPOSABLE
+  DATABASE AND SAYS NOTHING ABOUT PRODUCTION. This is a DEPLOYMENT gate, and
+  recording it as pending rather than estimating it is deliberate. [S2]
+
+  AN EXPLICIT REAL-POSTGRESQL RUN OF THE GUARDED SUITES IS REQUIRED BEFORE
+  RELEASE, because the ordinary continuous-integration run skips them
+  (section 1). Owner-reported as a named follow-up. [S2,B1]
+
+  THE AUTHORISATION RE-CHECK INSIDE CONSUMPTION STILL RECEIVES THE ENCLOSING
+  TRANSACTION. It runs before any artifact work and under the declared
+  authorisation stage of the lock order, and its only binding is the new
+  in-transaction function; the guard that the calling orchestrator must pass
+  exactly that function CANNOT BE PINNED UNTIL THAT ORCHESTRATOR EXISTS. Carried
+  to a later slice. [S2,B1]
+
+  MEMBERSHIP OF THE CLOSED PROBE LIST IS NOT ENFORCED IN PERSISTENCE, only the
+  shape of an identifier. Membership belongs to the protocol boundary of a later
+  slice, and the stronger claim was withdrawn rather than left standing
+  (section 8). [S2,S4]
+
+  THE M13 FLOOR MARKER NOW READS BELOW-FLOOR FOR AN IMAGE BUILT FROM THIS
+  SOURCE, because the schema contract string moved past the M13 value. The M13
+  record anticipated exactly this and said a later milestone moving the contract
+  MUST RESTATE THE FLOOR. The restatement is assigned to the final M14 slice and
+  IS NOT DONE. [S2,S3]
+
+  THE PUBLIC LEGAL AND PRIVACY COPY IS UNCHANGED while the wording decision is
+  open, so no claim about this feature has been published to anyone. [S2]
+
+15. GAPS IN THIS EVIDENCE PACKAGE — IDENTIFIED, NOT FILLED
+
+THIS IS THE FIRST M14 RECORD IN THIS REPOSITORY. Two earlier M14 stages are
+already merged in the technical repository and HAVE NO PERSONAL PROJECT EVIDENCE
+RECORD HERE. They are named so the absence is visible, and NO RECORD FOR THEM
+IS INVENTED OR DATED HERE. [S1]
+
+  M14-1 PRE-IMPLEMENTATION VERIFICATION — PR #42, "M14-1 pre-implementation
+  verification (docs only)", 1 file, 811 insertions, merged 2026-10-10 22:08:36
+  UTC as 74c88a3625e1f6915d26cb423d918423c3e7137d; pre-merge run 38044127551
+  (CI #52) and post-merge run 38090299976 (CI #53), both SUCCESS. Source record:
+  docs/evidence/M14_1_PRE_IMPLEMENTATION_VERIFICATION_2026-10-10.md. THIS NOTE
+  RELIES ON TWO OF ITS FINDINGS — the predicted M13 audit failure of section 6
+  and the lock footprint of section 14 — WITHOUT THAT STAGE HAVING A RECORD OF
+  ITS OWN.
+
+  M14-0 DESIGN LOCK — PR #40, "M14-0: lock authorised extended assessment
+  design", 3 files, 2,163 insertions, 3 deletions, merged 2026-10-11 08:44:49
+  UTC as 1fdca88b0a08222bd284f24de456ec2d4109534c; pre-merge run 38125472854
+  (CI #56) and post-merge run 38125893975 (CI #57), both SUCCESS. THIS NOTE
+  RELIES ON IT for every "equals the design's prediction" statement in section
+  4, because that design was locked before the measurement.
+
+NO M14 PACKAGE INDEX IS WRITTEN IN THIS COMMIT, because an index would have to
+describe stages that have no record. Earlier packages in this repository carry
+an index written at the start of the milestone; this package does not, and that
+is a stated difference rather than an oversight.
+
+ALSO OUT OF SCOPE AND NOT RECORDED: PR #44, the content decision, which the
+session verified as STATE OPEN AND NOT MERGED. NOTHING IN THIS NOTE MARKS IT
+ACCEPTED, MERGED OR DECIDED, and its evidence will be appended separately if and
+when that milestone is accepted. [S1]
+
+16. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The implementation, the migration, the tests, the operator SQL and the source
+evidence record were produced by Claude, an AI coding assistant, under a task
+specification written by the project owner. THE INDEPENDENT REVIEW THAT FOUND
+THE P0 DEFECT AND REFUSED THE MERGE, THE DECISION TO REQUIRE A STRUCTURAL FIX
+RATHER THAN A CHECK, THE RE-REVIEW, THE ACCEPTANCE AND THE MERGE ARE THE
+OWNER'S. This Personal Project note was compiled by Claude from the sources
+named in section 17 and from GitHub, and it RAN NO TEST OF ITS OWN. No assistant
+session held production access at any point in M14-1.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The first implementation's own test wrote no report and still got a
+     consumed entitlement, so the test agreed with the code and both were
+     wrong. What has to be true about a test before passing it means anything?
+  2. The review could have asked for one extra verification query. It asked
+     instead for the write to be made structurally incapable of committing an
+     incomplete artifact. What is the difference, and what does each cost?
+  3. Three of the seven injected faults are caught only by the re-read before
+     consumption, and not by any row count at insert time. What does that say
+     about trusting a write you have just made?
+  4. One finding went the other way: the code was right and the authoritative
+     design text was wrong. Why correct the design rather than the code, and
+     why is leaving them knowingly divergent the worst of the three options?
+  5. A security claim — that nothing could be smuggled through — was withdrawn
+     and replaced by a narrower one, with no code change. Why is narrowing a
+     claim a real correction rather than a retreat?
+  6. The green continuous-integration run skipped most of the database tests
+     that prove this slice works. Why does that make an explicit separate run a
+     release gate rather than a formality?
+  7. The migration applied in 37.5 milliseconds on a throwaway database, and
+     this note refuses to let that stand for production. What would accepting
+     it have risked?
+  8. Two earlier M14 stages are merged and have no evidence record here, and
+     section 15 names them rather than quietly filling the gap. Why is naming a
+     gap worth more than closing it with a plausible reconstruction?
+
+17. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull requests #40, #42, #43 and #44; PR #43's two
+     heads 7dc548469f6e456df4c44ef0f72636d20c4e0edf and
+     a3c602c0180c3f6cd42ea82a8aa1b4220b8d0f82, and its merge commit
+     851255ed1d702a580280f49509ebd67a7ff513e6; the continuous-integration
+     conclusions for runs 38044127551, 38090299976, 38125472854, 38125893975,
+     38129955379, 38134109950 and 38138413391; and the independent review
+     comment 6108125086. The committed migration's SHA-256 was recomputed from
+     the merge commit.
+[S2] docs/evidence/M14_1_EXTENDED_ASSESSMENT_PERSISTENCE_2026-10-11.md at
+     851255e — the source evidence record for this slice, from which every
+     schema figure, test count, fault-injection result, compatibility result and
+     validation figure above is taken, together with its sections on the owner
+     review and its pending items.
+[S3] docs/MILESTONES.md at 851255e, M14-1 section — the milestone record,
+     including its own statement that M14-1 is implemented in source and NOT
+     deployed.
+[S4] PR #43 comment 6108125086, the independent owner-side review of head
+     7dc5484, read in full through the GitHub API: the P0 blocker, the three
+     P1 findings, the P2 finding, the explicit refusal to merge and the list of
+     matters accepted as not blockers.
+[B1] The project owner's task statement to the session that compiled this note,
+     2026-10-11, for the independent re-review's 49-of-49 result and the
+     acceptance of M14-1 with two named follow-ups. OWNER-REPORTED, NOT
+     REPRODUCED HERE, and not found in the repository or on GitHub.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/ the production state M14-1
+                                                    did not change: schema
+                                                    contract m13-0004,
+                                                    payments CLOSED
+  SCANCOMPASS_M13_PP_Evidence_2026-10-08/           the payments and
+                                                    entitlements milestone this
+                                                    slice builds on, including
+                                                    the floor-restatement
+                                                    warning of section 14
+  SCANCOMPASS_BASELINE_RELIABILITY_2026-10-05/      the batch-bound fix of
+                                                    2026-10-05, whose
+                                                    two-statement form the
+                                                    minimisation pass reuses
+  SCANCOMPASS_R1_PRODUCTION_2026-10-07/             the rollback image whose
+                                                    write path was run against
+                                                    the new migration in
+                                                    section 10
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, Stripe account, customer, card or payer data, raw
+provider payload, host identifier, private target hostname, production
+environment value, email address or server detail appears in this note. No
+production configuration or production database value is reproduced. No
+unsanitised transcript is included; the independent review is summarised and
+cited by comment identifier. The only long identifiers are Git commit SHAs, one
+migration file SHA-256 and GitHub pull-request, comment and workflow-run
+numbers. No screenshot accompanies this note: M14-1 changed nothing a user can
+see, none was taken of the disposable test environment, and none is invented.
+
+END OF EVIDENCE
