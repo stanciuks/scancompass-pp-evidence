@@ -1,0 +1,458 @@
+SCANCOMPASS — M13 STEP 6 PERSONAL PROJECT EVIDENCE
+Final cross-slice review, the operator runbook, the rollback floor and the two
+separate deployment decisions; one payment-loss defect found and fixed before
+M13 was allowed to be called complete
+Review date: 9 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M13-6 IS IMPLEMENTED AND MERGED as PR #39. WITH IT, M13 IS REPOSITORY-COMPLETE
+— AND NOT PRODUCTION-DEPLOYED. M13-6 ITSELF CHANGED NOTHING IN PRODUCTION: at
+the moment of this merge production still ran R1 on schema contract m12c-0003
+with migration ledger 0000-0003, migration 0004 was not applied there, and no
+payment surface existed in production. [S1,S2,S3]
+
+NO STRIPE CONTACT OF ANY KIND IN THIS STEP — not test mode, not live mode. No
+event destination was created, no key installed, no webhook endpoint
+registered. LIVE PAYMENTS WERE NOT OPENED AND NOTHING HERE OPENS THEM. [S3]
+
+ONE DEFECT WAS FOUND BY THIS REVIEW AND FIXED BEFORE COMPLETION: finding F-1, a
+payment-loss defect in merged M13-4 code. The first disposition was to guard it
+operationally and leave the code alone; THE OWNER REJECTED THAT and required a
+code fix on the same pull request, which is what happened (section 5). [S3]
+
+The two deployment decisions were PREPARED AND KEPT APART, and NEITHER WAS
+TAKEN in this step. Decision A — deploy M13 with payments closed — was executed
+later, on 2026-10-10, and is recorded in a separate note named at the end of
+this one. Decision B — opening payments — remains blocked. [S3,S4]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Three kinds of statement appear in this note and are kept apart.
+
+  SESSION-VERIFIED Repository, pull-request and continuous-integration state
+                   read directly from the GitHub API while this note was being
+                   written. Marked [S1].
+  SOURCE-RECORDED  Figures taken from a committed source evidence document in
+                   the technical repository. Marked [S2] to [S4].
+  REVIEW-REPORTED  A finding from the cross-slice code review, or from one of
+                   the owner's two re-reviews, as recorded in the source
+                   evidence document with file-and-line evidence. Marked [S3]
+                   and attributed in place.
+
+THERE IS NO PRODUCTION OBSERVATION IN THIS NOTE, because M13-6 made none. Every
+database figure below comes from a DISPOSABLE PostgreSQL 18.6 container started
+from the production image digest and destroyed afterwards, never from the
+production database.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 13.
+
+1. WHAT THIS NOTE SUPERSEDES IN THE M13 INDEX
+
+SCANCOMPASS_M13_PP_Evidence_Index_2026-10-08.txt says "M13-6 — final review,
+the rollback floor, the production runbook and the two separate deployment
+decisions — HAS NOT STARTED", and lists six slices. THAT WAS CORRECT WHEN
+WRITTEN AND IS NOT AMENDED, which is the convention this repository already
+uses. M13-6 has since been implemented and merged, so the milestone has SEVEN
+slices, M13-0 to M13-6, and this is the seventh note. [S1]
+
+The index's other statements still held at this merge: nothing in M13 had
+reached production, migration 0004 was not applied there, and live Stripe mode
+had never been used. The first of those stopped being true on 2026-10-10 under
+Decision A, which has its own note; the last of them is STILL TRUE. [S1,S2]
+
+2. REVIEWED VERSION AND PULL REQUEST (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #39, "M13-6: final payments review, operational readiness and
+              deployment-decision preparation"
+Base: main at 4afee87386d79ce11a671a4c75f996ccdbb21ac7 — the M13-5 merge, whose
+      own post-merge run 37845393073 concluded SUCCESS
+Merged: 2026-10-09 08:57:34 UTC as
+        54774b5f4d5334f562be9a3e0a24223ffcbe1f2c
+Diff: 24 files changed, 2,810 insertions, 52 deletions
+Pre-merge continuous integration on the final head
+        84ce1e9f77234590aaada6a24a0f62b9ce9376b1: run 37903558531, SUCCESS
+Post-merge continuous integration on the merge commit: run 37908201726,
+        SUCCESS
+
+THE PULL REQUEST WAS REVIEWED BY THE OWNER TWICE BEFORE IT WAS MERGED, and each
+reviewed head was itself green:
+
+  head 29c04a9aa9774dddf74a1b27aa324574c2cfe91f   run 37851825455  SUCCESS
+       the first pass; the owner did not accept it (section 5)
+  head 5049b64fff59eb523fbdafc256168118e6a61c77   run 37890514007  SUCCESS
+       the F-1 fix; the owner's second re-review followed (section 7)
+
+Route inventory: 21, UNCHANGED. No migration 0005; migration 0004 is
+byte-identical and re-hashed, SHA-256
+47929b3c36ea7def7c977205e0b1fc4ac37a8e742dadfa170af9a38562bbcb10. No schema,
+grant, state-machine or dependency change. [S3]
+
+3. WHAT M13-6 IS, AND WHAT IT IS NOT
+
+It is the review-and-readiness half of closing a milestone, not new product. It
+re-read M13-1 to M13-5 as ONE SYSTEM rather than as five slices; it gave the
+two payment readiness statuses a place to be seen; it wrote the production
+runbook; it named the rollback floor; and it separated the act of DEPLOYING
+payment code from the act of SELLING anything. [S2,S3]
+
+It is NOT a deployment. The runbook it added says so on its own first line, and
+the design record it amended says M13 is repository-complete, not
+production-deployed. [S2,S4]
+
+4. THE CROSS-SLICE REVIEW
+
+Three independent read-only reviews, each instructed to look for
+inconsistencies INTRODUCED BY COMPOSITION rather than to repeat the per-slice
+reviews: one on checkout admission, scoping, configuration, version pins,
+interface containment and the M14 interface; one on the webhook, fulfilment,
+reversals, reconciliation and lock order; one on the sweep, expiry, rollback
+assumptions, free-path isolation and grants. Each ran the unit suites for its
+area and reported verified properties with file-and-line evidence. [S3]
+
+VERIFIED AS ONE SYSTEM, among others: the ownership gate runs first on every
+mutating method and any answer other than AUTHORIZED refuses; one canonicaliser
+only; every store query scoped by account, domain and product; every order
+update conditional on the expected state, and nothing leaves a refunded,
+disputed or reconciliation-required state towards paid; an entitlement copies
+account and hostname FROM THE LOCKED ORDER AND NEVER FROM A PROVIDER MESSAGE;
+one declared lock order, enforced in code; exactly one outbound provider call,
+to one exact allowlisted URL, with no refund endpoint and no provider library;
+no interface component imports server payment code and no payment value is
+published to the browser; and no scan, report, scanner, worker, account,
+session, domain or health module reaches any payment module. [S3]
+
+NO STATE MACHINE WAS LOOSENED, NO LOCK ORDER CHANGED, AND NO CONSTRAINT WAS
+TOUCHED to make the review come out well. [S3]
+
+Findings, all recorded rather than quietly closed: one payment-loss defect
+(F-1, section 5); three operational findings (section 8); three documentation
+corrections; three items handed forward to M14; and four notes judged to need
+no change, including one shape identical to F-1 that is unreachable while the
+catalogue holds a single product. [S3]
+
+5. F-1 — THE ONE DEFECT, AND THE OWNER'S DECISION TO FIX IT
+
+THE DEFECT. A signature-valid provider message whose own mode differed from the
+mode the server had been told to expect was RECORDED AND ACKNOWLEDGED rather
+than refused. Recording it consumed the message's provider identifier, so the
+corrected redelivery of that same message was then treated as a duplicate and
+did nothing. The end state was money taken, nothing granted, and the case in
+NEITHER reconciliation queue — the one outcome the whole milestone is built to
+make impossible. It can only arise from a configuration fault, which is exactly
+the family of fault the design elsewhere refuses to record for this reason.
+[S3]
+
+THE FIRST DISPOSITION, AND WHY IT WAS WITHDRAWN. The review's first pass did
+NOT change the behaviour: a webhook behaviour change was outside M13-6's scope,
+and the standing instruction for a defect of that kind is to stop and report
+rather than redesign. It was instead guarded in the runbook, in the
+configuration template and in the design's live-mode blocker list. THE OWNER
+REJECTED THAT DISPOSITION, on the ground that Decision A assigns the long-lived
+rollback floor and MUST NOT BLESS A KNOWN PAYMENT-LOSS BEHAVIOUR AS THE FLOOR.
+The first pass's wording is kept in the source record, labelled historical, and
+is not deleted. [S3]
+
+THE FIX, ON THE SAME PULL REQUEST. A message of the undeclared mode is now
+refused BEFORE ANY TRANSACTION IS OPENED — no lock, no read, no row — and the
+HTTP layer answers a retryable 503 with one closed log line. Because the check
+lives in the function rather than at the HTTP edge, every caller is protected,
+and the transaction re-asserts it as defence in depth. The separate check on a
+message that contradicts ITS OWN ORDER'S recorded mode is unchanged and still
+records a mismatch with a 2xx. No schema, migration, grant or outcome-set
+change. [S3]
+
+PROVEN AT FOUR LEVELS, and the proof includes the redelivery that the defect
+broke: on a disposable PostgreSQL 18.6 database, as the application role,
+through the real transport and transaction, a message delivered under the wrong
+declaration was refused 503 WITH ZERO ROWS WRITTEN and the order untouched;
+redelivered again under the same wrong declaration, refused again; then THE
+SAME provider identifier, with a byte-identical body and an identical signature
+header, delivered once the declaration matched, was FULFILLED — order paid, one
+available entitlement — and only a further identical redelivery after that
+answered the ordinary duplicate. The reverse direction was refused the same way.
+[S3]
+
+A MUTATION CHECK SHOWS THE TESTS BITE: with the three source files reverted to
+the pre-fix code, both new integration cases fail with "expected 200 to be
+503"; restored, they pass. [S3]
+
+THE FLOOR NOW REQUIRES THE FIX. The rollback floor gained a fifth property —
+"carries the F-1 correction" — with a mechanical check against the built image,
+and a test pins every string the floor check greps for to the executable source
+where its property lives. The earlier M13-4 merge therefore NO LONGER QUALIFIES
+as a floor, and the first qualifying source is the merge of this corrected pull
+request. NO COMMIT IDENTIFIER WAS INVENTED to express that: the floor is named
+by property, and the concrete image could only be assigned at Decision A. [S3]
+
+6. THE READINESS SURFACE, AND THE RULE IT MUST NOT BREAK
+
+M13-5 left two payment readiness statuses that nothing surfaced, so "watched"
+had no mechanism. M13-6 gives them the NARROWEST OPERATOR SURFACE THAT ALREADY
+EXISTED: two boot log lines, each carrying an event name, a status word and,
+when unavailable, the configuration's own problem names. A health-route field
+and a new route were both considered and rejected, and a launch control was
+forbidden by the design. [S3]
+
+  no value, key prefix, price identifier, origin or provider identifier can
+    appear in either line — proven across eleven configurations, each built
+    with a distinctive fake value, by asserting that none of them and none of
+    the known key shapes reaches the serialised line
+  "stop selling, keep reconciling" is legible: the webhook can read ready while
+    checkout reads disabled
+  an unavailable WEBHOOK is logged as an error, because it means money already
+    taken may go unreconciled; an unavailable CHECKOUT is only a warning
+  IT CANNOT BECOME A LAUNCH BLOCKER: the launch controls, the scan gate and the
+    launch readiness report are deep-identical across all eleven payment
+    configurations, on an unconfigured base and on a fully open scan gate; the
+    blocker inventory stays at twelve and names nothing payment-related
+  it cannot delay or break boot: the task is detached and never awaited, and a
+    failure inside the report leaves exactly one fallback line per event
+  a transitive import walk from every guarded entry point reaches no payment
+    module, and a mutation check that planted the new composition into the
+    launch controls failed six assertions before the file was restored
+    byte-identically
+
+[S3]
+
+7. PROVIDER MODE IS IMMUTABLE — A WITHDRAWN PROCEDURE, RECORDED
+
+The F-1 fix made a second problem visible, and the owner's SECOND re-review
+found the first answer to it insufficient. [S3]
+
+The first answer was a procedure for draining one provider mode before
+switching to the other. The owner's objection: it drained CHECKOUT SESSIONS,
+but a paid order is never swept, and ITS refunds and disputes keep arriving on
+the old mode's destination for as long as either can be raised. A process
+serving one declared mode and one secret would refuse those messages — now
+retryably, thanks to F-1 — until the provider's retries simply ran out.
+
+THE RESOLUTION IS A RULE, NOT A PROCEDURE: provider mode is IMMUTABLE for the
+production payment database. Test-mode acceptance of the exact candidate image
+runs OFF production, in an isolated environment with its own database; Decision
+A declares no mode at all; and Decision B, if it is ever taken, opens LIVE
+DIRECTLY and never declares test mode in production, before or after go-live,
+not even as an incident switch — the incident switch is "stop selling, keep
+reconciling". Concurrent test and live operation would need a separately
+reviewed architecture. The withdrawn drain survives only as the narrower
+request-byte drain it was always valid for. [S3]
+
+THE WITHDRAWN TEXT IS KEPT IN THE SOURCE RECORD, LABELLED WITHDRAWN. Two status
+sentences elsewhere in the repository that claimed "no blocker in merged code"
+were also corrected to say what the review actually found: one blocker, F-1,
+fixed on this pull request, and no other. [S3]
+
+8. THE REHEARSAL ON A DISPOSABLE DATABASE, AND THREE OPERATIONAL FINDINGS
+
+Every database step of the runbook was rehearsed against a DISPOSABLE
+PostgreSQL 18.6 container started from the production compose image digest,
+with the production roles and grants, and the production BASELINE reproduced
+from the R1 source commit a3d3a47c8e9da450f51bbb2631c6730a3446aeb6. The
+container was destroyed afterwards. NO PRODUCTION DATABASE WAS CONTACTED. [S3]
+
+  read-only preflight         PASS, 11 checks
+  migration                   0000-0003 skipped, 0004 applied, 1 applied /
+                              4 skipped
+  grants                      applied clean
+  database audit              PASS, 18 checks; the three watch counts 0/0/0;
+                              payment era ERA 1 — orders 0, events 0,
+                              entitlements 0
+  reconciliation report       every section empty, era ERA 1
+
+Then the report was driven against SEEDED rows of every shape it is meant to
+surface — a reconciliation-required order, an overdue entitlement, a disputed
+order, a stale checkout, a foreign reversal, a correlatable reversal, a mode
+mismatch and a partial refund — and each section returned exactly the seeded
+rows and nothing else. [S3]
+
+THREE OPERATIONAL FINDINGS, EACH REPRODUCED RATHER THAN ASSERTED. [S3]
+
+  O-1  THE MAINTENANCE IMAGE AND THE MIGRATION HAVE AN ORDER. The payment
+       hygiene pass runs only from the maintenance image, which the ordinary
+       deployment command never rebuilds. Promoted BEFORE migration 0004 it
+       fails and the unit exits non-zero; never promoted at all, stale open
+       orders hold their hostnames. Reproduced both ways against a 0003 and a
+       0004 database, and fixed by ordering the runbook: promote the
+       maintenance image only after the migration.
+  O-2  GRANTS AND INVALIDATION FOLLOW THE BACKUP, NOT THE CODE. Applying the
+       current grants file to a database restored from a PRE-MIGRATION backup
+       fails, because it names tables that backup does not contain. The
+       recovery procedure therefore selects the grants file and the
+       invalidation script BY BACKUP ERA.
+  O-3  THE WEB-SERVER WEBHOOK LOCATION IS A REPOSITORY TEMPLATE ONLY. The live
+       web server still caps request bodies far below what the webhook route
+       accepts. NOTHING WAS INSTALLED; it is recorded as a Decision B gate.
+
+A REAL BACKUP ROUND TRIP, which M13-1 had listed as not exercised, was also
+done on the disposable database: a dump of a migrated database with payment
+rows was restored and came back with identical payment row counts, and the
+era-2 invalidation left no restored lease behind. [S3]
+
+ROLLBACK WAS PROVEN IN BOTH DIRECTIONS. The R1 baseline image runs READY
+against a database that has ALREADY been migrated — which is what makes an
+image-based rollback possible while the payment era is still ERA 1 — and the new
+image against a database restored to the older schema reports unavailable with a
+missing-object reason, WHICH IS A BOOT LOG LINE AND NOT A CRASH. [S3]
+
+9. THE TWO DECISIONS, KEPT APART — THE CENTRAL OUTPUT OF THIS STEP
+
+The runbook M13-6 added states two decisions and refuses to merge them.
+
+  DECISION A — DEPLOY M13 WITH PAYMENTS CLOSED. Changes the application and
+  maintenance images, applies migration 0004 (three new, EMPTY tables), applies
+  the M13 grants, and writes explicit payments-off lines into the production
+  configuration. USER-VISIBLE EFFECT: NOTHING. Both payment routes answer 404
+  for every method and no purchase interface renders. The payment era stays
+  ERA 1, because no order, event or entitlement can exist. Rollback is by
+  image.
+
+  DECISION B — OPEN PAYMENTS. Raises the payment flags, installs provider
+  credentials, creates a LIVE event destination and installs the web-server
+  webhook location. It moves the payment era to ERA 2 PERMANENTLY, from the
+  moment anything is opened. It is written as a GATED CHECKLIST AND DELIBERATELY
+  NOT AS A SCRIPT, because most of its inputs do not exist yet.
+
+COMPLETING A DOES NOT AUTHORISE B. That sentence is in the runbook, in the
+design record and in the evidence record, because it is the single most
+misreadable fact in the milestone. [S2,S3,S4]
+
+AT M13-6, DECISION A WAS PREPARED AND NOT EXECUTED, and Decision B was blocked
+by every open live-mode item. Every financial or customer-affecting action in
+the runbook — a refund, a revocation, opening checkout, going live — is marked
+an owner decision, and nothing in the repository issues a refund. [S4]
+
+10. WHAT M13-6 PROVED, EXACTLY — AND WHAT IT DID NOT
+
+PROVED: that the five implemented slices compose into one system without a
+contradiction the per-slice reviews could have missed; that the one defect found
+was fixed, tested and pinned; that the two readiness statuses are visible,
+value-free and structurally incapable of blocking a launch; that the Decision A
+database sequence runs as written against a faithful copy of the production
+schema; that an image-based rollback works in both directions while the payment
+era is ERA 1; and that the operator procedures for both reconciliation queues
+exist. [S3]
+
+NOT PROVED, AND NOT CLAIMED. None of the live-mode blockers is closed. The
+final price, the currency, the tax treatment and the published refund wording
+are UNDECIDED. No live key, no live event destination and no live webhook
+endpoint exists. The pre-change production backup and its off-host restore
+could only be produced at Decision A. Test-mode acceptance ON THE IMAGE
+INTENDED FOR PRODUCTION had not happened, because M13-6 itself changed the
+runtime. The owner of the reconciliation queues, the refund turnaround and the
+disputed-and-won procedure are PROPOSED, NOT ACCEPTED. [S3]
+
+M13-5's limitations are preserved as historical fact and NOT re-described as
+exercised: the three-hour stale-checkout timing against the real provider, a
+provider-first deferred reversal, a dispute, and a completed anonymous free scan
+in that environment. M13-6 adds the sweep's DATABASE behaviour against a seeded
+overdue order, which is a smaller claim and is written as one. [S3]
+
+11. VALIDATION (SOURCE-RECORDED, AT THE CORRECTED HEAD) [S3]
+
+All on Linux. The comparison baseline is a clean worktree of the M13-5 merge,
+run the same way in the same session.
+
+  whitespace check, typecheck, lint       clean
+  build                                   clean, no warning; the standalone
+                                          output passes ALL FIVE floor checks
+  boundary suite                          1,659 passed (clean base: 1,641)
+  full test suite                         8,593 passed, 0 failed, 610 skipped
+                                          across 225 files
+                                          (clean base: 8,504 / 0 / 609, 224)
+  integration on disposable PostgreSQL    payments webhook 56/56, checkout
+  18.6, one file at a time                27/27, payment persistence 69/69,
+                                          migrations 31/31, readiness 16/16,
+                                          retention 45/45
+
+The 610 skips are the database-gated integration suites, which were run
+separately in the row above and are NOT claimed as having run inside the full
+suite. One suite was NOT RUN and is named: the restore-resurrection suite,
+which needs a container acceptance harness unrelated to M13-6's changes. THE
+LINUX CONTINUOUS-INTEGRATION RUN ON THE MERGE COMMIT IS THE AUTHORITY, and it
+is green (section 2). [S1,S3]
+
+12. WHAT M13-6 DID NOT TOUCH
+
+No production system, no virtual private server, no production database, no web
+server, no production configuration file, no deployment, no migration against
+production, NO STRIPE CONTACT IN EITHER MODE, no event destination, no DNS, no
+mail provider, and no Personal Project evidence action. No concrete floor image
+digest, because none could exist before Decision A. No decision on any owner
+item: price, tax, legal wording, keys, queue owner, refund turnaround, dispute
+policy, floor agreement. No M14, M15 or M16 work. The pull request was not
+merged by the session that wrote it. [S3]
+
+13. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The review, the fix, the tests, the runbook, the design amendments and the
+source evidence record were produced by Claude, an AI coding assistant, under a
+task specification written by the project owner. THE TWO INDEPENDENT REVIEWS OF
+THIS PULL REQUEST, THE REJECTION OF THE FIRST F-1 DISPOSITION, THE REJECTION OF
+THE MODE-TRANSITION DRAIN AND THE MERGE ARE THE OWNER'S. No assistant session
+held production access at any point in M13-6, and no assistant session used
+live provider mode.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The review's first answer to F-1 was to document the danger rather than
+     change the code, and the reason was a real one: a behaviour change was
+     outside the step's scope. Why was the owner right to overrule it, and what
+     does "the floor must not bless a known defect" mean in practice?
+  2. Deploying payment code and switching selling on were deliberately made two
+     separate decisions. What becomes possible to prove, and to undo, that would
+     not be if they were one?
+  3. A procedure for switching provider mode was written, reviewed, and then
+     withdrawn in favour of a rule that forbids the switch entirely. When is
+     removing an option a better answer than writing a careful procedure for it?
+  4. The readiness statuses were given a boot log line rather than a health
+     field or a new route. What would publishing "does this deployment sell?"
+     have cost?
+  5. Three operational findings were reproduced against a throwaway database
+     before anyone touched production. What did each of them save?
+  6. The step proves a great deal and closes NONE of the live-mode blockers.
+     Why is it worth writing down so plainly what has not been proved?
+
+14. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security read from the GitHub API while
+     this note was written: pull request #39, its final head
+     84ce1e9f77234590aaada6a24a0f62b9ce9376b1 and its merge commit
+     54774b5f4d5334f562be9a3e0a24223ffcbe1f2c; and the
+     continuous-integration conclusions for runs 37845393073, 37851825455,
+     37890514007, 37903558531 and 37908201726.
+[S2] docs/M13_PAYMENTS_ENTITLEMENTS.md — the authoritative M13 design, as
+     amended by this step, including its own correction log.
+[S3] docs/evidence/M13_6_FINAL_REVIEW_OPERATIONAL_READINESS_2026-10-08.md —
+     the source evidence record for this step, from which every review
+     finding, rehearsal figure and validation figure above is taken, together
+     with its sections on the owner's two re-reviews.
+[S4] docs/rollout/M13_PRODUCTION_RUNBOOK.md — the operator runbook this step
+     added, from which the two-decision table in section 9 is taken.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M13_PP_Evidence_Index_2026-10-08.txt  the package index, written
+                                                    before this step existed
+  SCANCOMPASS_M13_Step5_PP_Evidence_2026-10-08.txt  the slice whose two
+                                                    unsurfaced statuses and
+                                                    whose provider finding
+                                                    this step closes
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/ Decision A, executed and
+                                                    accepted the day after
+                                                    this merge
+  SCANCOMPASS_R1_PRODUCTION_2026-10-07/             the production state M13-6
+                                                    did not change
+
+No Stripe secret key, restricted key, webhook signing secret, price identifier,
+price amount, hosted checkout URL, session or payment-intent identifier, Stripe
+account identifier, customer or card data, payer email address, raw webhook
+payload, database password, connection string, environment-file value or hash,
+host identifier or capability value appears in this note. The advisory lock key
+string and the floor marker strings that the image check greps for are named by
+purpose and not reproduced. The only long identifiers are Git commit SHAs and
+one migration file SHA-256. No screenshot accompanies this note; none was taken
+of the disposable rehearsal environment and none is invented.
+
+END OF EVIDENCE

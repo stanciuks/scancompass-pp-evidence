@@ -1,0 +1,561 @@
+SCANCOMPASS — M13 DECISION A: PRODUCTION DEPLOYMENT AND ACCEPTANCE
+PERSONAL PROJECT EVIDENCE
+Payment code and its migration deployed to production with payments CLOSED;
+nothing a user can see changed, and nothing is for sale
+Review date: 10 October 2026
+Classification: Confidential project evidence
+
+STATUS
+DECISION A IS COMPLETE AND OWNER-ACCEPTED, 2026-10-10. M13 is deployed to
+production from source 54774b5f4d5334f562be9a3e0a24223ffcbe1f2c, the schema
+contract is now m13-0004, the migration ledger is 0000-0004, and PAYMENTS ARE
+CLOSED. [R1,S1,S2]
+
+NOTHING IS FOR SALE AND NO PAYMENT CAN BE TAKEN. Both payment routes answer 404
+for every method, no purchase interface renders, no provider mode is declared,
+and no provider credential exists on the server. THE PAYMENT ERA IS STILL
+ERA 1 — no order, event or entitlement has ever been recorded in production, by
+both halves of the two-part era test. [R1,S2]
+
+DECISION B — OPENING PAYMENTS — WAS NOT RUN, and completing Decision A does not
+authorise any step of it. No payment flag was raised, no provider credential
+installed, no event destination created, and NO WEB-SERVER, DNS OR FIREWALL
+CHANGE OF ANY KIND was made. There was no provider contact in either mode. The
+inputs Decision B needs — the final price, the tax treatment, the published
+refund wording, a live key, a live event destination — DO NOT EXIST YET.
+[R1,S2,S3]
+
+LIVE PAYMENTS HAVE NEVER BEEN OPENED IN THIS PROJECT, and nothing in this note
+says otherwise.
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Four kinds of statement appear in this note and are kept apart throughout.
+
+  OWNER-EXECUTED   A command the OWNER ran against production, or a browser
+  / OWNER-OBSERVED check only the owner could perform, together with the output
+                   the owner saw. Marked [R1].
+  SESSION-EXECUTED A verification performed by the assistant session of
+                   2026-10-10 that wrote the source execution record: for the
+                   deployment itself, a reconstruction of the owner's run from
+                   a 566-line capture of the owner's terminal session, checked
+                   step by step against the runbook. Marked [R2].
+  SESSION-VERIFIED Repository, pull-request and continuous-integration state
+                   read directly from the GitHub API while THIS note was being
+                   written. Marked [S1].
+  SOURCE-RECORDED  Figures taken from a committed source evidence document or
+                   from the runbook in the technical repository. Marked [S2]
+                   and [S3].
+
+THE DISTINCTION BETWEEN [R1] AND [R2] MATTERS AND IS NOT BLURRED. EVERY
+DEPLOYMENT COMMAND AND EVERY PRODUCTION OUTPUT IN SECTIONS 8 TO 10 IS THE
+OWNER'S: the source record states that those commands and outputs are
+owner-executed and that the assistant session's part was the verification
+against the runbook, reconstructed from the owner's terminal capture.
+
+WHAT IS NOT CLAIMED EITHER WAY. For the earlier preparation steps — the build
+host, the baseline record, the read-only preflight and the restore rehearsal —
+THE SOURCE RECORD DOES NOT STATE WHO TYPED EACH COMMAND, and this note does not
+guess. Those figures are attributed to the production run of 2026-10-10 carried
+out under the owner's direction, with the owner as the accepting authority, and
+are marked [R1,R2] accordingly.
+
+THE SESSION THAT WROTE THIS PERSONAL PROJECT NOTE CONTACTED NO PRODUCTION
+SYSTEM. It read the technical repository and the GitHub API, and nothing else.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 16.
+
+1. WHAT THIS NOTE SUPERSEDES
+
+SCANCOMPASS_M13_PP_Evidence_Index_2026-10-08.txt says "NOTHING IN M13 REACHED
+PRODUCTION" and that migration 0004 "IS NOT APPLIED TO PRODUCTION". THAT WAS
+CORRECT WHEN WRITTEN AND IS NOT AMENDED, which is the convention this
+repository already uses. It stopped describing production on 2026-10-10.
+
+SCANCOMPASS_R1_PRODUCTION_ACCEPTANCE_PP_Evidence_2026-10-07.txt records the
+production state Decision A replaced: deployed source
+a3d3a47c8e9da450f51bbb2631c6730a3446aeb6, schema contract m12c-0003, migration
+ledger 0000-0003. Its figures remain the correct baseline and are not
+re-stated as current. THE R1 SCANNER IMAGE IT RECORDS IS STILL THE RUNNING
+SCANNER IMAGE, unchanged by Decision A. [S1,S2]
+
+The M13 Step 6 note in SCANCOMPASS_M13_PP_Evidence_2026-10-08/ says Decision A
+was PREPARED AND NOT EXECUTED. This note is its execution. [S2]
+
+2. WHAT WENT TO PRODUCTION (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+
+  Deployed source   54774b5f4d5334f562be9a3e0a24223ffcbe1f2c
+                    "feat(m13): finalize payments operational readiness (#39)"
+                    merged 2026-10-09 08:57:34 UTC; post-merge continuous
+                    integration run 37908201726, SUCCESS
+  Previous source   a3d3a47c8e9da450f51bbb2631c6730a3446aeb6 (R1)
+  Schema contract   m12c-0003 -> m13-0004
+  Migrations        0000-0003 -> 0000-0004
+
+The deployment prerequisite was not merely "a green build" but THIS PARTICULAR
+green build: the rollback floor the step assigns requires the F-1 correction, so
+Decision A had to run on an image built from the corrected M13-6 merge and no
+earlier commit. [S2,S3]
+
+3. THE THREE SOURCE IDENTIFIERS, PERMANENTLY DISTINGUISHED [R2,S2]
+
+The runbook carried ONE name, BASELINE_COMMIT, for what turned out to be two
+different things, and the first real contact with the server proved it
+ambiguous. Decision A therefore records three identifiers, and later milestones
+must keep them apart.
+
+  the server's git working tree    928323f1552db1550f658502d01956298d89df7c
+  the commit the RUNNING IMAGE     a3d3a47c8e9da450f51bbb2631c6730a3446aeb6
+    was built from
+  the commit being deployed        54774b5f4d5334f562be9a3e0a24223ffcbe1f2c
+
+THE SERVER'S CHECKOUT WAS 14 COMMITS BEHIND THE SOFTWARE IT WAS RUNNING. That
+the running image really was built from the R1 commit is proved by IMAGE
+IDENTITY RATHER THAN BY INFERENCE: the running application image digest was
+byte-identical to the digest the R1 acceptance note records. [R1,S2]
+
+WHY THE LAG WAS COSMETIC RATHER THAN DANGEROUS, CHECKED BOTH WAYS. The
+deployment topology files — the container composition, the service units and
+the firewall rules — are IDENTICAL at the checkout commit, at the release commit
+and at the deployed commit, and the baseline grants file is identical at the
+checkout and release commits, so using the release commit for it changes no
+bytes and only makes the provenance correct by name. The runbook's single-sided
+topology check was replaced by a TWO-SIDED one, and both sides returned empty.
+[R2,S2]
+
+Deployment here is BY IMAGE, NOT BY GIT. The server's checkout exists only to
+supply the composition file, the service units and the operator SQL.
+
+4. THE PRE-DEPLOYMENT GATES, IN ORDER (OWNER-EXECUTED) [R1,R2]
+
+  the build host     built from the exact deployed commit, detached, with a
+                     clean tree, from a clean archive of the commit; THE BUILD
+                     TREE WAS PROVED FILE BY FILE AGAINST THE COMMIT — 813
+                     expected blobs, 813 actual, every hash identical, the same
+                     method R1 used; built for linux/amd64 on an Apple Silicon
+                     machine through the isolated virtualisation profile R1
+                     established
+  the migration pin  the migration file's SHA-256 matched the value pinned in
+                     the repository
+  the rollback floor all five floor properties checked INDIVIDUALLY as well as
+                     together, all PASS, including the two markers that are the
+                     F-1 correction
+  the read-only      every payment flag absent entirely; no declared provider
+  production         mode and no provider value with a non-empty value; the
+  preflight          three services healthy; the health endpoint answering;
+                     NOTHING DUE from the backup or retention timers for the
+                     next 17 and 18 hours; the database preflight PASS, 11
+                     checks, run inside a READ-ONLY transaction that was rolled
+                     back and WROTE NOTHING, confirming migration 0004 was not
+                     applied
+  the hard gate      a fresh encrypted production backup AND an off-host
+                     restore rehearsal of THAT backup (section 6)
+
+AT THE END OF THE PREPARATION PHASE, exactly two things had changed on
+production: two images were loaded, and two rollback tags were created. No
+container was recreated, restarted or stopped; no database write of any kind
+occurred; the production configuration files were neither edited nor read.
+[R1,R2]
+
+5. THE SCANNER WAS DELIBERATELY NOT REBUILT
+
+The only scanner image present on the build host was the R1 scanner, and the
+running scanner image at the end of Decision A is BYTE-IDENTICAL to the one the
+R1 note records. The reason it is safe rather than lazy is recorded in the
+runbook: the only change to the worker source since the R1 commit is a comment.
+[R1,S3]
+
+6. THE HARD GATE: A FRESH BACKUP AND AN OFF-HOST RESTORE — PASSED [R1,R2]
+
+THE MIGRATION IS NOT UNDONE BY A ROLLBACK: the rollback path keeps the migrated
+database and goes back to the previous IMAGE, which M13-6 proved runs READY
+against it. So the only way back past the migration is a restore, and the gate
+was therefore a PROVEN RECOVERY POINT rather than a hoped-for one.
+
+  the backup ran     dump written, encrypted to the backup recipients, the
+                     plaintext removed, ciphertext only uploaded, upload
+                     confirmed — no error, no warning
+  the restore ran    OFF-HOST, on the operator workstation, against a
+                     disposable PostgreSQL 18.6 container started from the
+                     production image digest
+  the chain closed   THE DECRYPTED BYTE COUNT OFF-HOST EXACTLY EQUALLED THE
+                     BYTE COUNT THE SERVER LOGGED WHEN IT WROTE THE DUMP, so
+                     dump, encryption, upload, download and decryption are
+                     proven end to end
+  the restore was    restored as the migration role with errors fatal, no
+  usable             error; the BASELINE grants file applied clean; the
+                     capability-invalidation script reported all five
+                     capability tables empty; and the database preflight on the
+                     restored copy returned PASS, 11 checks
+  what it contained  a clean pre-migration database: the ledger exactly
+                     0000-0003, the expected table count, one owner, one
+                     non-owner role, nothing granted to PUBLIC, every
+                     constraint validated, and NO PAYMENT TABLE
+
+The restore used the baseline grants file DELIBERATELY: the current grants file
+names the payment tables and would have failed against a pre-migration backup.
+That is one of the operational findings M13-6 reproduced, applied here for real.
+[R2,S2]
+
+THE OFF-HOST DECRYPTION IDENTITY WAS SUPPLIED BY PATH AND ITS CONTENTS WERE
+NEVER READ, PRINTED, HASHED OR COPIED. The backup object's name, the bucket and
+the restore credential are not recorded in this note. [R2]
+
+ONE DEFECT WAS FOUND IN THE REHEARSAL HARNESS ITSELF, AND IT MATTERED. The
+cleanup removed the scratch container in a way that PRE-EMPTED the automatic
+removal of its anonymous data volume, leaving a dangling volume THAT HELD
+RESTORED PRODUCTION DATA. The operations runbook requires destroying the
+volume, so this was a real gap and not cosmetic. It was found by a post-run
+audit, the volume was removed, the harness was corrected, and the end state was
+verified: no volumes, no containers, no scratch files. [R2]
+
+Independently of the preflight, the restored copy of the production dump is a
+SECOND, INDEPENDENT PROOF that migration 0004 had not been applied before the
+deployment. [R2]
+
+7. A RUNBOOK STEP THAT COULD NOT RUN AT ALL, AND THE CHOSEN RESOLUTION
+
+The deployment step began "fetch from the origin and check out the commit".
+THAT CANNOT WORK ON THIS SERVER, and the failure is not transient: the
+repository is private, the server holds no credential helper, and the fetch
+fails for want of a username. The commit was simply unknown to the server. This
+also explains why the checkout had been stale since M12C — the server has never
+been able to pull. [R1,R2]
+
+THE RESOLUTION CHOSEN WAS A VERIFIED GIT BUNDLE, built on the build host from
+the proven clone and carried to the server. IT INSTALLS NO CREDENTIAL ON THE
+SERVER, git verifies every object hash on fetch, and the checkout is pinned by
+commit identifier, so it is as trustworthy as fetching from the origin and more
+auditable. The bundle's SHA-256 was verified identical on both hosts and the
+bundle verified on the server before anything was fetched. [R1,R2]
+
+THE ALTERNATIVE — GIVING THE SERVER A READ-ONLY DEPLOY CREDENTIAL — WAS LEFT AS
+AN OWNER DECISION rather than taken quietly under deployment pressure. [S2]
+
+8. A DIRTY SERVER CHECKOUT, AND HOW IT WAS KEPT OUT OF THE DEPLOYMENT
+
+After the bundle was fetched, the working tree on the server was BOTH STALE AND
+DIRTY: still at the old commit, with 22 modified files, one deleted and seven
+untracked paths. The objects for the new commit were in the server's object
+store, but the tree had never been advanced.
+
+THE OWNER DID NOT DEPLOY FROM IT. Instead: [R1,R2]
+
+  1. A TREE-EQUIVALENCE CHECK PROVED THE WORKING TREE WAS NOT THE TARGET
+     COMMIT. Every blob of the target commit was hashed against the tree, and
+     the run printed a long list of missing and differing paths — the whole
+     payment source tree, both payment routes, the evidence documents. The tree
+     was REJECTED as a deployment source.
+  2. THE EXACT OPERATOR ARTIFACTS WERE EXPORTED FROM THE COMMIT OBJECT ITSELF
+     into a fresh private directory, and every later step read from there. The
+     migration file's SHA-256 in that export matched the pinned value. This is
+     STRONGER than the runbook's own instruction, because the bytes come from
+     the commit object rather than from a tree that could drift.
+  3. THE ONE FILE THE TREE STILL CONTRIBUTED WAS PROVED IDENTICAL TO THE
+     COMMIT. Every container command reads the composition file from the tree,
+     so that file was checked blob-for-blob against the target commit and
+     matched. That is what makes the dirty tree operationally harmless rather
+     than merely unused.
+  4. The pre-write database preflight was re-run FROM THE EXPORT and again
+     returned PASS, 11 checks, including that migration 0004 was not applied.
+
+9. THE DEPLOYMENT, STEP BY STEP (OWNER-EXECUTED) [R1,R2]
+
+  the migration       exactly four skipped (0000-0003), exactly one applied
+                      (0004), zero refused, and the summary line byte-exact
+                      against the runbook. Run with the container read-only,
+                      all capabilities dropped and no new privileges, with the
+                      migration directory mounted read-only
+  the credential      the migration credential file was confirmed restricted
+                      before use and PROVED SHREDDED AFTERWARDS, confirmed
+                      twice. It was never read, printed, hashed or copied
+  the grants          applied with errors fatal; no output, clean exit — and
+                      confirmed INDEPENDENTLY by the audit, where the grant
+                      count moved from 44 privileges to 52, the eight expected
+                      additions and nothing else
+  the database audit  PASS, 18 checks, with the four informational lines: the
+                      three reconciliation watch counts all 0, and the payment
+                      era ERA 1 with orders 0, events 0, entitlements 0
+  what the audit      the ledger exactly 0000-0004, five rows, with COMMITTED
+  proved              SHA-256 checksums — which is what proves the SQL applied
+                      was the committed migration and not something else; the
+                      expected table, privilege, constraint, key and index
+                      counts; the payment event ledger append-only BY
+                      PRIVILEGE, with no delete or truncate right on any
+                      payment table; and the usable-entitlement backstop index
+                      unique, valid and partial, with zero duplicate targets
+  the application     the deployment tag moved to the candidate and the
+                      application container force-recreated; polled to healthy;
+                      THE RUNNING IMAGE DIGEST EQUALLED THE CANDIDATE EXACTLY
+  the boot output     persistence readiness READY / OK on expected schema
+                      contract m13-0004; launch readiness with production
+                      scanning enabled, ready for production true and ZERO
+                      blockers; and both payment readiness lines DISABLED with
+                      no problems — the surface M13-6 added, doing its job on
+                      its first production boot
+  the maintenance     promoted AFTER the migration, never before, as the
+  image               operational finding required; the retention run reported
+                      the payment hygiene pass OK with every counter zero,
+                      which is the specific proof that it is running against
+                      the new schema and not the old one
+
+THE R1 IMAGE SERVED CONTINUOUSLY ACROSS THE MIGRATION AND THE AUDIT. The
+application was recreated only afterwards. [R2]
+
+10. CLOSED ACCEPTANCE (OWNER-EXECUTED AND OWNER-OBSERVED) [R1,R2]
+
+  the public health endpoint   answering, HTTP 200
+  PAYMENT ROUTES CLOSED        14 of 14 returned 404 — verified as 14 UNIQUE
+                               method-and-route pairs, seven methods across
+                               both payment routes, WITH ZERO NON-404 ANSWERS
+  the final database audit     PASS, 18 checks; payment era ERA 1, orders 0,
+                               events 0, entitlements 0
+  the reconciliation report    EVERY SECTION EMPTY — both queues, the mode
+                               mismatches, the partial refunds, the disputed
+                               orders and both hygiene sections; era ERA 1
+
+HUMAN BROWSER ACCEPTANCE, WHICH CANNOT BE DONE FROM A TERMINAL and was the last
+gate on recording Decision A complete (OWNER-OBSERVED) [R1]:
+
+  the operator signs in to production                  signed in successfully
+  the domain authorisation page behaves as before       behaves normally
+  NO product summary for the paid assessment is visible NOT VISIBLE
+  NO purchase button is visible                         NOT VISIBLE
+  an anonymous assessment from the home page completes  completed normally
+
+THE LAST TWO CHECKS ARE THE USER-VISIBLE ASSERTION THAT PAYMENTS ARE CLOSED.
+The runbook requires Decision A to change nothing a user can see, and nothing a
+user can see changed. [R1,S3]
+
+11. THE ACCEPTED FINAL STATE [R1,R2]
+
+  deployed source         54774b5f4d5334f562be9a3e0a24223ffcbe1f2c
+  schema contract         m13-0004
+  migrations              0000-0004, five ledger rows with committed checksums
+  application image       sha256:16862622153b8d23551acf07cdcf23ca29d61237b5aed
+                          03f6fd296a91123b689
+  rollback floor tag      site-security-app:m13-floor points at THAT EXACT
+                          application image
+  maintenance image       sha256:0c443b19af8b4877b7118f845f6b90e64238f9e246ce1
+                          fddb3e0eb4ded9ee77f
+  scanner image           sha256:3672ef72b0d9a13dc95dc6a80a3c45413d7776e082fe2
+                          1b3f08ccbff355f0bad — UNCHANGED, exactly the R1
+                          scanner, never rebuilt for M13
+  services                application, database and scanner all healthy
+  payments                CLOSED
+  payment flags           enabled 0, checkout enabled 0, live mode enabled 0 —
+                          all three written explicitly rather than left absent
+  declared provider mode  ABSENT — no mode is declared
+  Stripe values           ABSENT — no Stripe value of any kind on the server
+  payment routes          14 of 14 return 404
+  payment era             ERA 1, by BOTH halves of the two-part test
+  Decision B              NOT RUN
+
+THE ERA TEST NEEDS BOTH HALVES AND GOT BOTH. The database half: the audit
+reports ERA 1 with orders 0, events 0 and entitlements 0. The operator half:
+the era marker file is ABSENT. The database cannot by itself prove that
+payments were never opened — a test-mode order would have counted — which is
+why the owner's written statement and the operator marker exist. While both
+halves say ERA 1, the image-based rollback to the R1 application image remains
+a legitimate target; the first step of Decision B would write the marker and
+retire it. [R1,S2,S3]
+
+THE FLOOR WAS ASSIGNED ONLY AT THE END. The floor image is the one that passed
+all five floor checks on the build host AND has now actually run in this
+production environment. Both halves were required. [R2,S3]
+
+12. CONTROLLED DEVIATIONS, RECORDED RATHER THAN HIDDEN
+
+Eight deviations from the runbook are recorded in the source evidence record,
+and none is omitted here. Four are already described above — the dirty tree
+that was rejected as a source (section 8), the artifacts exported from the
+commit object instead (section 8), the verified bundle in place of a credential
+on the server (section 7), and the two baseline identifiers that must stay
+distinct (section 3). The remaining four: [R2,S2]
+
+  A DIAGNOSTIC CHECK THAT FALSE-POSITIVED BY DESIGN. One preflight check
+  grepped a configuration file for the name of a migration credential and
+  expected zero matches. It returned one. THE GREP WAS UNANCHORED AND COUNTED
+  COMMENT LINES, and the repository's own shipped template contains a comment
+  that literally names that variable in a list of what must NOT be there — so
+  the expected value was UNREACHABLE for a correctly built file. The stop was
+  cleared only after comment-aware classification probes, which report a class
+  and never a value, returned ABSENT for both files, the live process was
+  confirmed to hold no such credential, and the single matching line was shown
+  to be byte-identical to the shipped template comment. NO CONFIGURATION FILE
+  WAS EDITED: the correction is to the CHECK, not to the configuration. The
+  check was kept rather than dropped, because an active assignment there would
+  hand schema-changing credentials to a daily scheduled job.
+
+  THE BACKUP OBJECT NAME IS NOT LOGGED, THOUGH THE RUNBOOK PROMISED IT IS. The
+  backup script logs that the upload was confirmed and never the name. The
+  object was identified instead by correlating the off-host listing: the newest
+  object, whose embedded timestamp matched the run's start second exactly, with
+  no other candidate. The name is not recorded in this note.
+
+  THE REHEARSAL HARNESS LEFT AN ANONYMOUS DATABASE VOLUME holding restored
+  production data; it was found, removed, and the harness corrected
+  (section 6).
+
+  ONE ACCEPTANCE OUTPUT WAS LOST TO A TERMINAL REDRAW. The public health check
+  was issued but its output is absent from the transcript. It was RE-VERIFIED
+  INDEPENDENTLY from the operator workstation against the public endpoint,
+  rather than asserted from memory or quietly dropped. That is a read of a
+  public endpoint and no production write.
+
+ALL FOUR RUNBOOK FAULTS THE RUN EXPOSED WERE WRITTEN UP AS CORRECTIONS so the
+next operator does not rediscover them mid-run. AT THE TIME THIS NOTE WAS
+WRITTEN THOSE CORRECTIONS WERE NOT YET MERGED: the commit that carries them
+exists only in the local working clone of the technical repository, it is not on
+the remote branch and not on the main branch, and the runbook on the main branch
+still carries the steps Decision A proved wrong. THE EXECUTION RECORD ITSELF IS
+MERGED (section 14). [S1,S4]
+
+13. THE OPERATIONAL FOLLOW-UP THAT IS STILL OPEN
+
+THE SERVER'S WORKING TREE IS STILL DIRTY AND STILL STALE, and it was
+deliberately not tidied as a side effect of a deployment. Why it still matters,
+stated rather than softened: [S2]
+
+  - the rollback procedure READS AN OPERATOR SQL FILE FROM THAT TREE, where it
+    is untracked. A clean would delete it and a checkout could change it —
+    either would break rollback at the moment it is needed;
+  - the server cannot fetch from the origin, so the tree cannot be reconciled
+    by the obvious command and will keep drifting;
+  - a clean tree is a precondition in two runbook steps, and it cannot pass
+    while the tree is dirty.
+
+Reconciling it is a SEPARATE, DELIBERATE OPERATION with its own review, and it
+needs a decision first: whether the server receives a read-only deploy
+credential or keeps receiving verified bundles. [S2]
+
+14. THE TECHNICAL REPOSITORY'S OWN RECORD (SESSION-VERIFIED) [S1]
+
+  PR #41  "docs(m13): Decision A execution record — COMPLETE / ACCEPTED"
+          head 79175a429f0ddd2462075f5aa363852f03c706ec
+          merged 2026-10-10 09:45:16 UTC as
+            81b80ae4da2d910469ded450480e15c0cea5799e
+          1 file changed, 561 insertions, 0 deletions — the execution record
+            and nothing else
+          post-merge continuous integration: run 38042502462, SUCCESS
+
+That merge adds documentation only and changes no runtime behaviour; the
+deployed functional source is still 54774b5f…. [S1]
+
+15. WHAT DECISION A CHANGED, AND WHAT IT DID NOT
+
+CHANGED [R1,R2]: migration 0004 applied, adding three NEW AND EMPTY tables and
+altering no existing one; the grants extended from 44 to 52 privileges; the
+application and maintenance deployment tags moved to the M13 candidates; the
+application container recreated on the candidate; three explicit payments-off
+lines appended to the production configuration; and the rollback floor tag
+assigned.
+
+NOT CHANGED, AND NOT AUTHORISED BY ANYTHING HERE [R1,R2,S2]: no declared
+provider mode; no provider credential; no event destination; no web-server
+webhook location; no web-server, DNS or firewall change of any kind; no
+provider contact in either mode; no scanner rebuild; no step of Decision B; no
+M14 work. Payments remain CLOSED and the payment era remains ERA 1.
+
+M13 STATUS AFTER DECISION A: M13-0 to M13-6 are implemented, merged and now
+DEPLOYED with payments closed. M13 IS NOT COMMERCIALLY LIVE, and every
+live-mode blocker the M13-6 note lists is still open — the final price, the
+currency, the tax treatment, the published refund wording, a live key, a live
+event destination, test acceptance on the candidate image off production, the
+owner of the reconciliation queues, the refund turnaround and the
+disputed-and-won procedure. [S2,S3]
+
+16. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The runbook, the preparation, the source execution record and this note's
+source material were produced by Claude, an AI coding assistant, under task
+specifications written by the project owner. THE DECISION TO DEPLOY, THE
+DEPLOYMENT COMMANDS, THE BROWSER ACCEPTANCE AND THE ACCEPTANCE ITSELF ARE THE
+OWNER'S: the source record states that the commands and outputs of the
+deployment are owner-executed and that the assistant session's part was to
+verify them against the runbook from the owner's terminal capture. That is
+exactly what the sections marked [R2] claim and no more, and where the source
+record does not say who typed a command, this note does not say either.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. Payment code and its database tables were deployed to production while
+     nothing was for sale, and the acceptance test for success was that NOTHING
+     A USER COULD SEE CHANGED. Why split the work that way instead of launching
+     the feature in one step?
+  2. The server's git checkout was stale AND dirty, and the deployment could
+     have proceeded from it with a little tidying. What did refusing it cost,
+     and what did it protect?
+  3. The step that was supposed to fetch the code could not run at all. The
+     answer was a verified bundle rather than installing a credential on the
+     server. What does that choice say about what a deployment should be
+     allowed to leave behind?
+  4. A safety check failed because it counted a comment in the project's own
+     template. The check was corrected rather than deleted. Why is a check that
+     cries wolf still worth keeping?
+  5. The restore rehearsal — the gate meant to make the migration survivable —
+     itself left a copy of real data behind. What is the value of auditing a
+     procedure whose only job is safety?
+  6. One acceptance output was lost to a terminal redraw and was re-verified
+     from scratch rather than assumed. Why does a single missing line matter in
+     a record like this?
+  7. The runbook was written before anyone ran it and four of its steps did not
+     survive contact with the real server. What does that say about the
+     difference between a plan and a rehearsal?
+  8. Completing Decision A authorises nothing about Decision B, and the record
+     says so four times. Who is that repetition for?
+
+17. SOURCE LOCATORS
+
+[R1] The project owner, who executed the Decision A deployment and acceptance
+     of 2026-10-10 against production and performed the browser acceptance.
+     Not verified by any assistant session.
+[R2] The assistant session of 2026-10-10, which verified the owner's
+     deployment run against the runbook from a 566-line capture of the owner's
+     terminal session and recorded it in [S2]. For the earlier preparation
+     steps that record does not state who typed each command, and this note
+     makes no claim about that either way.
+[S1] GitHub state for stanciuks/site-security read from the GitHub API while
+     this note was written: pull requests #39 and #41, their merge commits
+     54774b5f4d5334f562be9a3e0a24223ffcbe1f2c and
+     81b80ae4da2d910469ded450480e15c0cea5799e, and the continuous-integration
+     conclusions for runs 37908201726 and 38042502462.
+[S2] docs/evidence/M13_DECISION_A_EXECUTION_2026-10-10.md, added at main
+     81b80ae4da2d910469ded450480e15c0cea5799e — the source execution record
+     from which every production figure in this note is taken, including its
+     own table of controlled deviations and its open operational follow-up.
+[S3] docs/rollout/M13_PRODUCTION_RUNBOOK.md — the operator runbook Decision A
+     executed, from which the two-decision separation, the prerequisites and
+     the era test are taken.
+[S4] The local working clone of the technical repository, in which the commit
+     "docs(m13): correct the runbook steps Decision A proved wrong" exists and
+     from which its absence from the remote branch and from main was checked.
+     Recorded as an unmerged state, not as a merged correction.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M13_PP_Evidence_2026-10-08/            M13-0 to M13-6, the source
+                                                     this deployment carries,
+                                                     and Step 6's preparation
+                                                     of this decision
+  SCANCOMPASS_R1_PRODUCTION_2026-10-07/              the production state
+                                                     Decision A replaced
+  SCANCOMPASS_M12C_PP_Evidence_2026-10-05/           domain authorisation,
+                                                     which any future purchase
+                                                     requires first
+
+No credential, token, password, database URL, connection string,
+environment-file value or hash, migration credential, backup object name,
+backup bucket, backup encryption identity, restore credential, Stripe key,
+webhook signing secret, price identifier, price amount, capability value, share
+URL, email address, host identifier or volume identifier appears in this note.
+The migration role is referred to by function only. The only long identifiers
+are Git commit SHAs and three container image digests. No screenshot
+accompanies this note; the browser acceptance was the owner's and no screenshot
+of it was supplied to any assistant session, so none is shown and none is
+invented.
+
+END OF EVIDENCE
