@@ -1,0 +1,593 @@
+SCANCOMPASS — M14 STEP 2.1 PERSONAL PROJECT EVIDENCE
+The tier-aware catalogue, scoring and report foundation that must exist before
+a single paid check does; proven by a golden baseline captured from unchanged
+source BEFORE the change, by a mutation test that injects synthetic paid
+entries, and by seven reverted source mutations — with four P2 findings from an
+independent review and one new fail-closed guard the review asked for
+Subject dates: implemented 11-12 October 2026; reviewed, corrected and merged
+               12 October 2026
+Evidence written: 12 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M14-2.1 IS IMPLEMENTED IN SOURCE, MERGED AS PR #46 AND OWNER-ACCEPTED. IT IS
+NOT DEPLOYED. It adds the TIER CLASSIFICATION and the tier-aware catalogue,
+scoring, engine, report-composition and version-selection infrastructure.
+[S1,S2]
+
+NO EXTENDED CHECK EXISTS. ALL 42 CATALOGUE ENTRIES ARE FREE. No catalogue
+entry, check module, DNS query, target request, route, schema change,
+migration, worker protocol change, payment flag or runtime EXTENDED admission
+was added. The EXTENDED tier has catalogue STRUCTURE and NOTHING ELSE: every
+version selector for it THROWS RATHER THAN GUESSES. [S2,R1]
+
+NOTHING A USER CAN SEE CHANGED, AND THAT IS THE POINT. The milestone's whole
+claim is that FREE output is BYTE-IDENTICAL after a change that touched 13
+source files on the FREE path. There is still nothing for sale. [S2]
+
+NOTHING REACHED PRODUCTION. Migration 0005 remains IN SOURCE ONLY and was NOT
+RUN ANYWHERE. Production still runs the M13 Decision A state carried in the
+earlier accepted record in this repository: schema contract m13-0004, migration
+ledger 0000-0004, payments CLOSED. NO PRODUCTION CONTACT OF ANY KIND — no
+virtual private server, no production database, no Stripe in either mode, no
+web server, no DNS, no firewall, no production configuration file. [S2,
+HISTORICAL]
+
+THE 658 POSTGRESQL-DEPENDENT TESTS WERE SKIPPED BY ORDINARY CONTINUOUS
+INTEGRATION, NOT PASSED. The figure 658 appears beside every test count in this
+note and in the source record. IT IS A SKIP COUNT. The guarded real-PostgreSQL
+suites have no scratch database in the ordinary workflow and are skipped by
+design. THEY WERE NOT RUN ANYWHERE FOR THIS SLICE AND NO CLAIM IS MADE THAT ANY
+OF THEM PASSED. This slice touches no persistence code. [S1,S2]
+
+FOUR P2 FINDINGS WERE FOUND BY AN INDEPENDENT REVIEW BEFORE THE MERGE: no P0
+and no P1. Three were corrections to the record and to a comment; the fourth
+asked for a SAFETY PROPERTY THE SLICE DID NOT YET HAVE, and the answer was a
+NEW NARROW FAIL-CLOSED GUARD plus a MANDATORY CONTRACT FOR STEP 2.3. The
+pre-correction head was not merged. [S1,S2]
+
+THE FULL PROFILE-TO-TIER BINDING IS NOT DONE AND IS MANDATORY AT M14-2.3.
+Today the tier is an EXPLICIT INPUT that DEFAULTS TO FREE. That is an
+engineering-stage boundary, written into the design as a stop, not a property
+to be relied on. [S1,S2]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Six kinds of statement appear in this note and are kept apart throughout.
+
+  SESSION-VERIFIED   Repository, pull-request and continuous-integration state
+                     read directly from the GitHub API while this note was
+                     being written. Marked [S1].
+  SOURCE-RECORDED    Figures taken from the committed source evidence document
+                     or the design record in the technical repository, READ AT
+                     THE MERGE COMMIT. Marked [S2].
+  SESSION-REPRODUCED A fact this session re-read or recounted from the
+                     repository itself rather than accepting a document's word
+                     for it. Marked [R1] and named in place.
+  REVIEW-REPORTED    A finding of the independent review of this pull request,
+                     as recorded in the committed evidence document and in the
+                     pull-request description. Attributed in place.
+  OWNER-DECIDED      A decision of the project owner, named where used. THIS
+                     SLICE RELIES ON NONE AND TAKES NONE.
+  HISTORICAL         Production facts carried from an earlier accepted record
+                     in this repository, named where used. M14-2.1 ADDS NONE.
+
+NO FORMAL GITHUB REVIEW WAS SUBMITTED ON PR #46, AND THE PULL REQUEST CARRIES
+NO COMMENTS AT ALL. Both were queried through the GitHub API while this note
+was written: zero formal reviews, zero issue comments, zero review comments.
+The independent review described in sections 7 and 8 was conducted in a
+separate assistant session and is recorded only inside the committed evidence
+document and the pull-request description. WHERE THIS NOTE SAYS "REVIEW", THAT
+IS WHAT IT MEANS, AND NEVER A GITHUB APPROVAL. [S1]
+
+NO TEST IN THIS NOTE WAS RUN BY THE SESSION THAT WROTE IT, and none was run by
+the project owner. Every test count is either SOURCE-RECORDED from the
+implementing session's own record, REVIEW-REPORTED from the reviewing session,
+or CONFIRMED BY CONTINUOUS INTEGRATION — and the three are NEVER MERGED INTO
+ONE FIGURE. Where they disagree, section 9 says so.
+
+THERE IS NO PRODUCTION OBSERVATION IN THIS NOTE, because M14-2.1 made none.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 13.
+
+1. REVIEWED VERSION, PULL REQUEST, MERGE AND CONTINUOUS INTEGRATION
+   (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #46, "feat(m14-2.1): tier-aware catalogue foundation (FREE
+              byte-identical, no extended checks)"
+Base: main at e7d96c994454838322ab42216535307019c414e0 — the OD-1 content-lock
+      merge (PR #44)
+Head branch: claude/m14-2-1-tier-foundation, worked in a separate worktree
+Merged: 2026-10-12 07:46:44 UTC as
+        441741b6329fdea2053f1f0d536cc53a01bf791c, by squash
+Diff: 23 files changed, 2,173 insertions, 72 deletions — 13 under src/, 8 under
+      tests/, 2 under docs/ [R1]
+
+THE COMMIT ORDER IS PART OF THE EVIDENCE, AND HISTORY WAS NOT REWRITTEN:
+
+  b59bf8a  THE BASELINE CAPTURE. TESTS AND GOLDEN ONLY — this session confirmed
+           the commit changes exactly two files, both under tests/, and NOTHING
+           UNDER src/. It captures the FREE baseline FROM THE UNCHANGED SOURCE,
+           which is what makes the golden a genuine before-state rather than a
+           description of the after-state. [R1]
+  2cc089d  the implementation and its tests.
+  5b32c35  the source evidence record. Run 38176101440 (CI #68) FAILED here —
+           a whitespace finding, not a test failure.
+  d1977fb  the whitespace fix: a blank line at the end of a test helper. Run
+           38176204834 (CI #69), SUCCESS, 8,702 passed, 0 failed, 658 skipped.
+           THE INDEPENDENT REVIEW COVERED THIS HEAD (section 7).
+  09e682a  a NON-REWRITING merge of main at 7c286da (PR #45, docs only, no
+           conflict), so the review's corrections could extend the design
+           document as merged.
+  1f5deacda9956504e96acbe577c3438652f9c763
+           the review-correction head, and THE REVIEWED FINAL HEAD. Run
+           38211179252 (CI #71), event pull_request, SUCCESS, 8,710 passed, 0
+           failed, 658 skipped. THIS IS THE HEAD THAT WAS MERGED.
+
+Post-merge continuous integration on the merge commit
+441741b6329fdea2053f1f0d536cc53a01bf791c: run 38219656598 (CI #75), event
+push, SUCCESS.
+
+THE EIGHT-TEST DELTA RECONCILES EXACTLY. 8,702 at d1977fb plus the eight tests
+of the new profile-tier guard is 8,710 at 1f5deac. The correction round added
+tests and changed no expectation. [S1]
+
+WHAT THE GREEN RUN DOES AND DOES NOT PROVE. The ordinary run reported 8,710
+passed, 0 failed and 658 SKIPPED. THE 658 SKIPS ARE THE DATABASE-GATED
+INTEGRATION SUITES, which the workflow has no PostgreSQL scratch database for
+and therefore skips by design. A GREEN ORDINARY RUN IS NOT EVIDENCE THAT ANY
+REAL-DATABASE PROOF RAN. None was needed for this slice, which touches no
+persistence code, and none is claimed. [S1,S2]
+
+2. WHAT M14-2.1 IS, AND WHAT IT IS NOT
+
+IT IS the infrastructure that has to exist BEFORE the first paid catalogue
+entry can be added safely. Every place in the code that iterated "the whole
+catalogue" had to learn which TIER it was serving, because the moment an
+EXTENDED entry exists, "the whole catalogue" becomes the wrong answer on the
+FREE path — and the wrong answer in a direction a customer would see. [S2]
+
+IT IS NOT the paid assessment, and it is not even one paid check. The ten
+extended checks DO NOT EXIST IN CODE. [S2]
+
+IT IS NOT the binding between a scan's profile and its tier. The tier is an
+explicit argument that defaults to FREE. The review asked about exactly that
+and got a narrow guard plus a mandatory stop; see section 8. [S2]
+
+THE SAFETY PROPERTY THE WHOLE MILESTONE SERVES is the one the design calls
+central: THE ASSESSMENT TIER IS NEVER AN INPUT FROM A USER. Nothing in this
+slice weakens it, and nothing in this slice completes it. [S2]
+
+3. WHAT CHANGED, AND THE TWO THINGS DELIBERATELY LEFT GLOBAL
+   (SOURCE-RECORDED) [S2]
+
+Every complete-catalogue iteration under src/ was audited. The changes, by
+purpose:
+
+  THE CATALOGUE gains a tier on every entry, selection and membership helpers
+  for a tier, a per-tier catalogue version, a refusal error type, and tier
+  arguments on the identifier and scorable-check helpers, all DEFAULTING TO
+  FREE. TIERS NEST BY DESIGN: a FREE check belongs to both tiers, an EXTENDED
+  check only to EXTENDED.
+  SCORING now synthesises missing results FOR THE SCORED TIER ONLY — this is a
+  named design hazard, because synthesising a paid check's absence into a free
+  score would move the free score. An OUT-OF-TIER RESULT is treated exactly
+  like an unknown identifier: excluded, with an integrity problem recorded.
+  The stamped catalogue version is chosen by tier.
+  REPORT COMPOSITION composes findings only for the tier's checks, replacing a
+  whole-catalogue iteration that would otherwise have thrown.
+  THE ENGINE takes its not-produced list, its undecidable results and its
+  stamped versions FROM THE FREE TIER explicitly.
+  THE WORKER RESULT CEILING is derived from the FREE tier's count and is
+  UNCHANGED AT 546,816 BYTES. A per-tier selector was added and IS READ BY
+  NOTHING until M14-3's protocol work.
+  VERSION SELECTION replaces six imported constants with per-tier selectors.
+  Each returns EVERY EXISTING FREE LITERAL UNCHANGED and THROWS for EXTENDED.
+
+TWO LOOKUP TABLES WERE DELIBERATELY KEPT GLOBAL AND DOCUMENTED AS SUCH: the
+enrichment catalogue and the by-identifier entry and informational lookups.
+The reason recorded is precise: these answer "WHAT IS THIS CHECK?", not "WHAT
+DOES THIS ASSESSMENT OWE?". They must still resolve extended identifiers later.
+TIERING THEM WOULD HAVE BEEN THE WRONG KIND OF CORRECT. [S2]
+
+NOTHING REACHES EXTENDED AT RUNTIME. Scoring and report composition for the
+EXTENDED tier both throw, as do all three new version selectors. The refusal
+message records the reason: no versions are defined yet, so it refuses RATHER
+THAN GUESSES. This session re-read the refusal type and its message from the
+merge commit. [R1]
+
+4. HOW FREE INVARIANCE IS PROVEN, AND WHY THE ORDER MATTERS
+   (SOURCE-RECORDED) [S2]
+
+THE GOLDEN WAS CAPTURED BEFORE THE CHANGE, FROM UNCHANGED SOURCE, IN A COMMIT
+THAT TOUCHES NO SOURCE FILE AT ALL. That is the whole strength of the argument,
+and this session verified the commit's shape independently: b59bf8a changes two
+test files and nothing under src/. [R1]
+
+What the golden pins, per fixture:
+
+  - the SHA-256 of the whole score — score, grade, coverage, contributions,
+    control counts and integrity problems;
+  - the report model, the finding identifiers and their order, the priority
+    actions and the action plan;
+  - the SERIALISED public report artifact, by BYTE SIZE AND SHA-256;
+  - the self-contained HTML report and the PDF, by BYTE SIZE AND SHA-256;
+  - the worker not-produced list and the result identifiers — an empty list and
+    42 identifiers;
+  - every version literal and the SIX-PART CACHE KEY, both by golden and by
+    literal value;
+  - the worker-result ceiling, 546,816 bytes over 42 checks;
+  - the missing-check semantics, including a no-results score;
+  - DETERMINISM: a second test runs the capture twice and compares byte for
+    byte.
+
+THE GOLDEN WAS NEVER REGENERATED OR EDITED. It passes unchanged on the
+implementation commit and on the final head. A golden you may rewrite proves
+nothing; see also P2-2 in section 7. [S2]
+
+AN OBSERVATION RECORDED IN PASSING, AND WHY IT MATTERS. On the unreachable
+fixture the FREE not-applicable count is 19 — NOT ZERO. This confirms an
+earlier correction that the FREE baseline is DATA-DEPENDENT AND NON-ZERO, which
+is precisely why the M3 supplementary count must be derived from the actual
+extended findings rather than from a presumed FREE baseline. The two milestones
+agree. [S2]
+
+5. THE MUTATION TEST: PROVING THE PROOF COULD FAIL (SOURCE-RECORDED) [S2]
+
+A golden that passes tells you nothing unless you know it CAN fail. The leakage
+test mocks the catalogue module, per file only, so the real code runs against a
+shared catalogue holding TWO SYNTHETIC EXTENDED ENTRIES, one implemented and
+one not.
+
+IT FIRST PROVES THE MUTATION IS REAL: 44 entries, and a FREE scan leaves two
+catalogued checks without a result — which is EXACTLY THE CONDITION THAT USED
+TO THROW before this slice. Only then does it assert that THE ENTIRE GOLDEN
+STILL MATCHES.
+
+It also pins what happens to a paid result smuggled into a free score: it moves
+NEITHER the score, NOR the grade, NOR the earned or eligible points, NOR the
+coverage percentage, NOR the coverage band, NOR the cap. Like any unknown
+identifier it is recorded as one excluded not-applicable contribution, which is
+PRE-EXISTING BEHAVIOUR AND UNCHANGED. [S2]
+
+SEVEN SOURCE MUTATIONS WERE MADE BY HAND AND EACH ONE WAS REVERTED. Each made
+the leakage test fail, and the recorded failure counts differ per mutation,
+which is itself evidence that the tests discriminate rather than merely alarm:
+
+  report composition iterating every tier                      6 tests failed
+  scoring synthesis iterating every tier                       3 tests failed
+  scoring accepting an out-of-tier result                      1 test failed
+  the engine's not-produced list over every tier               2 tests failed
+  the engine's undecidable results over every tier             4 tests failed
+  the worker ceiling taken from every tier                     2 tests failed
+  the FREE catalogue version bumped                            1 test failed
+
+A LIMITATION OF THIS METHOD, STATED PLAINLY: the synthetic entries are
+injected by a per-file module mock, not by adding real entries to the shipped
+catalogue. It proves the tier filtering holds when a paid entry exists; it does
+not and cannot prove that the ten real extended checks, once written, will
+behave as the synthetic pair does. [S2]
+
+6. VALIDATION GATES (SOURCE-RECORDED AT THE REVIEWED HEADS) [S2,S1]
+
+  type checking                                               clean
+  linting                                                     clean
+  whole-tree whitespace gate                                  clean
+  build                                                       succeeds, tree
+                                                              clean afterwards
+  full suite on UNCHANGED main at e7d96c9    8,677 passed, 0 failed, 658 skipped
+  full suite on the branch at d1977fb        8,702 passed, 0 failed, 658 skipped
+  full suite at the final head 1f5deac       8,710 passed, 0 failed, 658 skipped
+
+The baseline-to-branch delta is +25 tests at d1977fb and +33 at the final head,
+all of them NEW tests; NO EXISTING EXPECTATION WAS CHANGED EXCEPT AS DESCRIBED
+BELOW. The final-head figures were confirmed independently by continuous
+integration run 38211179252. [S1,S2]
+
+TWO TEST FILES WERE DELIBERATELY RE-SCOPED, AND BOTH ARE DISCLOSED:
+
+  THE SCORING COMPLETENESS CANARY keeps every FREE assertion and value — 42,
+  28, 3 and 11, and exactly one scoring rule per non-informational scorable
+  FREE check. Two checks were ADDED: that every entry has a tier, and that NO
+  EXTENDED ENTRY HAS A SCORING RULE in either rule version. The orphan-rule
+  check now covers both versions.
+  A SHARED TEST HELPER built its all-passing result set and its scorable
+  identifiers from the global catalogue. Both were scoped to FREE — WHICH IS
+  WHAT THEY ALWAYS CLAIMED TO DESCRIBE, "a full 42-result set".
+
+AN INVENTORY OF FIFTEEN TEST FILES that read the catalogue globally and will
+need tier-scoping or a golden-count update ONCE EXTENDED ENTRIES EXIST was
+recorded for M14-2.5. NONE NEEDED A CHANGE HERE. Recording the debt at the
+moment it is created, rather than discovering it later, is the point. [S2]
+
+7. THE INDEPENDENT REVIEW AND ITS FOUR P2 FINDINGS [S1,S2]
+
+An independent review covered ALL 21 CHANGED FILES AT d1977fb and ran a
+temporary integration against main at 7c286da. It was NOT a formal GitHub
+review and left no comment on the pull request. VERDICT: CORRECT, THEN MERGE —
+NO P0 AND NO P1, four P2 findings. [S1,S2]
+
+WHAT THE REVIEW VERIFIED INDEPENDENTLY — this is the part that matters most,
+because it is the only check on the implementing session's own golden:
+
+  - THE BASELINE CAPTURE b59bf8a REGENERATES BYTE-IDENTICALLY on the unchanged
+    source. The golden is reproducible by a party that did not write it.
+  - the FREE golden passes on the implementation head;
+  - INJECTING A REAL EXTENDED CATALOGUE ENTRY — not the mocked pair — leaves
+    FREE output byte-identical;
+  - mutations to tier classification and to tier filtering are caught;
+  - the branch has no merge conflict against current main.
+
+THE REVIEW'S OWN TEST RUN WAS NOT A CLEAN PASS, AND THIS NOTE DOES NOT PRESENT
+IT AS ONE. On macOS it gave 8,694 passed, EIGHT FAILED and 658 skipped. The
+eight failures are KNOWN DEPLOYMENT TESTS THAT FAIL ON macOS and are unrelated
+to this slice. The Linux continuous-integration run on the same head gave 8,702
+passed, 0 failed, 658 skipped. THE TWO FIGURES ARE KEPT APART AND NEITHER IS
+PRESENTED AS THE OTHER. [S2]
+
+THE FOUR FINDINGS AND WHAT EACH BECAME:
+
+  P2-1 — A COUNT IN THE RECORD WAS WRONG. The evidence record said 20 changed
+  files; the itemised list summed to 21. THE LIST WAS RIGHT AND THE TOTAL WAS
+  WRONG. Corrected in the record. THE HISTORICAL TEST EVIDENCE WAS LEFT AS IT
+  WAS, with the post-correction counts recorded separately — the record does
+  not retroactively claim figures that were not measured at the time.
+
+  P2-2 — THE GOLDEN'S OWN HARNESS CHANGED SOURCE BETWEEN CAPTURE AND
+  IMPLEMENTATION, AND THIS WAS NOT DISCLOSED. At capture, the golden's
+  catalogue section and the all-passing fixture read the GLOBAL catalogue and
+  version. From the implementation commit onward, both read the FREE TIER
+  instead.
+
+  THE RESOLUTION WAS TO DISCLOSE, NOT TO REGENERATE. THE COMMITTED GOLDEN WAS
+  NEITHER REGENERATED NOR EDITED. The disclosure states four things: that the
+  VALUES ARE IDENTICAL TODAY because all 42 entries are FREE, so the FREE
+  catalogue IS the shared catalogue; that the substitution is NECESSARY,
+  because observing the global catalogue would make the 44-entry-versus-42
+  leakage comparison meaningless and a global all-passing helper would
+  FABRICATE EXTENDED RESULTS FOR A FREE SCORE; that the GLOBAL CATALOGUE IS
+  STILL PINNED SEPARATELY by a test asserting exactly 42 entries, every one
+  FREE, and equal to the FREE catalogue; and that nothing else in the harness
+  changed beyond being moved into a shared module.
+
+  THIS SESSION REPRODUCED THAT SEPARATE PIN: the test asserts 42 entries, all
+  FREE. [R1]
+
+  P2-3 — A COMMENT JUSTIFIED A FILE'S LOCATION BY HALF THE RULE. A new module
+  cited only the content-must-not-import-scanner direction, omitting the
+  PRIMARY architectural rule in the other direction. The comment was rewritten
+  to state BOTH ENFORCED DIRECTIONS, naming the primary one first. NO RUNTIME
+  CHANGE. A finding about a comment is still a real finding: the next person
+  to move that file would have been reasoning from an incomplete rule.
+
+  P2-4 — THE SLICE HAD NO DEFENCE AGAINST A FUTURE EXTENDED SCAN BEING SCORED
+  UNDER FREE RULES. This is the substantive one and section 8 is about it.
+
+8. P2-4: THE GUARD THAT WAS ADDED, AND THE CONTRACT THAT WAS DEFERRED
+   [S1,S2]
+
+THE FINDING. The free-scan result carries NO TIER, and both scoring and report
+composition DEFAULT TO FREE. So a future extended scan could, in principle, be
+composed and scored UNDER FREE RULES — a paid assessment silently graded as a
+free one.
+
+WHY THE FULL FIX WAS NOT AVAILABLE IN THIS SLICE, AS RECORDED. The production
+call path passes scoring only the hostname, the mail-assessment domain and the
+results, SO A GUARD INSIDE SCORING COULD NOT SEE THE PROFILE AT ALL. Report
+composition, by contrast, receives the WHOLE SCAN, immediately after scoring
+and inside the same error-handling block. That is the one place a guard could
+stand today.
+
+WHAT WAS ADDED — NARROW, AND FAIL-CLOSED:
+
+  - the extended profile version literal is RESERVED in source and RECOGNISED
+    ONLY IN ORDER TO REFUSE IT. NOTHING STAMPS IT, and the version selector
+    for EXTENDED still throws.
+  - a composability assertion runs FIRST in report composition, reading the
+    profile FROM THE SCAN ITSELF rather than from an argument a caller
+    controls. An extended-stamped scan is REFUSED for any tier but EXTENDED,
+    AND EXTENDED IS ITSELF STILL REFUSED because it has no versions. The
+    practical effect today is that an extended-stamped scan CANNOT PRODUCE A
+    REPORT AT ALL.
+
+HOW THE REFUSAL WAS PROVEN, at three levels, by eight tests: report
+composition with the default tier and with an explicit FREE tier; the explicit
+EXTENDED tier, still refused; and END TO END through the assessment runner,
+where a worker returning an extended-stamped scan yields a FAILED run with an
+internal-failure reason AND NO REPORT. The same tests confirm that a
+FREE-stamped scan still composes and that the existing test fixture profile is
+still tolerated. REMOVING THE GUARD MAKES THREE OF THE EIGHT TESTS FAIL —
+which is what makes them a guard rather than decoration. [S2]
+
+WHY FREE STILL CANNOT MOVE: every FREE scan stamps the free profile, NO TIER
+FIELD WAS ADDED to the scan result, so its serialised shape is unchanged, and
+the golden is unchanged. [S2]
+
+WHAT IS EXPLICITLY NOT DONE, AND IS MANDATORY AT STEP 2.3. The full contract is
+written into the design as a stop and a new section: the scoring and
+composition tier must be DERIVED FROM THE SCAN'S SERVER-SELECTED PROFILE, so a
+caller can neither supply it independently nor rely on a default; profile and
+tier must AGREE IN BOTH DIRECTIONS; an UNKNOWN PROFILE MUST BE REFUSED, with
+fixtures moved to a real profile identifier or an explicit seam; scoring must
+be BOUND TO THE PROFILE; and STEP 2.3 IS NOT ACCEPTABLE WITHOUT A NEGATIVE
+TEST, both direct and through the runner.
+
+THE RECORD IS EXPLICIT ABOUT WHAT THIS IS: an ENGINEERING-STAGE BOUNDARY, NOT A
+RELAXATION OF SCAN VERIFICATION, and it makes no EXTENDED admission reachable.
+This note repeats that framing because the distinction is the only thing
+separating a deferred requirement from a quietly accepted hole. [S1,S2]
+
+9. WHERE THE FIGURES IN THIS NOTE DISAGREE, AND HOW THEY ARE KEPT APART
+
+  - THE IMPLEMENTING SESSION'S LOCAL RUNS: 8,677 on unchanged main, 8,702 at
+    d1977fb, 8,710 at the final head. SOURCE-RECORDED.
+  - THE REVIEWING SESSION'S INTEGRATED RUN: 8,694 passed with EIGHT FAILURES on
+    macOS, which is NOT A CLEAN PASS. REVIEW-REPORTED.
+  - CONTINUOUS INTEGRATION ON LINUX: 8,702 at d1977fb and 8,710 at the final
+    head, both SUCCESS. SESSION-VERIFIED.
+  - 658 SKIPPED in every one of them. A SKIP COUNT, NEVER A PASS COUNT.
+
+THE THREE SETS ARE NOT AVERAGED, RECONCILED OR PRESENTED AS ONE. The only
+figure independently confirmed outside the sessions that produced the work is
+the continuous-integration one.
+
+10. WHAT M14-2.1 DID NOT TOUCH [S1,S2] [R1]
+
+No extended check, catalogue entry, check module, scoring rule, enrichment
+entry, content entry, evidence-policy entry, report-schema key, route, schema
+change, migration or payment code. No worker protocol change. No new HTTP
+request, DNS lookup, TLS handshake, port, method, path or redirect behaviour.
+No runtime EXTENDED admission. Nothing under db/, deploy/, scripts/ or
+.github/, and no package or lockfile change — the 23-file shape of the merge
+diff was re-read in this session. Migration 0005 was NOT RUN ANYWHERE.
+Production, the virtual private server, Stripe in either mode, the web server,
+DNS, the firewall and the production environment file were NOT CONTACTED. The
+public legal and privacy copy was NOT TOUCHED. The separate Personal Project
+evidence repository was NOT CHANGED by the slice itself. [R1]
+
+11. PENDING GATES AND STATED LIMITATIONS [S1,S2]
+
+  1. THE FULL PROFILE-TO-TIER BINDING — mandatory at M14-2.3, as a design
+     stop. Until then the tier is an explicit input defaulting to FREE.
+  2. THE EXTENDED VERSIONS THEMSELVES — named at M14-2.5. Until then every
+     selector refuses.
+  3. FIFTEEN TEST FILES still read the catalogue globally and will need
+     tier-scoping once extended entries exist.
+  4. THE WORKER PROTOCOL — the per-tier ceiling selector exists and NOTHING
+     READS IT. Choosing a ceiling from an extended result's profile is M14-3.
+  5. THE GUARDED REAL-POSTGRESQL SUITES — still skipped, still required as an
+     M14-6 release gate. Unaffected by this slice.
+  6. THE MUTATION EVIDENCE IS SYNTHETIC. See the limitation in section 5.
+  7. STEPS 2.2 ONWARD had not started: primitives, check modules, the extended
+     catalogue and content entries, the extended priority methodology and
+     extended report composition. Step 2.2 is recorded separately in this
+     package.
+
+12. GAPS IN THIS EVIDENCE — IDENTIFIED, NOT FILLED
+
+  1. THE INDEPENDENT REVIEW LEFT NO TRACE ON GITHUB. Zero formal reviews and
+     zero comments were confirmed on PR #46 in this session. Its findings,
+     including its independent regeneration of the golden, are known only
+     through documents written by the implementing session. THE ONE CHECK ON
+     THE IMPLEMENTER'S GOLDEN IS ITSELF SELF-REPORTED.
+  2. NO TEST WAS RE-RUN IN THIS SESSION. This note re-read commit shapes, file
+     counts, the 42-entry pin, the refusal type and the merge and run facts
+     from the repository and the GitHub API. It did not execute the suite, the
+     golden, the leakage test or the seven mutations.
+  3. THE BYTE-IDENTICAL CLAIM IS AS STRONG AS THE FIXTURE CORPUS. The golden
+     covers the fixtures it covers. FREE output is proven unchanged FOR THOSE
+     INPUTS, not for every site on the internet.
+  4. NO PRODUCTION-SHAPE OR REAL-DATABASE EVIDENCE EXISTS HERE, and none is
+     needed for this slice — but that also means this slice contributes
+     nothing toward the M14-6 release gate.
+
+13. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The implementation, its tests, the golden capture, the committed source
+evidence record and this Personal Project note were produced by Claude, an AI
+coding assistant, under task specifications written by the project owner. THE
+INDEPENDENT REVIEW THAT FOUND THE FOUR P2 FINDINGS, INCLUDING THE ONE THAT
+ASKED FOR THE FAIL-CLOSED GUARD, WAS A SEPARATE ASSISTANT SESSION. THE
+ACCEPTANCE AND THE MERGE ARE THE OWNER'S. This note was compiled from the
+sources in section 14 and from the GitHub API, and it RAN NO TEST OF ITS OWN.
+No assistant session held production access at any point in M14-2.1.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The golden was captured in a commit that changes no source file, before
+     the change it exists to judge. What would the same golden have been worth
+     if it had been captured afterwards, and how would anyone tell?
+  2. A review found that the golden's own measuring harness had changed between
+     capture and implementation. The answer was to disclose it and prove the
+     values identical, NOT to regenerate the golden. Why is regenerating it the
+     tempting option, and what exactly would it have destroyed?
+  3. The leakage test first proves the mutation is real, and only then proves
+     the golden still matches. Why is a test that cannot be shown to fail worse
+     than no test at all?
+  4. Two lookup tables were deliberately left global while twelve other sites
+     were tiered. What distinguishes "what is this check?" from "what does this
+     assessment owe?", and what would tiering the first have broken later?
+  5. The fourth finding described a hole that could not be closed in this
+     slice. A narrow guard was added where the data happened to be visible, and
+     the real contract was written into the design as a mandatory stop. When is
+     that honest engineering, and when is it a hole with paperwork attached?
+  6. The reviewer's own test run had eight failures and this note refuses to
+     call it a clean pass, even though the failures are unrelated. Why keep
+     three different test counts apart instead of reporting the best one?
+  7. The green continuous-integration run skipped 658 tests. This note says so
+     next to every count. Why would it be dishonest to write "8,710 tests
+     pass" without the skip figure?
+  8. Fifteen test files were recorded as needing future work, and none was
+     touched. Why write the debt down at the moment you create it?
+
+14. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #46, its title, base, head branch,
+     state, merge time and diff totals; the branch commits b59bf8a, 2cc089d,
+     5b32c35, d1977fb, 09e682a and the final head
+     1f5deacda9956504e96acbe577c3438652f9c763; the merge commit
+     441741b6329fdea2053f1f0d536cc53a01bf791c; the continuous-integration
+     conclusions and reported test counts for runs 38176101440 (CI #68,
+     FAILURE), 38176204834 (CI #69), 38211179252 (CI #71) and 38219656598
+     (CI #75); the ABSENCE of any formal review on PR #46 and the ABSENCE of
+     any issue or review comment on it; and the pull-request description, which
+     records the four P2 findings, the reviewer's verified checks and the
+     reviewer's own test figures.
+[S2] docs/evidence/M14_2_1_TIER_FOUNDATION_2026-10-11.md at 441741b — the
+     committed source evidence record for this slice, from which the change
+     inventory, the golden's contents, the leakage test, the seven mutations
+     and their failure counts, the gate results, the re-scoped test files, the
+     fifteen-file inventory, the four findings and their resolutions, and the
+     deferred step-2.3 contract above are taken, together with its own
+     statements of what is not done by design.
+[R1] Reproduced in this session from the technical repository, not taken from
+     a document: that commit b59bf8a changes exactly two files, both under
+     tests/, and nothing under src/; the merge commit's 23-file, +2,173/-72
+     shape and its distribution across src/, tests/ and docs/; the test
+     assertion pinning exactly 42 catalogue entries, every one FREE, and the
+     FREE selection equal to the whole catalogue; and the refusal type and its
+     message for a tier with no versions defined.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt   the design lock whose
+                                                    §24 stops this slice
+                                                    extends, including the
+                                                    new mandatory step-2.3
+                                                    stop
+  SCANCOMPASS_M14_OD1_DECISION_PP_Evidence_2026-10-11.txt  the content lock
+                                                    that specified the ten
+                                                    extended checks this
+                                                    slice makes room for and
+                                                    does not build
+  SCANCOMPASS_M14_OWNER_DECISIONS_H4_M3_M4_PP_Evidence_2026-10-12.txt
+                                                    the owner approvals this
+                                                    slice assumes but relies
+                                                    on none of
+  SCANCOMPASS_M14_Step2.2_PP_Evidence_2026-10-12.txt  the next slice, whose
+                                                    files are disjoint from
+                                                    this one's
+  SCANCOMPASS_M14_Step1_PP_Evidence_2026-10-11.txt    the persistence slice
+                                                    whose migration 0005 this
+                                                    slice does not touch
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/  the production state this
+                                                    slice did not change
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data, raw
+provider payload, host identifier, private target hostname, nameserver address,
+production environment value, production filesystem path, backup identifier,
+email address or server detail appears in this note. No check or probe
+identifier, header name, record name or source file path is reproduced; the
+changed sites in section 3 are described by purpose only, so this note carries
+no scanning recipe. No unsanitised transcript or command output is included;
+the independent review is summarised from the committed record. The only long
+identifiers are Git commit SHAs and GitHub pull-request and workflow-run
+numbers. NO SCREENSHOT ACCOMPANIES THIS NOTE: the slice changed nothing a user
+can see — that is its central claim — and none is invented.
+
+END OF EVIDENCE

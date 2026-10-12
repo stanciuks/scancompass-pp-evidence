@@ -1,0 +1,891 @@
+SCANCOMPASS — M14 STEP 2.2 PERSONAL PROJECT EVIDENCE
+Four additive parsing primitives for the paid profile, reachable from nothing;
+four recorded review rounds, three of which found a way to make a parser do
+unbounded work on a page a hostile target controls, each answered by an
+explicit enforced limit rather than by a promise about timing
+Subject dates: implemented and corrected 12 October 2026; merged 12 October
+               2026
+Evidence written: 12 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M14-2.2 IS IMPLEMENTED IN SOURCE, MERGED AS PR #47 AND OWNER-ACCEPTED. IT IS
+NOT DEPLOYED. It adds four FACT-EXTRACTING PARSING PRIMITIVES and the test
+oracle for the checks that will later consume them. [S1,S2]
+
+THE PRIMITIVES ARE REACHABLE FROM NOTHING. No engine, check, catalogue,
+scoring, enrichment, content, evidence-policy, presentation, worker-protocol,
+route, schema, migration or payment file was changed. A test asserts that NO
+FILE UNDER src/ OUTSIDE THE PRIMITIVES THEMSELVES REFERENCES THEM. They cannot
+run in a scan because nothing calls them. [S2]
+
+NO PRE-EXISTING FREE FUNCTION WAS CHANGED. Every primitive is a NEW EXPORT
+beside the existing one, never a new field on it. No existing export, signature
+or return shape changed, so NO FREE CONSUMER, TEST OR SERIALISATION CAN OBSERVE
+THIS SLICE. [S2]
+
+NOTHING A USER CAN SEE CHANGED, AND NOTHING IS FOR SALE. The ten extended
+checks STILL DO NOT EXIST: this slice builds the parts they will read facts
+from, and the oracle they will be judged against, and not one check module.
+[S2]
+
+NOTHING REACHED PRODUCTION. Migration 0005 remains IN SOURCE ONLY and was NOT
+RUN ANYWHERE. Production still runs the M13 Decision A state carried in the
+earlier accepted record in this repository: schema contract m13-0004, migration
+ledger 0000-0004, payments CLOSED. NO PRODUCTION CONTACT OF ANY KIND — no
+virtual private server, no production database, no Stripe in either mode, no
+web server, no DNS, no firewall, no production configuration file. NO NEW
+NETWORK OPERATION OF ANY KIND WAS ADDED: no HTTP request, DNS lookup, TLS
+handshake, port, method, path or redirect behaviour. [S2]
+
+THE REVIEWS FOUND FIVE SUPER-LINEAR PARSING PATHS IN ALL, AND NO P0 OR P1 AT
+ANY STAGE. The source numbers its own rounds, and the last two it records —
+which it calls the FOURTH and the FIFTH — each found a way for a page a hostile
+target controls to make the parser do unbounded work WHILE THE PRIMITIVE STILL
+REPORTED THAT ABSENCE WAS SAFE TO ASSERT. Both were fixed by CHARGING THE WORK
+WHERE IT IS INCURRED and REFUSING, not by a timeout. [S1,S2,B1]
+
+HOW MANY REVIEWS THERE WERE IN TOTAL IS NOT ESTABLISHED BY ANY SOURCE THIS
+SESSION COULD READ. The committed record describes THREE ROUNDS IN DETAIL and
+numbers two of them the fourth and the fifth, so AT LEAST ONE EARLIER ROUND
+EXISTS WHOSE RECORD IS NOT IN THAT DOCUMENT. A further final review is
+BRIEF-REPORTED. This note therefore counts ROUNDS IT CAN POINT AT — three
+recorded plus one brief-reported — AND DOES NOT ASSERT A TOTAL. [S1,S2,B1]
+
+NO MACHINE-INDEPENDENT WALL-CLOCK OR MEMORY LIMIT WAS PROVEN, AND NONE IS
+CLAIMED ANYWHERE IN THIS NOTE. Every timing and memory figure recorded in the
+source is ONE MACHINE'S OBSERVATION. The limits that ARE enforced are counts:
+scan-step units, attributes per tag, adopted attributes and elements created.
+An earlier claim that the bound was machine-independent was DISPROVEN BY REVIEW
+AND WITHDRAWN. [S2]
+
+THE 658 POSTGRESQL-DEPENDENT TESTS WERE SKIPPED BY ORDINARY CONTINUOUS
+INTEGRATION, NOT PASSED. The figure is identical before and after the slice,
+which touches no persistence code. THEY WERE NOT RUN ANYWHERE FOR THIS SLICE
+AND NO CLAIM IS MADE THAT ANY OF THEM PASSED. [S1,S2]
+
+THE ORACLE IS NOT AN APPROVAL. Its 111 cases are 84 binding, 20 proposed and 7
+blocked on an owner decision. ONLY THE 84 BINDING CASES HAVE SETTLED STATUS
+SEMANTICS. The 20 proposed outcomes are the implementing session's conservative
+reading AND STILL NEED A REVIEWER; 11 of those 20 HAVE NOT BEEN INDEPENDENTLY
+REVIEWED AT ALL. [S1,S2,R1]
+
+FIVE OWNER SEMANTIC DECISIONS REMAIN OPEN and are not decided, implied or
+recommended-into-approval by anything in this note. OD-10, B-6 and the
+sensitive-file review are also open. [S1,S2]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Seven kinds of statement appear in this note and are kept apart throughout.
+
+  SESSION-VERIFIED   Repository, pull-request and continuous-integration state
+                     read directly from the GitHub API while this note was
+                     being written. Marked [S1].
+  SOURCE-RECORDED    Figures taken from the committed source evidence document
+                     or the implementation plan in the technical repository,
+                     READ AT THE MERGE COMMIT. Marked [S2].
+  SESSION-REPRODUCED A fact this session recounted or re-read from the
+                     repository itself rather than accepting a document's word
+                     for it. Marked [R1] and named in place.
+  REVIEW-REPORTED    A finding of one of the independent reviews, as recorded
+                     in the committed evidence document and in the
+                     pull-request description. Attributed in place, WITH THE
+                     ROUND NAMED.
+  BRIEF-REPORTED     A result reported to the session that compiled this note,
+                     in the owner's task specification, which this session
+                     COULD NOT FIND in the repository or on GitHub. Marked
+                     [B1] and labelled as brief-reported wherever it appears.
+  OWNER-DECIDED      A decision of the project owner, named where used. THIS
+                     SLICE TAKES NONE AND DECIDES NONE.
+  HISTORICAL         Production facts carried from an earlier accepted record
+                     in this repository, named where used. M14-2.2 ADDS NONE.
+
+NO FORMAL GITHUB REVIEW WAS SUBMITTED ON PR #47, AND THE PULL REQUEST CARRIES
+NO COMMENTS AT ALL. Both were queried through the GitHub API while this note
+was written: zero formal reviews, zero issue comments, zero review comments.
+EVERY REVIEW ROUND WAS CONDUCTED IN A SEPARATE ASSISTANT SESSION and all are
+recorded only inside the committed evidence document and the pull-request
+description. WHERE THIS NOTE SAYS "REVIEW", THAT IS WHAT IT MEANS, AND NEVER A
+GITHUB APPROVAL. [S1]
+
+NO TEST IN THIS NOTE WAS RUN BY THE SESSION THAT WROTE IT, and none was run by
+the project owner. Every test count is SOURCE-RECORDED, REVIEW-REPORTED,
+CONFIRMED BY CONTINUOUS INTEGRATION or BRIEF-REPORTED — and these are NEVER
+MERGED INTO ONE FIGURE.
+
+EVERY TIMING AND MEMORY FIGURE IN THE SOURCE WAS MEASURED ON A REVIEW VIRTUAL
+MACHINE BY A REVIEWING OR IMPLEMENTING SESSION. This note reports a small
+number of them to show the SHAPE of a hazard, always labelled as one machine's
+observation, NEVER AS A BOUND.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 15.
+
+1. REVIEWED VERSION, PULL REQUEST, MERGE AND CONTINUOUS INTEGRATION
+   (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #47, "feat(m14-2.2): additive parsing primitives for the extended
+              profile (draft, unreachable)"
+Base: main at 7c286da5e1c4ea75ed33aee9f48579c5a3ae2ad4 — the owner-decisions
+      merge (PR #45). THE BRANCH WAS CREATED THERE, BEFORE M14-2.1 MERGED, and
+      was squashed onto main after it.
+Head branch: claude/laughing-maxwell-n8oldr, worked in an isolated worktree
+Reviewed final head: 91e625a4a36d5381c8dd4ef2324915c09c2d8341
+Merged: 2026-10-12 16:33:52 UTC as
+        b219dadc53800b0e53f7ebd8221f3b48beac668d, by squash
+Diff: 20 files changed, 6,825 insertions, ZERO DELETIONS [R1]
+
+THE ZERO-DELETION DIFF IS ITSELF THE CENTRAL EVIDENCE OF ADDITIVITY, and this
+session re-read it from the merge commit rather than taking the record's word
+for it. 20 files, 6,825 insertions, 0 deletions: THREE NEW SOURCE MODULES and
+ONE EXISTING MODULE APPENDED TO, THIRTEEN new test files, one new fixture file
+and two new documents. NOT ONE EXISTING LINE WAS REMOVED OR ALTERED. [R1]
+
+CONTINUOUS INTEGRATION ON THE REVIEWED FINAL HEAD: run 38252982557 (CI #78),
+event pull_request, SUCCESS. The run is on the PULL-REQUEST MERGE REFERENCE,
+that is the branch combined with main at 441741b, so it tested the slice
+TOGETHER WITH the already-merged M14-2.1. Reported: 9,130 passed, 0 failed,
+658 skipped, of 9,788 across 1,604 suites. Typecheck, lint, the whitespace
+gate, the build and the clean-tree check all green. [S1,S2]
+
+Post-merge continuous integration on the merge commit
+b219dadc53800b0e53f7ebd8221f3b48beac668d: run 38278276312 (CI #79), event
+push, SUCCESS. [S1]
+
+TWO EARLIER RUNS, BOTH SESSION-VERIFIED, ARE RECORDED BECAUSE ONE OF THEM
+FAILED:
+
+  d470445  the first implementation push. Run 38211259875 (CI #72), FAILURE at
+           the whole-tree whitespace gate — A TRAILING BLANK LINE IN A TEST
+           FILE. NO TESTS RAN. Section 6 records why the local gate had missed
+           it.
+  927f195  the whitespace fix plus the adversarial audit. Run 38211624100
+           (CI #73), SUCCESS, 8,913 passed, 0 failed, 658 skipped.
+
+THE PULL REQUEST'S OWN DESCRIPTION SAYS "DO NOT MERGE ON THE STRENGTH OF CI
+ALONE" and requires a final independent review and an owner merge. [S1]
+
+WHAT THE GREEN RUN DOES AND DOES NOT PROVE. It proves the suite, the type
+checker, the linter, the whitespace gate and the build are green WITH THIS
+SLICE COMBINED WITH CURRENT MAIN, and that the FREE invariance pins hold. IT
+PROVES NOTHING ABOUT TIMING OR MEMORY, because every assertion in the limit
+tests is on a REFUSAL REASON, NEVER ON ELAPSED TIME. It is also not evidence
+that any real-database proof ran: 658 tests were SKIPPED. [S1,S2]
+
+2. WHAT M14-2.2 IS, AND WHAT IT IS NOT
+
+IT IS four primitives that turn bytes a target served into BOUNDED, CLOSED-TOKEN
+FACTS, plus the test oracle for the ten checks that will read them. [S2]
+
+IT IS NOT a check, a status, a severity or a conclusion. The record states the
+design rule plainly: NO STATUS, SEVERITY OR REASON TOKEN EXISTS IN ANY TYPE
+THIS SLICE DEFINES. The names say "facts". A check decides; a primitive
+reports. [S2]
+
+IT IS NOT reachable. See the status block and section 5. [S2]
+
+IT IS NOT a change to the free scan. Section 4 is the proof, and section 10
+records four things the reviews MEASURED about the existing free scan AND
+DELIBERATELY DID NOT FIX, because fixing them would move free output bytes.
+[S2]
+
+3. THE FOUR PRIMITIVES, AND THE CONFIDENTIALITY BOUNDARY
+   (SOURCE-RECORDED) [S2]
+
+Each is described by PURPOSE ONLY. No check identifier, header name, record
+name, directive name or source path is reproduced in this note.
+
+  HTML DOCUMENT FACTS. Parses a document and reports what it saw: the frozen
+  base in effect, scripts and their integrity metadata, active subresource
+  references counted BY KIND, forms and their submission targets and
+  ownership, and any policy delivered by markup rather than by a header. It
+  reports COMPLETENESS as a first-class fact, not as an afterthought.
+  FORM-POINTER PARSING. A second entry point that runs the parser while
+  recording, at the moment each element is created, which form the parser
+  itself considered that element to belong to. Section 7 is why this exists.
+  POLICY HEADER FACTS. Reads the security policy a server sent as headers and
+  reports the dispositions SEPARATELY AND WITHOUT EVER MERGING THEM, with
+  per-disposition counts and the presence or absence of the two directives that
+  bear on insecure subresources, plus a bound-reached flag.
+  REGISTRY AND MAIL-REPORTING FACTS. Reads the registry response's signing
+  declaration as an OWN MEMBER ONLY, NEVER COERCING A TYPE, and reads the mail
+  policy record's two reporting tags under explicit bounds.
+
+THE CONFIDENTIALITY BOUNDARY IS THE STRICTEST PART OF THE DESIGN, AND IT IS
+TESTED, NOT ASSERTED. Every reference is resolved and then REDUCED TO A SCHEME
+TOKEN AND A HOSTNAME. The record states that NO PATH, QUERY, FRAGMENT, FIELD
+NAME, FIELD VALUE OR PAGE TEXT HAS A REPRESENTATION IN ANY OUTPUT TYPE, and
+that the mail-reporting output CARRIES NO DESTINATION AT ALL. A dedicated test
+file drives a canary page, a canary record and a canary registry body through
+every primitive and asserts that every string in every fact is EITHER A CLOSED
+TOKEN OR A HOSTNAME, and that no path, query, fragment, field name, field
+value, page text or destination appears anywhere. The ten extended check
+identifiers are confirmed UNCATALOGUED AND WITHOUT AN EVIDENCE-POLICY ENTRY, so
+both retention projections keep nothing even if a fact were produced. [S2]
+
+A LIMITATION THE REVIEWS CORRECTED, RECORDED HERE AS CORRECTED. The original
+no-network guarantee was a RUNTIME TRIPWIRE on network entry points. A review
+found that a tripwire CANNOT INTERCEPT ES-MODULE NAMED IMPORTS OR EVERY
+RESOLVER ENTRY POINT. THE CLAIM WAS NARROWED, NOT DEFENDED: the binding
+guarantee is now STATIC — an import allowlist plus a forbidden-pattern scan for
+dynamic code loading, each with a NON-VACUITY PROBE so the scan cannot silently
+match nothing. The tripwire is kept as defence in depth. The record states
+plainly that the static scan IS A HEURISTIC. [S2]
+
+4. FREE INVARIANCE: THE DIGESTS WERE PINNED BEFORE ANY SOURCE CHANGED
+   (SOURCE-RECORDED, PARTLY SESSION-REPRODUCED) [S2,R1]
+
+THE BASELINE COMMIT e35596e IS TEST-ONLY. This session confirmed it changes
+EXACTLY ONE FILE, a test file, and NOTHING UNDER src/. It was written and run
+against the unmodified base, with the source diff empty, and committed ALONE —
+before any primitive existed. THE SAME UNCHANGED FILE then runs against the
+implementation. It was NEVER MODIFIED after that commit, through every round of
+corrections. [R1,S2]
+
+It pins SEVEN SHA-256 DIGESTS over a corpus built for exactly the inputs these
+primitives care about — bodies either side of the parser cap, forms, scripts
+with and without integrity metadata, insecure references, multiple policy
+headers including comma-joined ones, mail records with awkward tags, and
+registry bodies with varying signing declarations. The seven cover: the
+existing HTML metadata extraction; two exposure checks across both truncation
+states; the existing policy assessment and its three dependent checks; the
+existing mail record parse; the existing registry parse; THE WHOLE FREE SCAN
+RESULT AND ITS REQUEST LIST; and the shared rich public report. [S2]
+
+ONE DIGEST IS CORROBORATED BY A PIN NOBODY INVOLVED IN THIS SLICE WROTE. The
+public-report digest is IDENTICAL to two independent pins that already existed
+in unrelated test files. That is the one FREE-invariance figure in this slice
+not resting solely on a file the implementing session authored. [S2]
+
+Determinism was checked by running the digest computation twice at the base.
+Every existing FREE suite passes WITH NO EXPECTATION CHANGED, and the record
+notes the structural reason: THE DIFF TOUCHES NO FILE UNDER tests/ OUTSIDE THE
+NEW DIRECTORY — which this session confirmed from the merge diff. [R1,S2]
+
+THE TWO TRUNCATION FACTS ARE KEPT APART, AND THAT DISTINCTION IS THE SLICE'S
+MOST IMPORTANT SINGLE DESIGN DECISION. There are two different ways a document
+can be incomplete and they are NOT THE SAME FACT:
+
+  THE TRANSPORT'S TRUNCATION — the caller's statement that the body it handed
+  over was cut short in transit. It is a REQUIRED INPUT to the primitive, so a
+  caller CANNOT FORGET TO PASS IT.
+  THE PARSER'S TRUNCATION — the primitive's own statement that the body
+  exceeded the 128 KiB parse cap and only a prefix was examined. It is computed
+  by the primitive and recorded BESIDE the transport's fact, never folded into
+  it.
+
+A SEPARATE FACT, NARROWLY DEFINED, SAYS WHETHER ABSENCE MAY BE ASSERTED AT ALL:
+it is true only when the document parsed, NEITHER truncation applies, the
+encoding is supported AND the parse did not hit its work budget. The record is
+explicit that the bare "it parsed" fact KEEPS ITS NARROW MEANING AND IS NEVER A
+COMPLETENESS SIGNAL, because A SUCCESSFUL PARSE OF AN INCOMPLETE DOCUMENT IS
+NOT EVIDENCE OF ABSENCE. In the other direction, POSITIVE FACTS COUNTED IN THE
+PARSED PREFIX STAND WHATEVER EITHER FLAG SAYS: truncation never erases an
+observed defect. [S2]
+
+5. UNREACHABILITY, AND WHY IT IS A TEST RATHER THAN A CLAIM
+   (SOURCE-RECORDED) [S2]
+
+The record states, and a test asserts, that NO FILE UNDER src/ OUTSIDE THE NEW
+PARSING MODULES REFERENCES THE NEW PRIMITIVES. The fixture oracle is DATA ONLY
+AND IMPORTED BY NO SOURCE FILE, also asserted. The existing architectural
+boundary tests apply automatically to the new modules: no raw networking
+import, no global network entry point, and the scanner's dependency allowlist.
+[S2]
+
+THIS IS WHY A DRAFT OF THIS SIZE COULD BE MERGED AT ALL. 6,825 inserted lines
+that nothing can call cannot change a single customer's report. The pull
+request's own title records the state: draft, unreachable. [S1]
+
+6. GATES, TEST COUNTS, AND THE ONE DEFECT CONTINUOUS INTEGRATION CAUGHT
+   [S1,S2]
+
+GATE RESULTS AT THE REVIEWED FINAL HEAD, as recorded and as confirmed by
+continuous integration where marked:
+
+  whole-tree whitespace gate, typecheck, lint, build, clean tree   all clean
+  full suite at the final head, LOCAL                 9,097 passed, 0 failed,
+                                                      658 skipped
+  full suite on a TEMPORARY NON-COMMITTING MERGE into
+  main at 441741b, LOCAL                              9,130 passed, 0 failed,
+                                                      658 skipped
+  CONTINUOUS INTEGRATION on the merge reference       9,130 passed, 0 failed,
+  (run 38252982557) [S1]                              658 skipped, of 9,788
+  FREE invariance at the final head                   all seven digests equal
+                                                      the base pins, in a file
+                                                      unchanged since e35596e
+  M14-2.1's own FREE golden, profile-tier guard,
+  tier-leakage and evidence-policy suites, on the
+  merged tree                                         all pass
+
+THE 9,097-VERSUS-9,130 DIFFERENCE IS NOT A DISCREPANCY: the smaller figure is
+the branch alone, the larger is the branch combined with the already-merged
+M14-2.1. BOTH ARE RECORDED RATHER THAN THE LARGER ALONE. The local and
+continuous-integration figures for the merged shape AGREE EXACTLY, which is the
+strongest corroboration available here. [S1,S2]
+
+THE NEW PARSING SUITE HOLDS 393 TESTS at the final head, across THIRTEEN
+files.
+The source record carries the per-file breakdown and explicitly states that the
+earlier count of 373 IS SUPERSEDED — superseded figures are marked, not
+deleted. [S2]
+
+THE DEFECT CONTINUOUS INTEGRATION CAUGHT, AND WHY THE LOCAL GATE MISSED IT. The
+first push failed the whole-tree whitespace gate on a trailing blank line. The
+recorded cause is exact and instructive: THE LOCAL GATE HAD BEEN RUN WHILE THE
+NEW FILES WERE STILL UNTRACKED, SO IT COULD NOT SEE THEM. It was reproduced
+locally with the exact command, fixed in its own commit, and the local gate now
+runs that exact command against the committed head. A SECOND, SEPARATE AUDIT
+FOUND A REAL CORRECTNESS DEFECT IN THE SAME ROUND: enumerated markup attributes
+were being whitespace-trimmed. The record states what that would have cost —
+TRIMMING WOULD HAVE INVENTED PASSWORD FIELDS, INFLATING A FUTURE SEVERITY, AND
+INVENTED NON-SUBMITTING FORMS, HIDING AN INSECURE TARGET. Fixed, with tests.
+[S2]
+
+ONE UNRELATED TEST IS RECORDED AS FLAKY AND EXPLICITLY NOT CLAIMED FIXED. An
+instrumentation test failed once in a full run on this tree and once in an
+isolated run on the merged tree, passing otherwise. The record states that
+NEITHER THIS SLICE NOR M14-2.1 TOUCHES THAT FILE OR THE CODE IT TESTS, that it
+is a PRE-EXISTING TIMING SENSITIVITY, and that it was NOT INVESTIGATED, NOT
+FIXED AND NOT CLAIMED FIXED. [S2]
+
+7. FORM OWNERSHIP: WHAT A BROWSER ACTUALLY DOES, AND THE LIMITS OF PROVING IT
+   [S2]
+
+WHY IT MATTERS. Whether a password field belongs to a form with an insecure
+target is the difference between a serious finding and nothing at all. A
+TREE WALK GETS THIS WRONG ON REAL LEGACY PAGES, because the HTML standard
+associates a control with the form the PARSER had open when the control was
+created — which, on mis-nested markup, is NOT its ancestor in the resulting
+tree.
+
+THE FIRST REVIEW ROUND FOUND EXACTLY THIS. Two layouts were named: a form
+inside a table, and a form closed by a stray tag mid-structure. On both, a
+purely structural reading MISSES THE ASSOCIATION a browser would make.
+
+THE FIX READS THE PARSER'S OWN ASSOCIATION AT THE MOMENT OF ELEMENT CREATION,
+which is where the standard's association step sits. The precedence is: an
+explicit owner attribute, resolved with the standard's own
+first-element-with-that-identifier rule AND REQUIRING THAT ELEMENT TO BE A
+FORM; then the parser's pointer; then the nearest ancestor. NO OWNERSHIP IS
+EVER INFERRED FROM AN UNRELATED PASSWORD FIELD. [S2]
+
+IT FAILS CLOSED. The hook reads members of the exactly pinned parser library
+that are documented as internal. A RUNTIME SHAPE CHECK MEANS THAT IF THE
+LIBRARY STOPS EXPOSING THEM, EXTRACTION RETURNS "NOT PARSED" RATHER THAN A
+WRONG ANSWER, and that path is tested by mocking a pointer-less parser. [S2]
+
+HOW BROWSER EQUIVALENCE WAS TESTED, AND EXACTLY WHAT THAT DOES AND DOES NOT
+ESTABLISH. The tree the recording parser produces is ASSERTED IDENTICAL TO THE
+LIBRARY'S ORDINARY PARSE ACROSS NINE DOCUMENTS, by serialisation. A dedicated
+49-test file covers both review layouts, the clearing of the pointer, pointer-
+associated overrides, a mis-nested second form, inert template content, two
+unrelated-password cases and four owner-attribute cases including duplicate
+identifiers.
+
+THE SCOPE LIMITATION IS STATED PLAINLY AND MUST NOT BE OVERSTATED: THIS IS
+EQUIVALENCE TO ONE PARSER LIBRARY'S IMPLEMENTATION OF THE STANDARD, NOT TO ANY
+SHIPPING BROWSER. NO BROWSER WAS RUN. The record goes further and names a
+divergence it knows about: the library implements the standard's control model
+for selection elements, not a current browser engine's newer model, so facts
+about controls placed inside a selection element CAN DIFFER FROM THAT BROWSER.
+It also records that the specification hosts WERE UNREACHABLE from the
+container during the correction rounds, so NO SPECIFICATION TEXT WAS RE-READ
+and the standards statements are the author's knowledge, NOT INDEPENDENTLY
+VERIFIED. ONE OPEN OWNER DECISION IS LEFT OPEN FOR PRECISELY THAT REASON. [S2]
+
+A CORRECTION THAT WENT AGAINST THE PROJECT'S INTEREST IS RECORDED AS SUCH. The
+first reading treated a form whose buttons all override an insecure target as
+safe. The review corrected it: A SCRIPT CAN SUBMIT THE FORM DIRECTLY AND REACH
+THE FORM'S OWN INSECURE TARGET WHATEVER THE BUTTONS SAY. The primitive's
+reachability fact was redefined to mean "reachable by any path", the narrower
+user-activation reading was kept beside it, and THE ORACLE ROW MOVED FROM PASS
+TO A HIGH-SEVERITY FAILURE. [S2]
+
+8. POLICY, REGISTRY AND MAIL FACTS: THE CONSERVATIVE DIRECTION, CHOSEN
+   DELIBERATELY (SOURCE-RECORDED) [S2]
+
+  MULTIPLE POLICIES IN ONE HEADER FIELD ARE READ AS MULTIPLE POLICIES. The
+  primitive splits a header field into a policy list on separators outside
+  quotes and follows the standard's parse rule for each. THIS IS THE SINGLE
+  BEHAVIOUR THE EXISTING FREE CODE GETS WRONG, and section 10 records that as
+  a measured finding left unfixed.
+  THE TWO DISPOSITIONS ARE KEPT APART AND NEVER MERGED. Enforced and
+  report-only are separate structures with separate counts. A report-only
+  policy must never be credited as protection, and the type system makes
+  merging them impossible rather than merely discouraged.
+  A DIRECTIVE THAT TAKES NO VALUE BUT CARRIES ONE IS RECORDED AS PRESENT-WITH-
+  A-VALUE AND IS NOT CREDITED AS PRESENT. The recorded reason is the right
+  one: CREDITING A MALFORMED DIRECTIVE COULD ONLY SOFTEN A DOWNSTREAM FINDING.
+  Whether a browser honours such a directive COULD NOT BE VERIFIED and IS NOT
+  ASSERTED EITHER WAY; it is one of the five open owner decisions.
+  POLICY DELIVERED BY MARKUP IS RECORDED AND NEVER APPLIED. The facts include
+  how many such policies there are, how many are in the document head, and how
+  many active references occur BEFORE the first one — because a policy
+  delivered partway down a document CANNOT REACH WHAT THE BROWSER ALREADY
+  FETCHED. Whether it may soften a finding is an OPEN OWNER DECISION, and the
+  primitive takes neither side.
+  THE REGISTRY'S SIGNING DECLARATION IS READ AS AN OWN MEMBER ONLY, AND TYPES
+  ARE NEVER COERCED: a string that merely looks like a boolean is MALFORMED,
+  not true. A declaration of "not signed" accompanied by signing data —
+  WELL-FORMED OR MALFORMED — is CONTRADICTORY, because data that might be
+  signing data is never read as "none". NO KEY MATERIAL, DIGEST, TAG OR
+  ALGORITHM IS RETAINED, and a fact recording that the result is NOT
+  INDEPENDENTLY VALIDATED travels with every value.
+  THE MAIL REPORTING TAGS ARE BOUNDED AT EVERY LEVEL and the output CARRIES NO
+  DESTINATION. Tag names are matched case-insensitively IDENTICALLY TO THE
+  EXISTING FREE PARSER, so the two CANNOT DISAGREE ABOUT WHICH TAG EXISTS — an
+  internal-consistency property chosen on purpose. A REPEATED TAG IS RECORDED
+  AS DUPLICATE AND NO OCCURRENCE IS CHOSEN.
+
+EVERY LIST AND HOST SET IS BOUNDED, AND EVERY BOUND SETS AN EXPLICIT FLAG. The
+rule the record gives is the one that matters: A BOUND MUST NEVER SILENTLY
+BECOME AN ABSENCE. Totals stay exact even where retained detail is capped. A
+review round found that THREE HOST SETS AND ONE PER-FORM OVERRIDE LIST HAD NO
+SUCH FLAG, and all four were added. A later round added the same treatment to
+a markup-delivered policy hitting its directive cap. [S2]
+
+9. THE REVIEW ROUNDS, AND FIVE WAYS TO MAKE A PARSER WORK WITHOUT BOUND
+   [S1,S2,B1]
+
+THIS IS THE CENTRAL ENGINEERING NARRATIVE OF THE SLICE. A parser that runs on
+bytes a hostile target chose is an attack surface, and SUCCESSIVE REVIEWS EACH
+FOUND A WAY PAST THE PREVIOUS ROUND'S DEFENCE. Every fix is an ENFORCED COUNT,
+CHARGED BEFORE THE WORK RUNS; not one is a timeout.
+
+The rounds below are numbered AS THIS NOTE ENCOUNTERS THEM IN THE RECORD, and
+the source's own numbering is given where it differs. See the status block: the
+total number of reviews is not established.
+
+ROUND 1 AS RECORDED — THE REVIEW OF THE FIRST EVIDENCE HEAD. Verdict CORRECT,
+no P0 and no P1. It found the form-ownership defect of section 7 and, as a
+second P2, that
+the plan promised ONE SHARED PARSE but the slice had added a THIRD, UNBUDGETED
+ONE — and that A DEADLINE CANNOT INTERRUPT A SYNCHRONOUS PARSE. The answer was
+a WORK BUDGET ENFORCED INSIDE THE PARSER: every token charged, BEFORE the
+parser processes it, by a formula bounding the scans it can cause, and the
+parse STOPPING at a 32,000,000-unit budget. A stopped parse KEEPS THE TREE
+BUILT SO FAR, so positive facts stand, and SETS THE FLAG THAT MAKES ABSENCE
+UNASSERTABLE. It also found the inaccurate free-policy claim of section 10, and
+several P3 items including the whitespace-truncation rule, an unsupported
+encoding gate and the missing bound flags. [S2]
+
+ROUND 2 AS RECORDED, WHICH THE SOURCE CALLS THE FOURTH INDEPENDENT REVIEW. IT
+DISPROVED THE PREVIOUS ROUND'S CLAIM DIRECTLY. Inputs that all FIT INSIDE THE
+128 KiB CAP ran for SECONDS WITH NO LIMIT TRIGGERED AND STILL REPORTED THAT
+ABSENCE WAS ASSERTABLE — the worst possible combination, a false statement of
+completeness. The reviewer's and
+the session's own figures were in the SECONDS range for repeated root tags
+carrying attributes and for a single tag carrying tens of thousands of
+attributes. The round also found a defect IN THIS SLICE'S OWN CODE: AN
+ANCHORED-ALTERNATION TRIM EXPRESSION THAT BACKTRACKS QUADRATICALLY, around 14
+seconds on a long whitespace run.
+
+THE ROOT CAUSES WERE FOUR DISTINCT UNCHARGED COSTS INSIDE THE PINNED PARSER
+LIBRARY — a per-attribute linear scan in the tokeniser, BELOW the level any
+tree-builder hook could see; an attribute-adoption step that rebuilds a set on
+every repetition; child-location scans during misplaced-content handling; and
+a comparison step whose cost the per-token charge had no attribute term for.
+
+THE FIX CHARGES AND CAPS EACH WHERE IT IS INCURRED: at most 256 ATTRIBUTE NAMES
+PER TAG, refused BEFORE the library's own scan runs; at most 256 ADOPTED
+ATTRIBUTES; child-list scans charged into the shared budget; the per-token
+charge extended with the token's attribute count; and THE BACKTRACKING
+EXPRESSIONS REPLACED WITH LINEAR TRIMMING, with a static test — carrying a
+non-vacuity probe — asserting no parsing module uses the old form.
+
+THE WITHDRAWN CLAIMS ARE STRUCK THROUGH IN THE SOURCE, NOT DELETED. The record
+explicitly strikes "every adversarial workload is refused in under about half a
+second" and "the bound is machine-independent", and it CORRECTS AN EARLIER
+COMMIT MESSAGE whose timing figure was measured at an interim budget setting.
+[S2]
+
+ROUND 3 AS RECORDED, WHICH THE SOURCE CALLS THE FIFTH INDEPENDENT REVIEW AND
+WHICH IS THE SUBTLEST OF THEM. A document
+of about 131,000 bytes — a form with an insecure target, then 31 unclosed
+formatting tags each carrying 255 attributes, then a short paragraph repeated to
+fill the cap — PARSED WITHOUT REACHING ANY LIMIT AND REPORTED ABSENCE AS
+ASSERTABLE. Each paragraph closes the open formatting elements, and the next
+character makes the tree builder RECONSTRUCT them: 31 new elements per
+paragraph, about 26,000 times, for ABOUT 802,000 ELEMENTS.
+
+THE ROOT CAUSE IS EXACTLY THE KIND OF THING A PREVIOUS FIX HIDES. The per-token
+charge bounded the library's SCANS but not the NUMBER OF ELEMENTS THE TREE
+BUILDER CREATES, and each reconstructed copy REUSES THE ORIGINAL TOKEN'S
+ATTRIBUTE ARRAY — so the attributes cost memory references and every later
+walk, WITHOUT BEING RE-TOKENISED AND THEREFORE WITHOUT BEING CHARGED. The
+post-parse walk, which is linear in the GENERATED tree, then visited about
+800,000 elements and roughly 200,000,000 attribute references. One machine's
+observation on the reproduction: about 1.7 seconds and a few hundred megabytes
+of additional resident memory, WITH NO LIMIT REACHED.
+
+THE FIX CHARGES ELEMENT CREATION AND CAPS IT. A wrapper on the single element-
+creation path — THE ONE PATH EVERY ELEMENT GOES THROUGH, whether from a token,
+an implied element, formatting reconstruction, an adoption clone or foreign
+content — refuses once 100,000 ELEMENTS EXIST, and otherwise charges one unit
+PLUS THE ELEMENT'S ATTRIBUTE COUNT into the shared budget. It FAILS CLOSED: if
+the budget is not initialised when creation first runs, extraction returns "not
+parsed".
+
+WHY THE REVIEWER'S OWN PROPOSED FIX WAS MEASURED AND FOUND INSUFFICIENT, AND
+WHY RECORDING THAT MATTERS. The reviewer suggested charging per element with no
+cap. That candidate was APPLIED IN A DISPOSABLE WORKTREE AND MEASURED. It does
+reach the budget on every variant — BUT ONLY AFTER BUILDING BETWEEN ABOUT
+110,000 AND ABOUT 780,000 ELEMENTS, because ONE UNIT PER ELEMENT IS TOO CHEAP
+FOR A 32-MILLION-UNIT BUDGET TO BOUND A TREE. The zero-attribute case built
+almost the entire unbounded tree. THE EXPLICIT CAP WAS THEREFORE NECESSARY, AND
+WITH IT EVERY VARIANT STOPS AT EXACTLY 100,000. A reviewer's remedy was tested
+rather than adopted on authority. [S2]
+
+A MUTATION CHECK, RUN IN A DISPOSABLE WORKTREE AND REMOVED AFTERWARDS, PROVES
+BOTH HALVES ARE LOAD-BEARING: with 20 of 20 reconstruction tests passing as a
+control, REMOVING THE CHARGE FAILS 8 TESTS and REMOVING THE CAP — that is,
+reverting to the reviewer's candidate — FAILS 10. [S2]
+
+ROUND 4 — THE FINAL INDEPENDENT REVIEW OF THE EXACT MERGED HEAD.
+BRIEF-REPORTED [B1]. The owner's task specification for this synchronisation
+states that a final independent review of the reviewed final head
+91e625a4a36d5381c8dd4ef2324915c09c2d8341 returned MERGE, WITH NO P0, P1 OR P2
+AT THAT HEAD, and that it carried out an ADVERSARIAL VERIFICATION AGAINST THAT
+EXACT HEAD. THIS SESSION COULD NOT FIND THAT REVIEW IN THE REPOSITORY OR ON
+GITHUB — PR #47 carries no comments, and the committed evidence document ends
+with the round-3 fix. IT IS RECORDED HERE AS BRIEF-REPORTED, NOT AS VERIFIED.
+
+TWO NONBLOCKING P3 OBSERVATIONS FROM THAT FINAL ROUND, ALSO BRIEF-REPORTED
+[B1], ARE RECORDED BECAUSE BOTH ARE LIMITATIONS RATHER THAN DEFECTS:
+
+  1. SOME LEGITIMATE MISNESTED LEGACY PAGES ARE CONSERVATIVELY TREATED AS
+     UNKNOWN. This is the accepted cost of the limits, and it is the SAFE
+     direction: unknown, never a false absence.
+  2. THE ATTRIBUTE WEIGHT IN THE ELEMENT CHARGE HAS NO DIRECT MUTATION-CATCHING
+     TEST. The charge is one unit plus the attribute count; the mutation check
+     above proves the CHARGE and the CAP are load-bearing, but NOT THAT THE
+     ATTRIBUTE TERM SPECIFICALLY IS. A real gap in the test evidence, NAMED
+     RATHER THAN CLOSED.
+
+WHAT THE ROUNDS ESTABLISH, AND WHAT THEY DO NOT. 27 tests pin the
+attribute and tree-work refusals and 20 pin the reconstruction refusals, and
+EVERY ASSERTION IS ON A REFUSAL REASON OR ON WHETHER ABSENCE MAY BE ASSERTED —
+NEVER ON ELAPSED TIME. The record states the residual limitation in terms this
+note will not soften: THIS WAS THE FIFTH SUPER-LINEAR PATH THE REVIEWS FOUND;
+"NO OTHER PATH EXISTS" IS A REVIEW RESULT, NOT A PROOF; the hooks depend on
+internals of the EXACTLY PINNED library, so AN UPGRADE RE-OPENS THE WHOLE
+ANALYSIS, which is written into the plan as a requirement; per-unit cost is
+machine- and operation-dependent; and A GENUINELY PREEMPTIVE BOUND WOULD STILL
+NEED AN ISOLATED WORKER THREAD THAT CAN BE TERMINATED. [S2]
+
+THE ACCEPTED TRADE-OFF IS RECORDED AS PRE-EXISTING, NOT AS CAUSED BY THE LAST
+FIX: content placed inside twenty or more levels of nested layout tables
+exceeds the work budget and yields UNKNOWN, because table-cell markers count in
+the charge's multiplier. The record shows it is IDENTICAL BEFORE AND AFTER the
+fix, bounds the behaviour by probe, and states that a more precise charge is
+NOT PROPOSED WITHOUT ITS OWN ADVERSARIAL REVIEW. Legitimate pages measured
+between about 6,200 and about 32,800 elements, the largest being A THIRD OF THE
+CAP. [S2]
+
+10. FOUR MEASURED FINDINGS ABOUT THE EXISTING FREE SCAN, DELIBERATELY NOT
+    FIXED [S2]
+
+The reviews measured four pre-existing defects in the FREE path. NOT ONE WAS
+CHANGED, because each would MOVE FREE OUTPUT BYTES for affected inputs and
+therefore needs its own pull request, its own golden revision and the owner's
+approval. THEY ARE NOT M14 WORK. Described by effect only:
+
+  M1 — A TRUNCATION HAZARD GIVES A FALSE PASS. A check returns a pass when it
+  finds no disclosure and the transport did not truncate — but the parser
+  examines only the first 128 KiB, so a page between 128 KiB and the transport
+  limit whose disclosure lies PAST THE CAP IS SCORED AS A PASS. Reproduced
+  independently: the same markup passes in a large page and fails in a small
+  one. A FALSE PASS IS THE WORST DIRECTION FOR A SECURITY REPORT TO ERR IN.
+  M2 — A PARSER FAILURE LOSES THREE RESULTS AND MISATTRIBUTES A FOURTH. The
+  existing recursive walk overflows on deeply nested markup, and the four-check
+  exposure group is wrapped under A SINGLE IDENTIFIER, so the failure yields
+  ONE misattributed error result and THREE CHECKS SILENTLY ABSENT.
+  Independently reproduced: 39 results instead of 42. The effect is confined to
+  THE HOSTILE TARGET'S OWN REPORT — no cross-tenant and no network effect.
+  M3 — THE EXISTING PARSE IS SUPER-LINEAR ON NESTING, AND ATTRIBUTE-DRIVEN
+  INPUT COSTS SECONDS. Whole free scans of nested and attribute-heavy documents
+  were measured in the SECONDS range on the review machine. A round-1 estimate
+  of roughly twelve seconds per scan WAS CORRECTED DOWNWARD and the reason
+  recorded: on those documents the second parse NEVER RUNS, because M2's
+  overflow aborts the group first. The record then draws the dependency that
+  matters: M2 AND M3 MUST BE FIXED TOGETHER, because an iterative walk WITHOUT
+  a bounded parse would let both parses run and ROUGHLY DOUBLE THE WORST CASE.
+  M4 — A COMMA-JOINED POLICY FIELD IS MISREAD IN BOTH DIRECTIONS. The existing
+  assessment reads one header field as one policy. Round 1 recorded this as
+  "conservative"; THE REVIEW DISPROVED THAT AND THE CLAIM WAS CORRECTED. A
+  counterexample in each direction is now pinned as a measured hazard: one
+  where the existing code OVER-reports, and one where it UNDER-reports and
+  yields A FALSE PASS. Only fields comma-joined WITHIN ONE HEADER FIELD are
+  affected; the transport keeps separate header fields separate.
+
+ALL FOUR ARE OPEN FREE-PATH FINDINGS, OUTSIDE M14, AND NONE IS SCHEDULED BY
+ANYTHING IN THIS NOTE. [S2]
+
+11. THE ORACLE: 111 CASES, OF WHICH 84 BIND (SESSION-REPRODUCED) [R1,S2]
+
+A fixture holds the expected outcomes for the ten extended checks. It is DATA
+ONLY, IMPORTED BY NO SOURCE FILE. Its composition at the merged head:
+
+  84  MEMO             the decision memo's own table states this outcome for
+                       this situation. THESE ARE THE ONLY BINDING ROWS AND THE
+                       ONLY ONES WITH SETTLED STATUS SEMANTICS.
+  20  PROPOSED         the memo does not state the outcome. These are the
+                       implementing session's CONSERVATIVE READING and MUST BE
+                       CONFIRMED BY THE REVIEWER OF THE CHECK MODULES. Of the
+                       20: 7 were marked supported by a review, 2 were
+                       CORRECTED BY REVIEW, and 11 WERE ADDED AFTER THE REVIEW
+                       AND HAVE NOT BEEN INDEPENDENTLY REVIEWED AT ALL.
+   7  OWNER_DECISION   blocked on one of the five open owner semantic choices.
+                       EACH CARRIES NO STATUS FIELD AT ALL — asserted by test —
+                       so it CANNOT BE ACCIDENTALLY COMPARED with a check's
+                       output and read as approved.
+ 111  total
+
+THIS SESSION REPRODUCED THE COMPOSITION FROM THE FIXTURE ITSELF rather than
+accepting the document's figure: 70 literal binding cases plus 14 produced by a
+generator invoked twice is 84 binding, with 20 proposed and 7 owner-decision
+cases, totalling 111. The test that pins this asserts the exact composition
+INCLUDING THE 7, 2 AND 11 BREAKDOWN OF THE PROPOSED ROWS, and that assertion
+PASSED IN THE VERIFIED CONTINUOUS-INTEGRATION RUN on the reviewed head. [R1,S1]
+
+A SEPARATE EXPORT ISOLATES THE BINDING ROWS, so a later check module cannot be
+judged against an unapproved expectation by accident. Of the 111, the record
+states that at least 40 are FACT-BACKED AND REPRODUCED BY THE REAL PRIMITIVES
+— the oracle is partly checked against the code that will feed it, not merely
+written down. [S2]
+
+TWO ROWS WERE CORRECTED BY REVIEW and both corrections made the expectation
+STRICTER, not more convenient: the all-buttons-overridden form became a
+high-severity failure, and the table-wrapped password form's high-severity
+failure now follows FROM PARSER OWNERSHIP rather than from an unrelated unowned
+field — the same verdict ON A SOUND BASIS INSTEAD OF A HEURISTIC. A verdict
+reached for the wrong reason was treated as a defect. [S2]
+
+12. THE FIVE OPEN OWNER SEMANTIC DECISIONS — NOT DECIDED, NOT IMPLIED
+    [S1,S2]
+
+The primitives RECORD THE FACTS EACH ANSWER WOULD NEED and DECIDE NONE OF THEM.
+Described by subject only:
+
+  1. WHETHER A POLICY DELIVERED BY MARKUP, RATHER THAN BY A HEADER, MAY SOFTEN
+     AN INSECURE-SUBRESOURCE FINDING. The memo's rule names only the enforced
+     header. The facts available include how many such policies are in the
+     document head and HOW MANY ACTIVE REFERENCES OCCUR BEFORE THE FIRST ONE.
+  2. WHICH EMBEDDED-CONTENT KINDS COUNT AS ACTIVE. The memo's question lists
+     three; three more are counted SEPARATELY so either answer is a one-line
+     filter later.
+  3. WHETHER UNRECOGNISABLE INTEGRITY METADATA COUNTS AS HAVING NONE, with a
+     related smaller question about the cross-origin attribute such metadata
+     also requires. The record notes the real-world nuance: without that
+     attribute the browser BLOCKS the script — PROTECTED BUT BROKEN, NOT
+     UNPROTECTED — which is a different finding again.
+  4. HOW A VALUED FORM OF A DIRECTIVE THAT TAKES NO VALUE SHOULD BE TREATED.
+     EXPLICITLY LEFT OPEN BECAUSE IT COULD NOT BE VERIFIED: the specification
+     hosts were unreachable, and the record declines to assert browser
+     behaviour either way.
+  5. HOW AN EMPTY REPORTING-DESTINATION TAG SHOULD BE TREATED. Two memo rows
+     plausibly apply and the record says so rather than picking one.
+
+NONE IS DECIDED, RECOMMENDED-INTO-APPROVAL OR IMPLIED HERE. A proposed oracle
+case IS NOT AN APPROVAL. [S2]
+
+13. WHAT M14-2.2 DID NOT TOUCH, AND WHAT REMAINS OPEN [S1,S2] [R1]
+
+DID NOT TOUCH: the existing HTML metadata extraction, the existing mail record
+parse, the existing registry parse, the existing policy assessment or ANY free
+check; no catalogue entry, check module, scoring rule, enrichment entry,
+content entry, evidence-policy entry, report-schema key, version literal,
+worker-protocol field, route, migration or payment code; no network operation
+of any kind; no site-boundary, redirect-policy or transport-policy change; no
+package or lockfile change — the 20-file, zero-deletion shape of the merge diff
+was re-read in this session. M14-2.1's branch was untouched. Migration 0005 was
+NOT RUN ANYWHERE. Production, the virtual private server, Stripe in either
+mode, the web server, DNS, the firewall and the production environment file
+were NOT CONTACTED. No Personal Project reflection was written by the slice.
+[R1,S2]
+
+REMAINS OPEN, PER THE COMMITTED RECORD:
+
+  - the five owner semantic decisions of section 12;
+  - REVIEW OF THE 20 PROPOSED ORACLE ROWS, 11 of which have had no independent
+    review at all, before any check-module status table is final;
+  - OD-10 customer copy, B-6 public, legal and privacy wording, and the
+    sensitive-file exposure review — UNCHANGED AND NOT APPROVED BY ANYTHING
+    HERE;
+  - M14-2.3 onward: the wiring and profile selection — INCLUDING M14-2.1's
+    mandatory fail-closed profile-to-tier binding contract — then the ten check
+    modules, then the catalogue, enrichment, content and retention entries,
+    then the remaining steps. NOT STARTED. An implementation plan for 2.3 was
+    added by this slice AS A PLAN ONLY, NOT AS AN APPROVAL, and it raises a
+    naming question it does not settle.
+  - M14-3 probe-list MEMBERSHIP at the protocol boundary; M14-4's
+    authorisation-callback guard and account-erasure path; M14-5's interface
+    and off-production acceptance; M14-6's guarded real-PostgreSQL release
+    gate, the production-shape migration timing and the floor restatement.
+  - the four free-path findings of section 10, each needing its own reviewed
+    change if the owner wants them;
+  - a parser-library upgrade re-opening the super-linear analysis.
+
+14. GAPS IN THIS EVIDENCE — IDENTIFIED, NOT FILLED
+
+  1. THE FINAL REVIEW IS BRIEF-REPORTED AND UNCORROBORATED [B1]. The merge
+     verdict, the absence of findings at the final head and the two P3
+     observations in section 9 round 4 come from the owner's task
+     specification. PR #47 CARRIES NO COMMENTS and the committed record does
+     not extend to that round. THE MERGE ITSELF IS VERIFIED; THE REVIEW THAT
+     PRECEDED IT IS NOT.
+  2. NO REVIEW ROUND LEFT A TRACE ON GITHUB. Every one is known only through
+     documents written by the implementing session, and the total number of
+     rounds is not established by any readable source. The reviews CORRECTED that
+     session's work, so the record of them is WRITTEN BY THE CORRECTED PARTY.
+  3. NO TEST, MEASUREMENT OR PARSE WAS RUN IN THIS SESSION. This note
+     reproduced the oracle composition, the commit shapes, the merge diff, the
+     enforced constants and the merge and run facts from the repository and the
+     GitHub API. It ran NO suite, NO parse and NO timing.
+  4. NO WALL-CLOCK OR MEMORY BOUND EXISTS. Stated in the status block and
+     repeated here because it is the most likely figure to be misread: the
+     timings are ONE MACHINE'S OBSERVATIONS and the enforced limits are COUNTS.
+  5. BROWSER EQUIVALENCE IS EQUIVALENCE TO ONE LIBRARY, NOT TO A BROWSER. No
+     browser was run, and a known divergence is recorded in section 7.
+  6. THE STANDARDS STATEMENTS WERE NOT RE-VERIFIED. Specification hosts were
+     unreachable during the correction rounds; the record says so and leaves one
+     owner decision open for that reason.
+  7. 11 PROPOSED ORACLE ROWS HAVE NEVER BEEN INDEPENDENTLY REVIEWED.
+  8. THE ATTRIBUTE TERM IN THE ELEMENT CHARGE HAS NO DIRECT MUTATION TEST
+     [B1].
+  9. THE PRIMITIVES HAVE NEVER RUN ON A REAL TARGET, because nothing can call
+     them. Every fact about their behaviour comes from fixtures and synthetic
+     adversarial documents.
+
+15. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The primitives, their tests, the baseline digest pins, the oracle, the
+implementation plan, the committed source evidence record and this Personal
+Project note were produced by Claude, an AI coding assistant, under task
+specifications written by the project owner. EVERY INDEPENDENT REVIEW ROUND,
+INCLUDING THE TWO THAT DISPROVED EARLIER SAFETY CLAIMS AND THE ONE THAT FOUND
+THE ELEMENT BLOW-UP, WAS A SEPARATE ASSISTANT SESSION. THE DECISION TO
+REQUIRE ENFORCED LIMITS RATHER THAN TIMING PROMISES, THE REFUSAL TO FIX THE
+FREE PATH IN THIS SLICE, THE ACCEPTANCE AND THE MERGE ARE THE OWNER'S. This
+note was compiled from the sources in section 16, from the GitHub API and from
+its own reading of the repository, and it RAN NO TEST OF ITS OWN. No assistant
+session held production access at any point in M14-2.2.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. Four reviews in a row each found a way past the previous round's defence,
+     and the fifth path was the subtlest. At what point is it reasonable to
+     believe a parser is safe, and what would that belief have to rest on?
+  2. Every fix is a count charged before the work runs, and no fix is a
+     timeout. Why is "refuse at 100,000 elements" a stronger engineering claim
+     than "abort after one second"?
+  3. The worst version of the bug was not that the parser was slow. It was that
+     the parser was slow AND still reported that absence could be asserted. Why
+     is the second part so much worse than the first?
+  4. The reviewer proposed a fix. It was implemented in a throwaway worktree,
+     measured, shown to still build 780,000 elements, and replaced by something
+     stricter. What would have been lost by simply doing as the reviewer said?
+  5. Two claims about safety were disproven by review and struck through rather
+     than deleted. Who benefits from being able to read a claim you no longer
+     stand behind?
+  6. Four real defects in the free scan were measured, written down in detail,
+     and deliberately left in place because fixing them would change what
+     existing customers see. Was that the right call, and what would make it
+     the wrong one?
+  7. 6,825 lines were merged that nothing can call. What makes that responsible
+     rather than reckless, and what single change would make it reckless?
+  8. The oracle has 111 cases and only 84 of them bind. Why keep 27 cases you
+     are not allowed to rely on, instead of deleting them until someone
+     decides?
+  9. The final review that cleared this for merge cannot be found anywhere in
+     the repository or on GitHub, and this note says so plainly rather than
+     presenting it as verified. What is the cost of recording the gap, and what
+     would the cost of hiding it have been?
+
+16. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #47, its title, base, head branch,
+     state, merge time and diff totals; the reviewed final head
+     91e625a4a36d5381c8dd4ef2324915c09c2d8341; the merge commit
+     b219dadc53800b0e53f7ebd8221f3b48beac668d; the branch commit history,
+     including the test-only baseline e35596e and the correction commits of
+     all three recorded rounds; the continuous-integration conclusions and
+     reported test counts for runs 38211259875 (CI #72, FAILURE at the
+     whitespace gate), 38211624100 (CI #73), 38252982557 (CI #78) and
+     38278276312 (CI #79); the ABSENCE of any formal review on PR #47 and the
+     ABSENCE of any issue or review comment on it; and the pull-request
+     description, which records the review rounds, the enforced limits and
+     the gate results.
+[S2] docs/evidence/M14_2_2_PARSING_PRIMITIVES_2026-10-12.md at b219dad — the
+     committed source evidence record for this slice, from which the primitive
+     descriptions, the implementation decisions, the seven FREE digests, the
+     test inventory, the gate results, the four free-path findings, the five
+     open owner decisions, the oracle composition, the three recorded review
+     rounds with their findings and fixes, the calibration tables, the mutation
+     check and
+     every stated residual limitation above are taken. Also
+     docs/M14_2_3_IMPLEMENTATION_PLAN.md at b219dad, a PLAN ONLY, for the
+     parse-cost strategy and the requirements the next step inherits.
+[R1] Reproduced in this session from the technical repository, not taken from
+     a document: the merge commit's 20-file, +6,825, ZERO-DELETION shape and
+     its distribution across source, test, fixture and document files (2
+     documents, 4 source files of which 3 are new, 1 fixture, 13 test files);
+     that
+     commit e35596e changes exactly one test file and nothing under src/; the
+     oracle's composition counted from the fixture itself (70 literal plus 14
+     generated binding rows = 84; 20 proposed; 7 owner-decision; 111 total) and
+     the test assertion that pins it including the 7/2/11 proposed breakdown;
+     and the four enforced limit constants in source — the 32,000,000-unit work
+     budget, 256 attribute names per tag, 256 adopted attributes and the
+     100,000-element cap — together with the 128 KiB parse cap.
+[B1] The project owner's task specification to the session that compiled this
+     note, 2026-10-12: the final independent review's MERGE verdict with no
+     P0, P1 or P2 at the reviewed final head, its adversarial verification
+     against that exact head, and the two nonblocking P3 observations in
+     section 9 round 4. BRIEF-REPORTED, NOT REPRODUCED HERE, and NOT FOUND in
+     the repository or on GitHub.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_Step2.1_PP_Evidence_2026-10-12.txt  the tier foundation this
+                                                    slice is disjoint from and
+                                                    was merged over, whose
+                                                    FREE golden passes on the
+                                                    merged tree
+  SCANCOMPASS_M14_OD1_DECISION_PP_Evidence_2026-10-11.txt  the content lock
+                                                    whose memo rows are the
+                                                    84 binding oracle cases
+  SCANCOMPASS_M14_OWNER_DECISIONS_H4_M3_M4_PP_Evidence_2026-10-12.txt
+                                                    the owner approvals whose
+                                                    host-scope limit this
+                                                    slice does not test and
+                                                    does not widen
+  SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt   the design lock whose
+                                                    §24 stops govern the
+                                                    evidence bounds and the
+                                                    completeness rules
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/  the production state this
+                                                    slice did not change
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data, raw
+provider payload, host identifier, private target hostname, nameserver address,
+production environment value, production filesystem path, backup identifier,
+email address or server detail appears in this note. No check or probe
+identifier, header name, directive name, record name, tag name or source file
+path is reproduced; every primitive, policy fact and open decision above is
+described BY PURPOSE ONLY, so this note carries NO SCANNING RECIPE AND NO
+REUSABLE ADVERSARIAL INPUT — the hostile documents of section 9 are described by
+shape and never given as markup. No canary value, fixture body or target
+hostname is reproduced. No unsanitised transcript or command output is
+included; every independent review is summarised from the committed record.
+The only long identifiers are Git commit SHAs and GitHub pull-request and
+workflow-run numbers. NO SCREENSHOT ACCOMPANIES THIS NOTE: the slice
+changed nothing a user can see, its primitives are reachable from nothing, and
+none is invented.
+
+END OF EVIDENCE

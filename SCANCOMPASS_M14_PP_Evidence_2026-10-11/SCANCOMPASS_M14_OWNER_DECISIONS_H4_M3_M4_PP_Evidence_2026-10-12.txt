@@ -1,0 +1,458 @@
+SCANCOMPASS — M14 OWNER DECISIONS H4, M3 AND M4
+PERSONAL PROJECT EVIDENCE
+Three owner-level questions that two earlier independent reviews had left OPEN
+are answered by the owner and recorded in the design and the methodology;
+documentation only, and an independent review of the record itself corrected
+two of its claims before the merge
+Subject dates: approvals given 11 October 2026; recorded, reviewed, corrected
+               and merged 11-12 October 2026
+Evidence written: 12 October 2026
+Classification: Confidential project evidence
+
+STATUS
+THE THREE DECISIONS ARE APPROVED BY THE OWNER, RECORDED IN SOURCE, MERGED AS
+PR #45 AND NOTHING ELSE. H4 (host scope), M3 (control-count presentation) and
+M4 (extended priority ordering) now have approved answers where the OD-1
+reviews had recorded only OPEN questions and recommendations. [S1,S2]
+
+THIS MILESTONE IS DOCUMENTATION ONLY. Six files changed, 423 insertions and 57
+deletions, every one of them under docs/. NOTHING under src/, tests/, db/,
+deploy/, scripts/ or .github/ was touched, and no package or lockfile changed.
+NO CODE IMPLEMENTS THESE DECISIONS; they are requirements for work that has not
+been written. [S1,S2]
+
+M14-2 HAD NOT STARTED WHEN THESE DECISIONS WERE RECORDED. The approvals are
+inputs to it, not a report of it. [S2]
+
+NOTHING REACHED PRODUCTION. Migration 0005 remains IN SOURCE ONLY and is NOT
+APPLIED. Production still runs the M13 Decision A state carried in the earlier
+accepted record in this repository: schema contract m13-0004, migration ledger
+0000-0004, payments CLOSED. NO PRODUCTION CONTACT OF ANY KIND — no virtual
+private server, no production database, no Stripe in either mode, no web
+server, no DNS, no firewall, no production configuration file. [S2, HISTORICAL]
+
+AN APPROVAL IS NOT CUSTOMER-FACING COPY. All three decisions approve a
+TECHNICAL choice. The exact words any customer will read are still OD-10, and
+the exact public, legal and privacy wording is still B-6. BOTH REMAIN OPEN AND
+NEITHER IS APPROVED BY ANYTHING IN THIS NOTE. [S1,S2]
+
+TWO P2 DOCUMENTATION FINDINGS WERE FOUND BY AN INDEPENDENT REVIEW BEFORE THE
+MERGE, and both were corrected on the same pull request. Neither changed any
+owner decision. The pre-correction head was not merged. [S1,S2]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+Six kinds of statement appear in this note and are kept apart throughout.
+
+  SESSION-VERIFIED   Repository, pull-request and continuous-integration state
+                     read directly from the GitHub API while this note was
+                     being written. Marked [S1].
+  SOURCE-RECORDED    Figures and wording taken from a committed source document
+                     in the technical repository, READ AT THE MERGE COMMIT.
+                     Marked [S2].
+  SESSION-REPRODUCED A fact this session recomputed or re-read from the
+                     repository itself rather than accepting a document's
+                     word for it. Marked [R1] and named in place.
+  OWNER-DECIDED      A decision written by the project owner, recorded in a
+                     committed document as the instruction for the change.
+                     Attributed in place.
+  REVIEW-REPORTED    A finding of the independent review of this pull request,
+                     as recorded in the committed evidence document and in the
+                     pull-request description. Attributed in place.
+  HISTORICAL         Production facts carried from an earlier accepted record
+                     in this repository, named where used. THIS MILESTONE ADDED
+                     NONE.
+
+NO FORMAL GITHUB REVIEW WAS SUBMITTED ON PR #45, AND THE PULL REQUEST CARRIES
+NO COMMENTS AT ALL. Both were queried through the GitHub API while this note
+was written: zero formal reviews, zero issue comments, zero review comments.
+The independent review described in section 7 was conducted in an assistant
+session and is recorded only inside the committed documents and the
+pull-request description. WHERE THIS NOTE SAYS "REVIEW", THAT IS WHAT IT
+MEANS, AND NEVER A GITHUB APPROVAL. [S1]
+
+THE APPROVALS ARE NOT GITHUB COMMENTS EITHER. The committed record states that
+the owner supplied all three directly as the instruction for the documentation
+change. NO COMMENT IDENTIFIER IS CITED BY THE SOURCE AND NONE IS CLAIMED HERE.
+No time of day was given and none is recorded. [S2]
+
+NO TEST FIGURE APPEARS IN THIS NOTE, because this milestone changed no test and
+ran none that bears on it. NO TEST WAS RUN BY THE SESSION THAT WROTE THIS NOTE.
+
+This record is a factual technical evidence summary. It is NOT a student
+reflection and is not written in the student's voice. Reflection prompts are
+carried unanswered in section 11.
+
+1. REVIEWED VERSION, PULL REQUEST, MERGE AND CONTINUOUS INTEGRATION
+   (SESSION-VERIFIED) [S1]
+
+Repository: stanciuks/site-security
+Pull request: #45, "docs(m14): record owner decisions H4, M3 and M4"
+Author of record: the repository owner's account
+Base: main at e7d96c994454838322ab42216535307019c414e0 — the OD-1 content-lock
+      merge (PR #44)
+Head branch: claude/tender-clarke-9gz9ok
+Merged: 2026-10-12 05:34:45 UTC as
+        7c286da5e1c4ea75ed33aee9f48579c5a3ae2ad4, by squash
+Diff: 6 files changed, 423 insertions, 57 deletions — ALL UNDER docs/ [R1]
+
+THE PULL REQUEST HAD TWO HEADS, AND ONLY THE SECOND WAS MERGED:
+
+  head 166a406
+       the record as first written. Run 38155025321 (CI #66), event
+       pull_request, SUCCESS. THE INDEPENDENT REVIEW RETURNED TWO P2 FINDINGS
+       AGAINST THIS HEAD (section 7). IT WAS NOT MERGED.
+  head 8e3958834b510309b915a61044db3ec9eb3d7afb
+       the corrected head, and the reviewed final head. Run 38174770158
+       (CI #67), event pull_request, SUCCESS, started 2026-10-11 21:03:24 UTC.
+       THIS IS THE HEAD THAT WAS MERGED.
+
+Post-merge continuous integration on the merge commit
+7c286da5e1c4ea75ed33aee9f48579c5a3ae2ad4: run 38208546158 (CI #70), event
+push, SUCCESS.
+
+WHAT THE GREEN RUNS DO AND DO NOT PROVE HERE. The diff is documentation only,
+so a green run proves that the repository's gates — type checking, linting, the
+whitespace gate, the build and the test suite — were unaffected by it. IT IS
+NOT EVIDENCE THAT ANY APPROVED DECISION IS IMPLEMENTED OR CORRECT. There is no
+code for it to test. [S1]
+
+2. WHAT THIS MILESTONE IS, AND WHAT IT IS NOT
+
+IT IS the moment three questions stopped being open. Each had been raised by an
+independent review of the OD-1 content decision and recorded as OPEN, with a
+recommendation attached. A RECOMMENDED OPTION IS NOT AN APPROVAL, and the
+earlier M14 package says so explicitly. This milestone is the owner approving
+one answer to each, and the design and methodology documents being changed to
+state it as a requirement. [S2]
+
+IT IS NOT an implementation, a scan, a report, a route, a test or a deployment.
+No scanner module, catalogue entry, scoring rule, content entry or test for the
+extended profile existed when the approvals were recorded, and this milestone
+created none. [S2]
+
+IT IS NOT the customer's wording. Each approval states a technical choice and
+each defers the words to OD-10. The owner's own M3 text says so in terms: the
+technical presentation choice is approved, and the final customer-facing
+wording remains subject to OD-10. [S2]
+
+3. THE THREE OWNER APPROVALS, AS GIVEN (OWNER-DECIDED) [S2]
+
+The approvals were given on 11 October 2026 as the instruction for this
+documentation change. The committed record carries the owner's words; the
+substance of each, as recorded, is below. The committed source is the
+authoritative wording.
+
+  H4 — HOST SCOPE. An authorisation covers ONE EXACT HOSTNAME. Extended
+  assessments initiate requests only at that hostname, on the fixed path list,
+  and follow redirects only under the EXISTING FREE transport policy: same
+  registrable site, no HTTPS downgrade, at most five redirects, and every
+  existing address and safety check. The extended profile NEVER DELIBERATELY
+  SELECTS ANOTHER HOSTNAME. Facts taken from a redirect destination must be
+  attributed to the host that served them, and an unsupported cross-host
+  comparison returns UNKNOWN.
+
+  The approval states its own limit: it PRESERVES CURRENT FREE BEHAVIOUR and
+  APPROVES NO additional scanning, no new ports, no new paths, no arbitrary
+  subdomains and no broader authorisation.
+
+  M3 — CONTROL-COUNT PRESENTATION. Option b-prime. Every existing
+  ControlCounts bucket, its numerical semantics and the strict public-report-v1
+  schema are PRESERVED UNCHANGED. For EXTENDED reports only, a truthful
+  supplementary explanation identifies the extended checks that are assessed
+  but not scored in this version, with its count DERIVED FROM THE ACTUAL
+  EXTENDED FINDINGS and not from a presumed FREE baseline. Genuinely
+  inapplicable FREE controls are NOT relabelled. FREE presentation is
+  unchanged. The wording belongs to OD-10.
+
+  M4 — EXTENDED PRIORITY. The EXISTING SEVERITY-FIRST comparator is retained
+  unchanged: severity, then foundational status, then recoverable points, then
+  confidence, then effort, then a stable identifier. The new
+  priority-extended-v1 methodology may admit eligible ZERO-POINT extended
+  corrective findings, and each such action MUST CLEARLY STATE that correcting
+  it does not increase the security score in this version. FREE keeps
+  priority-v1 and its existing output unchanged.
+
+WHAT THE THREE HAVE IN COMMON is that each chooses the conservative direction
+and each writes its own boundary into the approval. H4 says what it does not
+widen. M3 says what it does not relabel and whose wording it is not. M4 says
+what it does not change and what the user must be told.
+
+4. HOW THE DECISIONS WERE RECORDED IN SOURCE (SOURCE-RECORDED) [S2] [R1]
+
+Six documents changed. The file list and line counts below were read from the
+merge commit in this session, not copied from the record. [R1]
+
+  docs/M14_AUTHORIZED_EXTENDED_ASSESSMENT.md       163 changed lines
+    the design record.
+    §10.3 states the approved decisions in the host-scope block, the
+    scoring/priority bullet and the envelope cell; §22's decision log gains the
+    approval row and OD-10 gains the two wordings it now holds; §23 names the
+    requirements in the M14-2 and M14-5 rows; §24's stops (22), (23) and (25)
+    are restated FROM "BEFORE THE DECISION" GATES INTO DECIDED, TESTABLE
+    REQUIREMENTS, with every original prohibition kept; and a NEW §25.7 holds
+    the requirements H4-R1 to R7, M3-R1 to R8 and M4-R1 to R7 together with the
+    SUPERSEDED GATE TEXT PRESERVED VERBATIM.
+  docs/SCANNING_METHODOLOGY.md                      82 changed lines
+    the published methodology.
+    §8.5's intro; §8.5.1's PENDING block REPLACED BY THE APPROVED H4 WORDING;
+    §8.5.3 and §8.5.4 labels; and §8.5.6's M3 and M4 paragraphs, including the
+    zero-point statement requirement.
+  docs/evidence/M14_OD1_DECISION_MEMO_2026-10-11.md 65 changed lines
+    the status note, the table of contents, decided callouts above §9.1.1 and
+    §9.2.1, annotations on §14's stops 20-21 and on §15's H4, M3 and M4 rows —
+    WITH THE ORIGINAL TEXT KEPT — and a new §17.
+  docs/MILESTONES.md                                24 changed lines
+    a new entry for the decisions; the OD-1 entry's "still open" row
+    ANNOTATED, NOT REWRITTEN.
+  docs/ROADMAP.md                                    2 changed lines
+    the M14 status sentence updated; the historical tail ANNOTATED.
+  docs/evidence/M14_OWNER_DECISIONS_H4_M3_M4_2026-10-11.md   NEW, 144 lines
+    the factual record of the approvals, written so that this Personal Project
+    note could be compiled from it after merge.
+
+THE EDITING DISCIPLINE IS ITSELF EVIDENCE. Across all six files the pattern is
+the same: superseded text is ANNOTATED OR PRESERVED VERBATIM rather than
+deleted, and §25.6's open list is MARKED HISTORICAL rather than rewritten. The
+record of what was once open survives the decision that closed it. This is the
+same append-only discipline the Personal Project package itself follows. [S2]
+
+5. THE SPOT-CHECKS MADE BEFORE RECORDING (SOURCE-RECORDED) [S2]
+
+The implementing session re-read the merged OD-1 design against main before
+recording anything, and spot-checked the design's citations in source at
+e7d96c9. The committed record states that ALL MATCHED AND NO DISCREPANCY WAS
+FOUND. What was checked, by purpose:
+
+  - the redirect-scope classifier answers SAME_SITE only when both registrable
+    sites are equal, and INDETERMINATE when either is unknown;
+  - the transport policy's redirect maximum is five, and the registry lookup
+    allows none;
+  - the priority comparator orders severity, then foundational status, then
+    recoverable points, then confidence, then effort, then a tiebreak
+    identifier — which is the comparator M4 retains;
+  - ControlCounts has seven buckets plus a total;
+  - the eligibility module's ordering, and which undetermined reasons map to
+    NOT_APPLICABLE;
+  - the public-report-v1 document is strict throughout, includes controlCounts,
+    and a priority action carries no recoverable-points field.
+
+THIS IS A PAPER CHECK, NOT AN EXECUTION. No test was run and no scan was
+performed. It establishes that the decisions were written against the code as
+it actually is, which is what makes them implementable requirements rather than
+aspirations. [S2]
+
+6. THE RECORDED READINGS THAT ARE NOT APPROVALS (SOURCE-RECORDED) [S2]
+
+Three readings were needed to apply the approvals and NONE OF THEM IS AN OWNER
+DECISION. Each is recorded beside the requirements so a reviewer or the owner
+can correct it, and each names what happens if the owner reads it otherwise.
+
+  1. WHAT H4's "REQUESTS" MEANS. Read as TARGET-FACING HTTP(S) requests and
+     handshakes. DNS reads at the exact hostname or the mail-assessment domain
+     go to a resolver, and the single registry lookup the FREE scan already
+     makes goes to a registry; both are CURRENT FREE BEHAVIOUR, which the
+     approval states it preserves, and neither is widened. IF THE OWNER READS
+     IT OTHERWISE, M14-2 STOPS AT STEP 2.3 — the stop is written into the
+     record rather than argued away.
+  2. HOW M3's COUNT IS DERIVED. The extended-tier findings that the scoring
+     classification places in the not-applicable bucket. See section 7: this
+     reading was INCOMPLETE AS FIRST WRITTEN and was corrected.
+  3. WHETHER M4's STATEMENT SURVIVES A ROLLBACK. NOT DECIDED by the approval.
+     The statement survives a pre-M14 renderer only if it is carried in an
+     existing string field. M14-2 is required to record the mechanism, and a
+     render-time-only statement's rollback view GOES TO THE OWNER BEFORE
+     RELEASE under an M14-6 stop.
+
+The committed record states plainly that no decision required a policy choice
+beyond what the owner approved, and that nothing was invented. [S2]
+
+7. THE INDEPENDENT REVIEW AND ITS TWO P2 CORRECTIONS [S1,S2]
+
+An independent review of head 166a406 was conducted in an assistant session. It
+was NOT a formal GitHub review and left no comment on the pull request; its
+findings are recorded in the committed evidence document and in the
+pull-request description, both read in this session. It returned TWO P2
+DOCUMENTATION FINDINGS, no P0 and no P1. The record states that each finding
+was RE-CHECKED IN SOURCE before it was applied. [S1,S2]
+
+  P2-1 — THE M3 EXPLANATION WAS REQUIRED ON A SURFACE THAT DOES NOT EXIST.
+  As first written, the requirement named three renderer surfaces. Only TWO
+  actually render ControlCounts: the self-contained HTML report and the PDF.
+  The web report and the shared-report view render none. The requirement now
+  applies to the HTML report and the PDF ONLY, and the record states that a
+  web control-count table would be SEPARATE M14-5 AND OD-10 WORK THAT M3 DOES
+  NOT APPROVE. The design's stop (22), the §23 M14-5 row and methodology
+  §8.5.6 were aligned with the corrected reading.
+
+  P2-2 — THE OWNER'S PHRASE WAS NOT A SAFE NORMATIVE FORMULATION. The owner
+  approved a supplementary explanation of extended checks "assessed but not
+  scored". The review found that the eligibility module classifies an extended
+  check WITHOUT A SCORING RULE as NOT_APPLICABLE BEFORE ITS STATUS IS READ, so
+  the count can include checks whose result is UNKNOWN, ERROR or NOT_TESTED —
+  checks that were NOT, in any honest sense, ASSESSED. Calling them assessed
+  would be a FALSE STATEMENT TO A PAYING CUSTOMER.
+
+  THE RESOLUTION DID NOT OVERRULE THE OWNER AND DID NOT QUIETLY REWRITE HIM.
+  The owner's phrase is KEPT VERBATIM as the record of his intent and is
+  EXPLICITLY DISTINGUISHED from the normative formulation. The normative
+  requirement is now STATUS-NEUTRAL: extended checks included in the
+  not-applicable scoring bucket but not counted toward the security score in
+  this version. OD-10 is bound to use status-neutral or status-conditional
+  wording and MUST NEVER CALL SUCH A CHECK "ASSESSED". [S2]
+
+TWO EDITORIAL CORRECTIONS accompanied them: the structural delta was separated
+from the rendered count, which is always computed from the document's own
+findings; and the gate that M14-2.5 relaxes for the extended profile only was
+named precisely, including its adjacent comment. [S2]
+
+NEITHER P2 CHANGED AN OWNER DECISION. Both changed what the project is allowed
+to say about it. The corrected head 8e39588 is the head that was merged.
+
+8. WHAT IS STILL OPEN, AND WHAT THIS APPROVAL DOES NOT COVER [S1,S2]
+
+CLOSED BY THIS MILESTONE: H4, M3 and M4, each at the technical level only.
+
+STILL OPEN, AND NOT APPROVED BY ANYTHING IN THIS NOTE:
+
+  OD-10   the customer-facing copy, which now ALSO HOLDS the M3 explanation's
+          wording and the M4 zero-score statement's wording. The two
+          approvals added work to OD-10 rather than removing it.
+  B-6     the exact public, legal and privacy wording.
+  §8.4    the sensitive-file exposure review in the methodology — unresolved,
+          and NOT RE-OPENED by this milestone.
+
+ALSO OPEN, AND NOT OWNER DECISIONS: the production-shape timing of migration
+0005 (M14-6); account erasure across the restrict chain (M14-4 and M14-6); the
+authorisation-callback guard, which cannot be pinned until a caller exists
+(M14-4); probe-list MEMBERSHIP as distinct from identifier shape (M14-3); and
+an explicit real-PostgreSQL run of the guarded suites as a release gate
+(M14-6), which ordinary continuous integration SKIPS. [S2]
+
+NO PUBLIC, LEGAL OR CUSTOMER-FACING COPY WAS APPROVED, WRITTEN OR DEPLOYED BY
+THIS MILESTONE. The methodology document is a project document; the words a
+customer reads are OD-10 and B-6, and both are open.
+
+9. WHAT THIS MILESTONE DID NOT TOUCH [S1,S2] [R1]
+
+Nothing under src/, tests/, db/, deploy/, scripts/ or .github/. No package
+file and no lockfile. No scanner module, check, catalogue entry, scoring rule,
+content entry, report-schema key, version literal, worker-protocol field,
+route, migration or payment code. No new HTTP request, DNS lookup, TLS
+handshake, port, method, path or redirect behaviour. Migration 0005 was NOT RUN
+ANYWHERE. Production, the virtual private server, Stripe in either mode, the
+web server, DNS, the firewall and the production environment file were NOT
+CONTACTED. The separate Personal Project evidence repository was NOT CHANGED by
+the milestone itself; this note is the later append-only synchronisation the
+committed record anticipated. The docs-only shape of the diff was re-read from
+the merge commit in this session. [R1]
+
+10. GAPS IN THIS EVIDENCE — IDENTIFIED, NOT FILLED
+
+  1. THE APPROVALS HAVE NO INDEPENDENT TIMESTAMP. They were given as an owner
+     instruction, not as a GitHub comment, so there is no comment identifier,
+     no time of day and NO ARTEFACT OUTSIDE THE COMMITTED RECORD that fixes
+     when they were given. The date 11 October 2026 is as recorded in source.
+     This note does not corroborate it and does not pretend to.
+  2. THE INDEPENDENT REVIEW LEFT NO TRACE ON GITHUB. Zero formal reviews and
+     zero comments were confirmed on PR #45 in this session. The review is
+     known only through the committed evidence document and the pull-request
+     description, both written by the implementing session. ITS FINDINGS ARE
+     THEREFORE SELF-REPORTED BY THE PARTY THEY CORRECTED, and this note does
+     not treat them as externally attested.
+  3. THE SPOT-CHECKS OF SECTION 5 WERE NOT REPRODUCED HERE. This session
+     re-read the diff shape, the file list and the merge and run facts, but
+     did not re-verify the seven source citations against the code.
+  4. NO VERIFICATION THAT THE REQUIREMENTS ARE IMPLEMENTABLE. H4-R1 to R7,
+     M3-R1 to R8 and M4-R1 to R7 are requirements for unwritten code. Whether
+     they can all be met together is NOT ESTABLISHED by this milestone.
+
+11. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+The documentation changes, the committed evidence record and this Personal
+Project note were produced by Claude, an AI coding assistant, under task
+specifications written by the project owner. THE THREE DECISIONS THEMSELVES ARE
+THE OWNER'S, given as an instruction and recorded verbatim. The independent
+review that found the two P2 findings was a separate assistant session; the
+acceptance and the merge are the owner's. This note was compiled from the
+sources in section 12 and from the GitHub API, and it RAN NO TEST OF ITS OWN.
+No assistant session held production access at any point.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The owner approved a phrase — "assessed but not scored" — that a review
+     then showed could be false for some checks. The resolution kept his words
+     as his intent and wrote a different rule for what the product may say.
+     Why is that better than either silently changing his words or shipping
+     them as written?
+  2. All three approvals state what they do NOT approve. What work does that
+     do later, when someone wants to widen the scan and points at H4?
+  3. The review found that a requirement named a surface that renders nothing.
+     What does it say about writing requirements from a design document rather
+     than from the code?
+  4. Nothing in this milestone can be tested, because nothing was built. What
+     makes a decision record evidence of progress at all, and what would make
+     it worthless?
+  5. The decision that closed three open questions also added two new items to
+     OD-10. Why might closing a question honestly leave you with more open
+     work than you started with?
+  6. Superseded text was annotated and preserved everywhere rather than
+     deleted. Who is that for, given that the decision is already made?
+
+12. SOURCE LOCATORS
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #45, its title, author, base, head
+     branch, state, merge time and diff totals; its two heads 166a406 and
+     8e3958834b510309b915a61044db3ec9eb3d7afb and its merge commit
+     7c286da5e1c4ea75ed33aee9f48579c5a3ae2ad4; the continuous-integration
+     conclusions for runs 38155025321 (CI #66), 38174770158 (CI #67) and
+     38208546158 (CI #70); the ABSENCE of any formal review on PR #45 and the
+     ABSENCE of any issue or review comment on it; and the pull-request
+     description, which records the independent review's two P2 findings and
+     their resolutions.
+[S2] docs/evidence/M14_OWNER_DECISIONS_H4_M3_M4_2026-10-11.md at 7c286da —
+     the committed source record for this milestone, from which the owner's
+     approved wording, the provenance of the approvals, the pre-recording
+     spot-checks, the three recorded readings, the two P2 corrections and the
+     still-open list above are taken. Its own §3 file table is the basis of
+     section 4, and its §6 anticipates this Personal Project note.
+[R1] Reproduced in this session from the technical repository, not taken from
+     a document: the merge commit's file list and line counts (6 files, +423,
+     -57, all under docs/), and that the diff touches nothing outside docs/.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_OD1_DECISION_PP_Evidence_2026-10-11.txt  the content lock
+                                                    whose independent reviews
+                                                    raised these three
+                                                    questions and recorded
+                                                    them OPEN
+  SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt   the design lock whose
+                                                    §24 stops these approvals
+                                                    restate as requirements
+  SCANCOMPASS_M14_Step2.1_PP_Evidence_2026-10-12.txt  the first slice built
+                                                    after these approvals,
+                                                    which relies on none of
+                                                    them
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/  the production state this
+                                                    milestone did not change
+  SCANCOMPASS_M14_PP_Evidence_Index_2026-10-11.txt   the package index, whose
+                                                    2026-10-12 addendum lists
+                                                    this note
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data,
+raw provider payload, host identifier, private target hostname, nameserver
+address, production environment value, production filesystem path, backup
+identifier, email address or server detail appears in this note. No check or
+probe identifier, header name or record name is reproduced; the subjects of the
+spot-checks in section 5 are described by purpose only, so this note carries no
+scanning recipe. No unsanitised transcript or command output is included; the
+owner's approvals are summarised from the committed record and the independent
+review is summarised, neither being quoted from any private channel. The only
+long identifiers are Git commit SHAs and GitHub pull-request and workflow-run
+numbers. NO SCREENSHOT ACCOMPANIES THIS NOTE: the milestone changed nothing a
+user can see, and none is invented.
+
+END OF EVIDENCE

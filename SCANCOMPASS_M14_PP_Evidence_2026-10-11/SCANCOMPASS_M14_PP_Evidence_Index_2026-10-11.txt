@@ -240,4 +240,207 @@ numbers. NO SCREENSHOT ACCOMPANIES THIS PACKAGE: no M14 milestone changed
 anything a user can see, the disposable test environments were destroyed, and
 none is invented.
 
+================================================================================
+ADDENDUM OF 12 OCTOBER 2026 — THREE FURTHER ACCEPTED MILESTONES
+================================================================================
+
+NOTHING ABOVE THIS LINE HAS BEEN CHANGED. Every statement in the index above is
+preserved exactly as written on 2026-10-11 and is HISTORICAL from here on. This
+addendum was appended on 2026-10-12, after three further milestones were
+independently reviewed, merged and owner-accepted, and it says which of the
+statements above the later work has overtaken. The package follows the same
+append-only discipline the source repository follows: SUPERSEDED TEXT IS MARKED,
+NOT REWRITTEN.
+
+WHAT THE INDEX ABOVE SAYS THAT IS NOW HISTORICAL
+
+  "FOUR M14 MILESTONES ARE MERGED AND OWNER-ACCEPTED"
+      SEVEN are now merged and owner-accepted. The three added are below.
+  "M14-2 HAS NOT STARTED"
+      M14-2 HAS STARTED. Steps 2.1 and 2.2 are merged. Steps 2.3 to 2.7 have
+      not started.
+  "Five slices remain unstarted"
+      Four remain unstarted: M14-3, M14-4, M14-5 and M14-6. M14-2 is PARTLY
+      BUILT.
+  "THE TEN EXTENDED CHECKS ARE SPECIFIED AND LOCKED, NOT BUILT: no scanner
+   module, check, catalogue entry, route or interface for them exists in code"
+      STILL TRUE OF EVERY CHECK ITSELF. No check module, catalogue entry, route
+      or interface for any extended check exists. What now exists is the TIER
+      INFRASTRUCTURE they will be registered in, the PARSING PRIMITIVES they
+      will read facts from, and the TEST ORACLE they will be judged against.
+      ALL 42 CATALOGUE ENTRIES ARE STILL FREE.
+  "FIVE OWNER DECISIONS REMAIN OPEN ACROSS THIS PACKAGE"
+      THREE OF THOSE FIVE ARE NOW DECIDED — the host scope, the control-count
+      presentation and the extended priority ordering, all at the TECHNICAL
+      LEVEL ONLY. The customer-facing copy (OD-10) and the public, legal and
+      privacy wording (B-6) REMAIN OPEN. FIVE NEW OWNER SEMANTIC DECISIONS
+      WERE OPENED by M14-2.2, so the count of open owner decisions has GONE UP,
+      not down. A RECOMMENDED OPTION IS STILL NOT AN APPROVAL.
+  "TWO RELEASE-BLOCKING DEFECTS WERE FOUND BY REVIEW BEFORE MERGE"
+      Still two. The three milestones below produced NO P0 AND NO P1 AT ANY
+      STAGE. They produced ten P2 findings, several P3 items, and FIVE
+      SUPER-LINEAR PARSING PATHS found by the reviews of one milestone.
+
+STILL TRUE, AND UNCHANGED BY ALL THREE MILESTONES
+
+NOTHING IN M14 HAS REACHED PRODUCTION. Migration 0005 exists IN SOURCE ONLY and
+is NOT APPLIED. Production still runs M13 Decision A: schema contract m13-0004,
+migration ledger 0000-0004, payments CLOSED, payment era ERA 1, the second
+deployment decision not run. NO M14 MILESTONE HAS CONTACTED production, the
+virtual private server, the production database, Stripe in either mode, the web
+server, DNS, the firewall or any production configuration file. THERE IS STILL
+NOTHING FOR SALE AND NO PAID ASSESSMENT HAS EVER BEEN PERFORMED. [S1,S2]
+
+NO FORMAL GITHUB REVIEW HAS EVER BEEN SUBMITTED ON ANY M14 PULL REQUEST. All
+seven were queried. PULL REQUESTS #45, #46 AND #47 CARRY NO COMMENTS AT ALL —
+zero formal reviews, zero issue comments, zero review comments on each. Every
+review described anywhere in this package was conducted in an assistant session
+and recorded inside a committed document or a pull-request description. [S1]
+
+NO TEST IN THIS PACKAGE WAS RUN BY THE SESSIONS THAT WROTE THESE NOTES, and
+none was run by the project owner.
+
+THESE REMAIN RETROSPECTIVE RECORDS. The three notes below were written on
+2026-10-12 and carry that date in their file names. Their subject dates are
+stated in their own opening lines and are NOT the date of writing.
+
+THE THREE FURTHER MILESTONES, IN PROJECT ORDER
+
+  2026-10-12  PR #45   OWNER DECISIONS H4, M3 AND M4, documentation only.
+              05:34    Three questions the OD-1 reviews had left OPEN are
+              merged   answered by the owner and written into the design and
+              7c286da  the methodology as requirements. Two P2 findings from an
+                       independent review corrected the record before merge —
+                       one requirement named a surface that renders nothing,
+                       and the owner's own phrase was shown to be UNSAFE AS A
+                       NORMATIVE RULE because it could call an unassessed
+                       check "assessed". The owner's words were KEPT VERBATIM
+                       as his intent and a status-neutral rule written beside
+                       them. NO CUSTOMER-FACING COPY WAS APPROVED.
+    SCANCOMPASS_M14_OWNER_DECISIONS_H4_M3_M4_PP_Evidence_2026-10-12.txt
+
+  2026-10-12  PR #46   M14-2.1 TIER-AWARE FOUNDATION. The tier classification
+              07:46    and the tier-aware catalogue, scoring, engine, report
+              merged   and version-selection infrastructure. ALL 42 ENTRIES
+              441741b  REMAIN FREE and FREE OUTPUT IS BYTE-IDENTICAL, proven by
+                       a golden captured from unchanged source BEFORE the change
+                       in a commit touching no source file, by a mutation test
+                       that injects synthetic paid entries, and by seven
+                       reverted source mutations. Four P2 findings, no P0 or
+                       P1; the fourth asked for a safety property the slice
+                       lacked and produced a NARROW FAIL-CLOSED GUARD plus a
+                       MANDATORY step-2.3 binding contract.
+                       SCANCOMPASS_M14_Step2.1_PP_Evidence_2026-10-12.txt
+
+  2026-10-12  PR #47   M14-2.2 PARSING PRIMITIVES. Four additive
+              16:33    fact-extracting primitives and a 111-case test oracle,
+              merged   REACHABLE FROM NOTHING — a 20-file diff with ZERO
+              b219dad  DELETIONS, and a test asserting no source file outside
+                       the primitives references them. THE REVIEWS FOUND FIVE
+                       SUPER-LINEAR PARSING PATHS, each one past the previous
+                       round's defence, and each was answered by an ENFORCED
+                       COUNT CHARGED BEFORE THE WORK RUNS rather than by a
+                       timeout. No P0 or P1 at any stage. TWO EARLIER SAFETY
+                       CLAIMS WERE DISPROVEN BY REVIEW AND WITHDRAWN. THE TOTAL
+                       NUMBER OF REVIEW ROUNDS IS NOT ESTABLISHED BY ANY SOURCE
+                       THIS PACKAGE COULD READ: three are recorded in detail,
+                       the source's own numbering implies at least one earlier,
+                       and the final one is BRIEF-REPORTED.
+                       NO WALL-CLOCK OR MEMORY BOUND IS PROVEN OR CLAIMED.
+                       SCANCOMPASS_M14_Step2.2_PP_Evidence_2026-10-12.txt
+
+A SEVENTH PROVENANCE CLASS APPEARS IN THE THREE NOTES BELOW
+
+The six classes listed in the index above are used unchanged. Two additions:
+
+  SESSION-REPRODUCED A fact the compiling session RECOUNTED OR RE-READ FROM THE
+                     REPOSITORY ITSELF rather than accepting a committed
+                     document's word for it. Marked [R1]. It covers, across the
+                     three notes: the merge diffs and their file
+                     distributions; that both golden-capture commits touch no
+                     source file; the 42-entry catalogue pin; the refusal type
+                     for an undefined tier; the four enforced parser limit
+                     constants; and the oracle's 111-case composition counted
+                     from the fixture.
+  BRIEF-REPORTED     Used in the M14-2.2 note only, marked [B1], for the FINAL
+                     independent review of PR #47 and its two nonblocking P3
+                     observations. THE MERGE IS VERIFIED; THAT REVIEW IS NOT.
+                     It appears in the owner's task specification and COULD NOT
+                     BE FOUND in the repository or on GitHub.
+
+WHAT IS PROVEN BY THESE THREE MILESTONES, AND WHAT IS NOT
+
+PROVEN, and confirmed by continuous integration on the exact reviewed heads:
+that free output is byte-identical after the tier change, against a baseline
+captured beforehand from unchanged source and independently regenerated by a
+reviewing session; that injecting a real paid catalogue entry leaves free
+output byte-identical; that seven source mutations and the removal of the new
+guard are each caught by tests; that an extended-stamped scan cannot produce a
+report at all; that the four new parsing primitives leave seven free-output
+digests identical to pins committed before any source changed, one of which
+matches a pin written for an unrelated purpose; that the new primitives are
+referenced by no source file; that no path, query, field name, field value,
+page text or reporting destination appears in any fact the primitives produce;
+and that four classes of hostile document now stop at an enforced count with
+absence marked unassertable, with the charge and the cap each shown
+load-bearing by mutation.
+
+NOT PROVEN, AND NOT CLAIMED: any wall-clock or memory bound — every timing and
+memory figure in the source is ONE MACHINE'S OBSERVATION; that no further
+super-linear parsing path exists, which is a review result and not a proof, and
+which a parser-library upgrade re-opens; equivalence to any shipping browser —
+only to one parser library's implementation of the standard, with a known
+divergence recorded; the standards statements themselves, since the
+specification hosts were unreachable during the correction rounds; the 20
+proposed oracle rows, 11 of which have had NO independent review; the attribute
+term in the element charge, which has no direct mutation test; the full
+profile-to-tier binding, which is MANDATORY AT M14-2.3 and not done; and
+anything at all about the ten extended checks, WHICH STILL DO NOT EXIST IN CODE.
+
+THE ORACLE IS NOT AN APPROVAL. 111 cases: 84 binding, 20 proposed, 7 blocked on
+an owner decision. ONLY THE 84 BINDING CASES HAVE SETTLED STATUS SEMANTICS.
+
+OPEN OWNER DECISIONS AFTER THESE THREE MILESTONES
+
+  DECIDED, TECHNICAL LEVEL ONLY: host scope; control-count presentation;
+  extended priority ordering.
+  STILL OPEN: OD-10 customer-facing copy, which now ALSO holds the
+  control-count explanation's wording and the zero-score statement's wording;
+  B-6 public, legal and privacy wording; the methodology's sensitive-file
+  exposure review.
+  NEWLY OPENED BY M14-2.2, FIVE SEMANTIC CHOICES: whether a policy delivered by
+  markup may soften an insecure-subresource finding; which embedded-content
+  kinds count as active; whether unrecognisable integrity metadata counts as
+  none, with its cross-origin sub-question; how a valued form of a valueless
+  directive should be treated; and how an empty reporting-destination tag
+  should be treated. NONE IS DECIDED OR IMPLIED ANYWHERE IN THIS PACKAGE.
+
+OTHER CONTINUING BLOCKERS, UNCHANGED OR NEWLY RECORDED
+
+M14-2.3 onward, including the mandatory fail-closed profile-to-tier binding
+contract; review of the 20 proposed oracle rows; M14-3 probe-list MEMBERSHIP at
+the protocol boundary; M14-4's authorisation-callback guard and account-erasure
+path; M14-5's interface and off-production acceptance; M14-6's guarded
+real-PostgreSQL release gate, the production-shape timing of migration 0005 and
+the floor restatement. NEWLY RECORDED AND OUTSIDE M14: four measured defects in
+the EXISTING FREE scan — a truncation hazard giving a false pass, an exposure
+group losing three results on a parser failure, hostile-input parse cost, and a
+comma-joined policy field misread in both directions. ALL FOUR WERE
+DELIBERATELY LEFT IN PLACE, because each would move free output bytes and each
+needs its own reviewed change and the owner's approval.
+
+SANITISATION OF THE THREE ADDED NOTES
+
+The sanitisation statement above applies unchanged to the three notes added on
+2026-10-12, with one addition specific to M14-2.2: the hostile documents that
+the review rounds used are described BY SHAPE ONLY and never reproduced as
+markup, so this package carries NO REUSABLE ADVERSARIAL INPUT alongside its
+existing rule that it carries no scanning recipe. No canary value, fixture body
+or target hostname is reproduced. The only long identifiers remain Git commit
+SHAs, one migration file SHA-256 and GitHub pull-request, comment and
+workflow-run numbers. NO SCREENSHOT ACCOMPANIES ANY OF THE THREE: none of them
+changed anything a user can see, and none is invented.
+
+END OF ADDENDUM
+
 END OF INDEX
