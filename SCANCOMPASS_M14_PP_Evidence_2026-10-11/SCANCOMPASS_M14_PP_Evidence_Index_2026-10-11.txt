@@ -443,4 +443,294 @@ changed anything a user can see, and none is invented.
 
 END OF ADDENDUM
 
+================================================================================
+SECOND ADDENDUM, OF 13 OCTOBER 2026 — ONE FURTHER ACCEPTED MILESTONE
+================================================================================
+
+NOTHING ABOVE THIS LINE HAS BEEN CHANGED. The index of 2026-10-11 and the
+addendum of 2026-10-12 are both preserved exactly as written and are HISTORICAL
+from here on. This second addendum was appended on 2026-10-13, after one further
+milestone was independently reviewed, corrected, INDEPENDENTLY RE-REVIEWED,
+merged and owner-accepted, and it says which earlier statements the later work
+has overtaken. SUPERSEDED TEXT IS MARKED, NOT REWRITTEN.
+
+WHAT THE INDEX AND THE FIRST ADDENDUM SAY THAT IS NOW HISTORICAL
+
+  "FOUR M14 MILESTONES ARE MERGED AND OWNER-ACCEPTED" (index)
+  "SEVEN are now merged and owner-accepted" (first addendum)
+      EIGHT are now merged and owner-accepted. The eighth is below.
+  "Steps 2.1 and 2.2 are merged. Steps 2.3 to 2.7 have not started."
+      STEP 2.3 IS MERGED. Steps 2.4 to 2.7 have not started. STEP 2.4 HAS A
+      PLAN-ONLY DOCUMENT MERGED WITH STEP 2.3, WHICH IMPLEMENTS NOTHING,
+      APPROVES NOTHING AND DECIDES NOTHING.
+  "the full profile-to-tier binding, which is MANDATORY AT M14-2.3 and not
+   done" (first addendum, under NOT PROVEN)
+      NOW DONE, AND THIS IS THE ONE EARLIER "NOT PROVEN" ITEM THIS MILESTONE
+      CLOSES. The optional tier argument is REMOVED from both scoring and
+      report composition, the tier is DERIVED from the profile the engine
+      stamped, the agreement is checked IN BOTH DIRECTIONS, and an unknown
+      stamp is REFUSED rather than treated as free.
+  "THE TEN EXTENDED CHECKS ARE SPECIFIED AND LOCKED, NOT BUILT" (index)
+      STILL TRUE OF EVERY CHECK ITSELF. No check module, catalogue entry,
+      content entry, evidence-policy entry, route or interface for any extended
+      check exists. What now exists in addition is the ENGINE THAT WOULD RUN
+      THEM, the PROFILE THEY WOULD RUN UNDER, and the OBSERVATIONS THEY WOULD
+      READ. ALL 42 CATALOGUE ENTRIES ARE STILL FREE.
+  "Still two." (first addendum, on release-blocking defects found by review)
+      STILL TWO AT THE RELEASE-BLOCKING LEVEL. This milestone produced NO P0.
+      It produced ITS FIRST P1 FOR THE M14-2 SERIES: a defect that could make a
+      paid scan WAIT FOREVER. IT WAS NOT REACHABLE IN PRODUCTION, by any user,
+      customer or scan, and it was corrected before acceptance. The count of
+      release-blocking defects is therefore unchanged, AND THE COUNT OF P1
+      FINDINGS IN THIS PACKAGE HAS GONE FROM ZERO TO ONE.
+  "FIVE NEW OWNER SEMANTIC DECISIONS WERE OPENED by M14-2.2, so the count of
+   open owner decisions has GONE UP"
+      STILL FIVE, STILL OPEN, AND STILL NOT IMPLIED. This milestone opened NO
+      NEW OWNER DECISION and CLOSED NONE. The merged step-2.4 plan lists all
+      five as open and REFUSES TO CHOOSE, and requires that any undecided
+      situation be reachable only through an explicit branch that REFUSES TO
+      DECIDE, with a quiet default named as a STOP CONDITION.
+  "NO FORMAL GITHUB REVIEW HAS EVER BEEN SUBMITTED ON ANY M14 PULL REQUEST.
+   All seven were queried."
+      ALL NINE HAVE NOW BEEN QUERIED, counting the eighth milestone's pull
+      request and the separate draft that holds its re-review. STILL NO FORMAL
+      GITHUB REVIEW ON ANY OF THEM, AND PULL REQUESTS #48 AND #49 CARRY NO
+      COMMENTS AT ALL. [S1]
+
+STILL TRUE, AND UNCHANGED BY THE EIGHTH MILESTONE
+
+NOTHING IN M14 HAS REACHED PRODUCTION. Migration 0005 exists IN SOURCE ONLY and
+is NOT APPLIED. Production still runs M13 Decision A: schema contract m13-0004,
+migration ledger 0000-0004, payments CLOSED, payment era ERA 1, the second
+deployment decision not run. NO M14 MILESTONE HAS CONTACTED production, the
+virtual private server, the production database, Stripe in either mode, the web
+server, DNS, the firewall or any production configuration file. NO LIVE TARGET
+HAS EVER BEEN SCANNED BY ANY M14 SESSION. THERE IS STILL NOTHING FOR SALE AND NO
+PAID ASSESSMENT HAS EVER BEEN PERFORMED. [S1,S2]
+
+NO PAID ASSESSMENT IS REACHABLE EVEN NOW THAT THE ENGINE CAN PERFORM ONE. No
+route, no worker command and no orchestrator path can select the paid profile,
+and the paid path is exercised ONLY BY UNIT TESTS. FOUR SEPARATE PROPERTIES ARE
+ASSERTED to make that true, and a smuggled profile or tier field is refused by
+both schemas. [S2]
+
+NO TEST IN THIS PACKAGE WAS RUN BY THE SESSIONS THAT WROTE THESE NOTES, and
+none was run by the project owner.
+
+THESE REMAIN RETROSPECTIVE RECORDS. The note below was written on 2026-10-13 and
+carries that date in its file name. ITS SUBJECT DATE IS 12 OCTOBER 2026 — the
+day the work was implemented, corrected, re-reviewed and merged — and that date
+is stated in its own opening lines. THE FILE-NAME DATE IS THE DATE OF WRITING,
+AND THIS IS THE FIRST NOTE IN THE PACKAGE WHOSE WRITING DATE AND SUBJECT DATE
+FALL ON DIFFERENT DAYS SINCE THE 2026-10-11 GROUP.
+
+THE EIGHTH MILESTONE
+
+  2026-10-12  PR #48   M14-2.3 PROFILE-AWARE SCANNER ENGINE. The engine now
+              23:09    takes an assessment profile, and the catalogue tier is
+              merged   a DERIVED CONSEQUENCE of that profile rather than
+              e256830  something a caller may state: THE OPTIONAL TIER ARGUMENT
+                       IS REMOVED FROM BOTH SCORING AND REPORT COMPOSITION,
+                       which COMPLETES THE BINDING CONTRACT STEP 2.1 MADE
+                       MANDATORY FOR THIS STEP. The paid profile performs
+                       EXACTLY TWO ADDITIONAL DNS TEXT-RECORD LOOKUPS AND
+                       NOTHING ELSE ON THE WIRE, proven by driving the REAL
+                       transport over an in-memory connection factory across
+                       EIGHT SCRIPTED WORLDS of redirects and refusals and
+                       comparing ordered traces event by event. The paid result
+                       is a DRAFT CARRYING NO CATALOGUE VERSION, which makes it
+                       STRUCTURALLY UNABLE to become a report rather than
+                       merely forbidden from becoming one. FREE OUTPUT AND
+                       EVERY FREE REQUEST ARE UNCHANGED, against the step-2.1
+                       golden, the step-2.2 digests and A NEW NETWORK-TRACE
+                       GOLDEN CAPTURED FROM UNCHANGED SOURCE BEFORE ANY SOURCE
+                       FILE WAS TOUCHED, in a commit confirmed to touch no
+                       source file AND to be a GIT ANCESTOR of the first commit
+                       that does. INDEPENDENT REVIEW FOUND THE SERIES' FIRST
+                       P1: a lookup whose deadline fired SYNCHRONOUSLY, before
+                       its cancel listener was attached, would never be
+                       dispatched again, SO A NEVER-ANSWERING QUERY LEFT A PAID
+                       RUN PENDING FOREVER — and the code's own comment and the
+                       first version of its record both CLAIMED THIS COULD NOT
+                       HAPPEN. NONE OF THE FIFTEEN MUTATIONS THE IMPLEMENTING
+                       SESSION HAD ALREADY RUN COVERED IT. Four P2 groups were
+                       resolved beside it. THE CORRECTION WAS MADE IN THE
+                       REVIEWING SESSION, SO A SEPARATE SESSION RE-REVIEWED THE
+                       EXACT CORRECTED HEAD, wrote its OWN reproducer and ran
+                       its OWN 29-MUTANT CAMPAIGN — 28 KILLED, THE ONE SURVIVOR
+                       GENUINELY EQUIVALENT — and returned MERGE with no P0, P1
+                       or P2. NO WALL-CLOCK OR MEMORY BOUND IS PROVEN OR
+                       CLAIMED.
+    SCANCOMPASS_M14_Step2.3_PP_Evidence_2026-10-13.txt
+
+AN EIGHTH PROVENANCE CLASS APPEARS IN THE NOTE BELOW, AND ONE EARLIER CLASS IS
+DELIBERATELY NOT USED
+
+  DRAFT-REVIEW-     A finding of the independent re-review of the exact merged
+  RECORDED          head, read by the compiling session in a committed document
+                    on the branch of DRAFT, UNMERGED PULL REQUEST #49. Marked
+                    [D1]. IT IS READABLE AND CITED — a real improvement on the
+                    previous milestone's unlocatable final review — BUT IT IS
+                    NOT MERGED SOURCE EVIDENCE, NOT AN OWNER APPROVAL AND NOT
+                    ACCEPTANCE. The review document states that distinction
+                    itself. IF THAT DRAFT IS ABANDONED OR REWRITTEN, THE RECORD
+                    OF THE ROUND THAT CLEARED THIS HEAD FOR MERGE GOES WITH IT.
+
+  THE BRIEF-REPORTED CLASS IS NOT USED IN THE EIGHTH NOTE, AND THAT ABSENCE IS
+  ITSELF A RESULT. For the seventh milestone one review existed only in the
+  owner's task specification and could not be found anywhere. FOR THE EIGHTH,
+  EVERY FACT THE TASK SPECIFICATION STATED WAS LOCATED AND CONFIRMED — the
+  reviewed head, the merge, the continuous-integration run and its counts, the
+  review document, the defect, the four resolution groups, the twenty-nine
+  mutations and the five outcome states. NOTHING IN THE EIGHTH NOTE RESTS ON AN
+  UNCORROBORATED REPORT. THE SEVENTH MILESTONE'S GAP IS NOT THEREBY CLOSED: IT
+  REMAINS OPEN AND IS STILL RECORDED IN ITS OWN NOTE.
+
+  SESSION-REPRODUCED is used again, marked [R1]. It covers, for the eighth
+  milestone: the 27-file merge diff and its distribution; that the
+  before-change capture commit touches NO source file AND IS A GIT ANCESTOR of
+  the first commit that does; that its files are byte-identical at the merge;
+  the recomputed digest of the captured golden, matching both the source record
+  and the re-reviewer's independently regenerated value; that the diff across
+  the whole transport-policy directory is ZERO LINES; the two-entry profile
+  table and the twelve and fourteen retrieval-operation lists; all five lookup
+  outcome states present in source with their prohibition written beside them;
+  that none of the draft pull request's seventeen files exists on the main
+  branch; and that the large test suites are table-driven, so static counts
+  neither confirm nor contradict the reported ones.
+
+WHAT IS PROVEN BY THE EIGHTH MILESTONE, AND WHAT IS NOT
+
+PROVEN, and confirmed by continuous integration on the exact reviewed head:
+that the catalogue tier can no longer be stated by a caller and is derived from
+the profile the engine stamped, in both directions, with unknown stamps refused;
+that free output is byte-identical after the change, against a report golden and
+seven digests committed by earlier milestones and left unmodified; that every
+free REQUEST is unchanged too — same hosts, ports, methods, paths, header names
+and order — against a trace golden captured from unchanged source in a commit
+that touches no source file and precedes the change in the commit graph; that
+the difference between the free and the paid profile on the wire is EXACTLY TWO
+DNS TEXT-RECORD LOOKUPS across eight scripted worlds of redirects and refusals,
+with no decoy host resolved, contacted, queried or sent to registration although
+the run did read the decoys; that the paid result CANNOT be composed into a
+report, at compile time for the ordinary path and at run time for the one path
+the compiler cannot block; that no route, worker command or orchestrator path
+can select the paid profile and that both strict schemas refuse a smuggled
+profile or tier field; that a curtailed lookup is never reported as an absence;
+and that twenty-eight of twenty-nine independently attempted mutations are
+caught, the single survivor being genuinely equivalent.
+
+NOT PROVEN, AND NOT CLAIMED: any wall-clock or memory bound — every timing and
+memory figure in the source is ONE MACHINE'S OBSERVATION, and the paid profile's
+measured overhead range INCLUDES NEGATIVE VALUES, which is the honest sign that
+it is noise; that abandoning a lookup cancels it, which it does not — the socket
+may be held until the resolver's own timeout; anything about the deadline against
+a REAL resolver, since every deadline test uses injected or never-answering
+fixtures; that the shipped tests protect every implemented safety property — ONE
+IMPLEMENTED REFUSAL HAS NO TEST THAT WOULD NOTICE ITS REMOVAL, and that was
+found by a reviewer's test rather than the project's; that the trace golden's
+event ORDER is guaranteed, since it depends on a fake socket's timer ordering;
+the 20 proposed oracle rows, 11 of which have still had NO independent
+confirmation; and anything at all about the ten extended checks, WHICH STILL DO
+NOT EXIST IN CODE.
+
+AND ONE CHRONOLOGY ITEM IS INCOMPLETE RATHER THAN PROVEN. The push-triggered
+continuous-integration run on the merge commit itself was created three seconds
+after the merge and WAS STILL IN PROGRESS WITH NO CONCLUSION when the eighth
+note was written. EVERY EARLIER MILESTONE IN THIS PACKAGE HAS A SUCCESSFUL
+POST-MERGE RUN RECORDED; THIS ONE DOES NOT YET. The run on the exact reviewed
+head succeeded, and that is the run the acceptance rests on. [S1]
+
+ONE RECORDED FIGURE IS DISPUTED AND THE PACKAGE DOES NOT RESOLVE IT. For the
+three test files used in the eighth milestone's before-and-after demonstration,
+the merged source record reports a total of 126 tests and the re-reviewer
+measured 127; THE FAILURE COUNT OF NINETEEN AGREES EXACTLY IN BOTH. BOTH
+FIGURES ARE PRINTED IN THE NOTE, and neither session that wrote a note ran
+either measurement.
+
+OPEN OWNER DECISIONS AFTER EIGHT MILESTONES
+
+  DECIDED, TECHNICAL LEVEL ONLY: host scope; control-count presentation;
+  extended priority ordering.
+  STILL OPEN: OD-10 customer-facing copy, which also holds the control-count
+  explanation's wording and the zero-score statement's wording; B-6 public,
+  legal and privacy wording, without which no paid assessment may run in
+  production; the methodology's sensitive-file exposure review.
+  THE FIVE SEMANTIC CHOICES OPENED BY M14-2.2 ARE ALL STILL OPEN, UNCHANGED AND
+  UNIMPLIED. The eighth milestone opened no new owner decision and closed none.
+  The draft re-review package contains a briefing on all five WITH OPTIONS AND
+  RECOMMENDATIONS; IT IS NOT MERGED, AND ITS OWN TEXT MARKS EVERY
+  RECOMMENDATION AS BINDING NOBODY AND REQUIRING OWNER APPROVAL. A RECOMMENDED
+  OPTION IS NOT AN APPROVAL.
+  A SIXTH QUESTION IS RECORDED AND DELIBERATELY NOT COUNTED AMONG THE FIVE: how
+  the eighth milestone's two deadline states should be reported. The merged plan
+  says this is the STEP-2.4 REVIEWER'S choice and not the owner's, lays out two
+  precedents from the existing free scan, and CHOOSES NEITHER — written down SO
+  IT IS NOT DECIDED SILENTLY.
+
+OTHER CONTINUING BLOCKERS, UNCHANGED OR NEWLY RECORDED
+
+M14-2.4 onward: the ten check modules, which must refuse to decide any
+owner-blocked situation and must reduce the paid lookups' raw record text to
+bounded findings before any evidence is retained; review of the 20 proposed
+oracle rows; M14-3's protocol change, which must carry only approved,
+content-free retrieval metadata, must enforce probe-list MEMBERSHIP at the
+boundary, must PIN THE EXACT PROFILE LITERAL rather than accept any string, and
+must prove that a transfer object carrying raw paid observations is REFUSED;
+M14-4's authorisation-callback guard — still a raw transaction callback, to be
+constrained BEFORE ANY RUNTIME CALLER EXISTS, with adversarial tests for a
+misbehaving callback that THE DRAFT RE-REVIEW REPORTS DO NOT EXIST TODAY — and
+its fail-closed lapse semantics and account-erasure path across restricting
+keys; M14-5's interface and off-production acceptance; M14-6's guarded
+real-PostgreSQL release gate, the production-shape timing of migration 0005, the
+rollback floor restatement and the older renderer's behaviour on a paid
+document.
+
+NEWLY RECORDED BY THE DRAFT RE-REVIEW, AND NOT APPROVED WORK ITEMS. An
+acceptance-runner obstacle: the existing runner validates its guarded phase
+against an EXACT ALLOW-LIST OF FILES and REJECTS ANY FILE NOT ON IT, and the M14
+persistence suite added by an earlier accepted milestone IS NOT ON THE LIST, so
+an M14-6 run as it stands WOULD FAIL ON THAT SUITE'S PRESENCE RATHER THAN
+CERTIFY IT. A missing boundary test that the paid-assessment switch and the
+payment switches are INDEPENDENT. And TWO FURTHER FREE-PATH FINDINGS beside the
+four already recorded: a mail configuration that explicitly declares the domain
+accepts no mail is NOT RECOGNISED, because the resolver represents that
+declaration one way and the check tests for another AND THE EXISTING FIXTURES
+USE THE FORM THE CODE EXPECTS; and the web tier DOES NOT CORRELATE the worker's
+reported target with the target that was requested, so a malfunctioning or
+compromised worker's hostname would reach a report. THE FIRST AFFECTS EVIDENCE
+ACCURACY AND NO SCORE; THE SECOND IS DEFENCE IN DEPTH AND REQUIRES A
+COMPROMISED WORKER TO MATTER.
+
+SO THE FREE-PATH TALLY RISES FROM FOUR TO SIX, AND ALL SIX REMAIN OPEN. The
+four already recorded — a truncation hazard giving a false pass, an exposure
+group losing three results on a parser failure, hostile-input parse cost, and a
+comma-joined policy field misread in both directions — were each REPRODUCED
+INDEPENDENTLY by the draft re-review, which supplies a minimal reproduction for
+each. EACH OF THE SIX WOULD MOVE FREE OUTPUT OR FREE FAILURE BEHAVIOUR FOR SOME
+INPUT, SO EACH NEEDS ITS OWN REVIEWED CHANGE, ITS OWN GOLDEN REVISION AND THE
+OWNER'S APPROVAL. NONE IS M14 WORK, NONE IS SCHEDULED, AND THE EXISTING FREE
+SCAN'S UNBOUNDED PARSE COST STILL DOMINATES EVERY COST FIGURE THE EIGHTH
+MILESTONE RECORDS.
+
+SANITISATION OF THE ADDED NOTE
+
+The sanitisation statements above apply unchanged to the note added on
+2026-10-13. No check or probe identifier, header name, directive name, record
+name, tag name, function name or source file path is reproduced in it; every
+profile, lookup, observation, outcome state and open decision is described BY
+PURPOSE ONLY, so the package still carries NO SCANNING RECIPE AND NO REUSABLE
+ADVERSARIAL INPUT. The eight scripted redirect and refusal worlds are described
+BY RELATIONSHIP ONLY and never as addresses; the hostile documents are described
+by shape and never as markup; the canary values the re-review planted are
+referred to and NEVER REPRODUCED; and the one loopback-resolver reproduction is
+described WITHOUT ITS ADDRESS LITERAL. The captured golden's SHA-256 is referred
+to as having been recomputed and matched, AND ITS VALUE IS NOT REPRODUCED, so
+the only long identifiers in the added note are Git commit SHAs and GitHub
+pull-request and workflow-run numbers. NO SCREENSHOT ACCOMPANIES IT: the slice
+changed nothing a user can see, no paid assessment is reachable, and none is
+invented.
+
+END OF SECOND ADDENDUM
+
 END OF INDEX

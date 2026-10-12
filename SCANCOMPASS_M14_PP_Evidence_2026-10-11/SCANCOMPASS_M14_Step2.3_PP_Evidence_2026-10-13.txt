@@ -1,0 +1,1436 @@
+SCANCOMPASS — M14 STEP 2.3 PERSONAL PROJECT EVIDENCE
+The profile-aware scanner engine: a second assessment profile that the server
+alone may select, two additional lookups and nothing else on the wire, and a
+defect found by independent review that could have made a paid scan wait
+forever
+Subject dates: implemented, corrected, independently re-reviewed and merged
+               12 October 2026
+Evidence written: 13 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M14-2.3 IS IMPLEMENTED IN SOURCE, MERGED AS PR #48 AND OWNER-ACCEPTED. IT IS
+NOT DEPLOYED. It adds the engine entry point that takes an assessment profile,
+the strict binding between that profile and the catalogue tier, two additional
+network lookups performed only under the paid profile, and the integration of
+the step-2.2 parsing primitives for that profile only. [S1,S2]
+
+NO PAID ASSESSMENT IS REACHABLE. No route, no worker command and no
+orchestrator path can select the paid profile. The paid engine path is
+exercised ONLY BY UNIT TESTS. The public request schema is strict and carries
+no profile field, the worker command schema is strict and carries no profile
+field, the orchestrator never passes a profile, and the worker calls only the
+free entry point. EACH OF THOSE FOUR IS ASSERTED BY A TEST, AND A SMUGGLED
+PROFILE OR TIER FIELD IS REFUSED BY BOTH SCHEMAS. [S2,D1]
+
+THE PAID RESULT CANNOT BECOME A REPORT, BY CONSTRUCTION AND NOT BY POLICY. The
+paid profile returns a DRAFT that carries NO CATALOGUE VERSION, because no paid
+catalogue version exists until step 2.5. The absence of that one field makes the
+draft UNASSIGNABLE to the free result type, so it cannot be handed to report
+composition or to the worker result schema AT COMPILE TIME, and scoring refuses
+its stamp AT RUN TIME. The implementing session chose to carry no version rather
+than invent one. [S2,D1]
+
+THE TIER IS NOW DERIVED FROM THE SCAN'S OWN STAMP AND CAN NO LONGER BE PASSED
+IN. Scoring and report composition previously accepted an optional tier
+argument that defaulted to free. BOTH ARGUMENTS ARE REMOVED. The tier is
+derived from the profile the engine stamped into the scan, the derivation must
+agree IN BOTH DIRECTIONS, and an unknown stamp is refused rather than treated as
+free. This is the FAIL-CLOSED BINDING CONTRACT THAT STEP 2.1's FOURTH P2 FINDING
+MADE MANDATORY FOR THIS STEP, and it is now met. [S2,D1]
+
+THE NETWORK DIFFERENCE BETWEEN THE FREE AND THE PAID PROFILE IS EXACTLY TWO
+DNS TEXT-RECORD LOOKUPS, AND NOTHING ELSE. No additional request, connection,
+host, port, path, method, redirect, certificate probe or registration lookup.
+Proven by driving the REAL transport over an in-memory connection factory
+across eight scripted worlds and comparing ordered traces event by event.
+[S2,D1]
+
+FREE OUTPUT IS BYTE-IDENTICAL, AND SO IS EVERY FREE REQUEST. The step-2.1
+report golden and the step-2.2 parser and report digests pass UNMODIFIED, and a
+NEW network-trace golden was captured FROM UNCHANGED SOURCE BEFORE ANY SOURCE
+FILE WAS TOUCHED, in a commit this session confirmed touches NO FILE UNDER THE
+SOURCE TREE and is a GIT ANCESTOR of the first commit that does. [R1,S2,D1]
+
+INDEPENDENT REVIEW FOUND ONE REQUIRED DEFECT, AND IT WAS A REAL ONE. Under the
+paid profile a lookup whose deadline fired SYNCHRONOUSLY, before the cancel
+listener had been attached, WOULD NEVER BE DISPATCHED AGAIN — so a
+never-answering query left the whole paid run PENDING FOREVER. The code's own
+comment and the first version of the source record both claimed this could not
+happen. THE CLAIM WAS FALSE AS WRITTEN, and the record now says so in place
+rather than being rewritten. NONE OF THE FIFTEEN MUTATIONS THE IMPLEMENTING
+SESSION HAD RUN COVERED IT. [S2,D1]
+
+THE DEFECT WAS NOT REACHABLE IN PRODUCTION, AND THAT IS NOT WHY IT WAS FIXED.
+The platform resolver cannot abort the deadline synchronously, and the paid
+profile has no caller outside unit tests, so no user and no customer could ever
+have reached it. It was a genuine hole in the function's OWN STATED CONTRACT and
+was corrected on that ground alone. [S2,D1]
+
+THE CORRECTION WAS MADE IN THE REVIEWING SESSION, AND THEREFORE NEEDED A
+SEPARATE RE-REVIEW. The session that found the defect also fixed it, at the
+owner's instruction. A SEPARATE INDEPENDENT SESSION then re-reviewed the exact
+corrected head, ran its OWN reproducer and its OWN mutation campaign, and
+returned a MERGE verdict with NO P0, NO P1 AND NO P2. That re-review is recorded
+in a SEPARATE DRAFT PULL REQUEST, #49, WHICH IS NOT MERGED AND IS NOT AN
+ACCEPTED MILESTONE. [S1,D1]
+
+TWENTY-NINE MUTATIONS WERE ATTEMPTED BY THE RE-REVIEWER AND TWENTY-EIGHT WERE
+CAUGHT. THE ONE SURVIVOR IS EQUIVALENT: removing a redundant one-shot listener
+option changes no observable behaviour, because the corrected code removes the
+listener on every path anyway. ONE FURTHER MUTATION SURVIVED THE PULL REQUEST'S
+OWN TESTS AND WAS CAUGHT ONLY BY THE REVIEWER'S, and that gap is recorded as a
+nonblocking observation. [D1]
+
+NO FORMAL GITHUB REVIEW WAS SUBMITTED ON PR #48, AND IT CARRIES NO COMMENTS AT
+ALL. Queried through the GitHub API while this note was written: zero formal
+reviews, zero issue comments, zero review comments. BOTH REVIEW ROUNDS WERE
+CONDUCTED IN SEPARATE ASSISTANT SESSIONS. Where this note says "review", that is
+what it means, and NEVER a formal GitHub review. [S1]
+
+THE 658 POSTGRESQL-DEPENDENT TESTS WERE SKIPPED BY ORDINARY CONTINUOUS
+INTEGRATION, NOT PASSED. The figure is identical before and after the slice,
+which touches no persistence code. THE GUARDED POSTGRESQL TESTS DID NOT RUN, AND
+NO CLAIM IS MADE THAT ANY OF THEM PASSED. The continuous-integration summary
+line says so itself. [S1,S2,D1]
+
+NO MACHINE-INDEPENDENT WALL-CLOCK OR MEMORY LIMIT WAS PROVEN, AND NONE IS
+CLAIMED ANYWHERE IN THIS NOTE. The source records timing and memory figures
+from ONE MACHINE, explicitly labelled as not a guarantee, and no assertion in
+the slice uses one. The scan budget is unchanged, and the parse limits that ARE
+enforced are COUNTS, not durations. [S2]
+
+STEP 2.4 IS PLANNED AND NOT ACCEPTED. A plan-only document for the ten paid
+checks was merged with this slice. IT IMPLEMENTS NOTHING, APPROVES NOTHING AND
+DECIDES NOTHING. THE TEN PAID CHECKS STILL DO NOT EXIST IN CODE. [S2]
+
+THE FIVE OPEN OWNER SEMANTIC DECISIONS ARE STILL OPEN. None is decided by this
+slice, none is implied by it, and the merged plan lists them as open and
+explicitly refuses to choose. A RECOMMENDED OPTION IS NOT AN APPROVAL. [S2,D1]
+
+NOTHING REACHED PRODUCTION. Migration 0005 remains IN SOURCE ONLY and was NOT
+RUN ANYWHERE. Production still runs the M13 Decision A state carried in the
+earlier accepted record in this repository: schema contract m13-0004, migration
+ledger 0000-0004, payments CLOSED. NO PRODUCTION CONTACT OF ANY KIND — no
+virtual private server, no production database, no Stripe in either mode, no
+web server, no DNS, no firewall, no production configuration file. NO LIVE
+TARGET WAS SCANNED BY ANY SESSION AT ANY POINT IN THIS SLICE. [S2,D1]
+
+================================================================================
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+================================================================================
+
+Seven kinds of statement appear in this note and are kept apart throughout. One
+class used in the step-2.2 note is NOT used here, and that is itself a result:
+see the paragraph after the list.
+
+  SESSION-VERIFIED   Repository, pull-request and continuous-integration state
+                     read directly from the GitHub API while this note was
+                     being written. Marked [S1].
+  SOURCE-RECORDED    Figures taken from the committed source evidence document
+                     or the step-2.4 plan in the technical repository, READ AT
+                     THE MERGE COMMIT. Marked [S2].
+  SESSION-REPRODUCED A fact this session recounted, recomputed or re-read from
+                     the repository itself rather than accepting a document's
+                     word for it. Marked [R1] and named in place.
+  DRAFT-REVIEW-      A finding of the independent re-review of the exact merged
+  RECORDED           head, read by this session in the committed review
+                     document on the branch of DRAFT PULL REQUEST #49. Marked
+                     [D1]. IT IS READABLE AND CITED, BUT IT IS NOT MERGED
+                     SOURCE EVIDENCE, NOT AN OWNER APPROVAL AND NOT ACCEPTANCE.
+                     The review document says so itself, in its own words, on
+                     its first page.
+  REVIEW-REPORTED    A finding of the FIRST independent review, as recorded in
+                     the committed source evidence document that WAS merged.
+                     Attributed in place, with the round named.
+  OWNER-DECIDED      A decision of the project owner, named where used. THIS
+                     SLICE TAKES NONE AND DECIDES NONE. The owner's acts here
+                     are the instruction to correct and the acceptance itself.
+  HISTORICAL         Production facts carried from an earlier accepted record
+                     in this repository, named where used. M14-2.3 ADDS NONE.
+
+THE BRIEF-REPORTED CLASS USED IN THE STEP-2.2 NOTE IS NOT NEEDED HERE. In that
+note one review existed only in the owner's task specification and could not be
+found in the repository or on GitHub, and it was labelled accordingly. FOR THIS
+SLICE EVERY FACT THE TASK SPECIFICATION STATED WAS LOCATED AND CONFIRMED —
+the reviewed head, the merge, the continuous-integration run and its counts, the
+independent review document, the defect, the four resolution groups, the
+twenty-nine mutations and the five outcome states. NOTHING IN THIS NOTE RESTS ON
+AN UNCORROBORATED REPORT. That is a difference from the previous note worth
+recording, not a claim that the earlier gap was closed: IT WAS NOT.
+
+THE TWO REVIEW ROUNDS ARE KEPT APART, AND SO ARE THEIR STANDINGS.
+
+  ROUND 1 reviewed the head BEFORE the correction. Its findings are recorded
+  inside the MERGED source evidence document, in a section the implementing
+  side appended rather than rewriting earlier text. Those findings are
+  REVIEW-REPORTED and are part of accepted source evidence.
+  ROUND 2 re-reviewed the EXACT CORRECTED HEAD THAT WAS MERGED. Its record
+  lives on the branch of a DRAFT, UNMERGED pull request. It is [D1]. ITS MERGE
+  VERDICT IS A REVIEWER'S TECHNICAL OPINION ON ONE EXACT COMMIT AND IS NOT THE
+  OWNER'S ACCEPTANCE. The review document states that distinction itself.
+
+WHERE THE TWO ROUNDS DISAGREE WITH THE MERGED RECORD, THE DISAGREEMENT IS
+PRINTED, NOT RESOLVED. One figure in the merged source record is off by one
+against the re-reviewer's own measurement of the same three files. BOTH NUMBERS
+ARE GIVEN IN SECTION 11. This note does not decide which is right, because it
+ran neither measurement.
+
+NO TEST, SUITE, PARSE, SCAN OR TIMING WAS RUN BY THIS SESSION. Every test count,
+gate result and timing figure below is either continuous-integration output read
+from the GitHub API, a figure recorded in a committed document, or a figure
+recorded in the draft review document. WHAT THIS SESSION DID ITSELF was read the
+repository and the GitHub API and recount structural facts from them; each such
+fact is marked [R1] and named.
+
+EVERY TIMING AND MEMORY FIGURE IN THE SOURCE WAS MEASURED ON ONE MACHINE, a
+cloud container the source names by core count and clock speed only. The source
+labels those figures as observations and not a guarantee. NO BOUND IS CLAIMED
+HERE, AND NO ASSERTION IN THE SLICE DEPENDS ON ONE.
+
+================================================================================
+1. REVIEWED VERSION, PULL REQUEST, MERGE AND CONTINUOUS INTEGRATION
+================================================================================
+
+All of the following was read from the GitHub API while this note was being
+written, and every commit named resolves in the technical repository with the
+subject line recorded for it. [S1,R1]
+
+  Pull request        #48, in stanciuks/site-security
+  Title               the profile-aware scanner engine, the strict profile and
+                      tier binding, and two additional text-record queries; the
+                      title itself carries the words "draft" and "unreachable"
+  Base                main
+  Branch              claude/lucid-brahmagupta-ne4wpx
+  Opened              2026-10-12 19:16:46 UTC
+  Final reviewed head b53837cb8965c49a962b866a974ca4fa032682b3
+  State               MERGED, by the project owner
+  Merge commit        e256830f6873c0c2a19143aa61cce95f337c11df
+  Merge time          2026-10-12 23:09:59 UTC
+  Merge diff          27 files changed, 4,998 insertions, 91 deletions
+  Formal reviews      ZERO
+  Comments            ZERO issue comments and ZERO review comments
+
+A NOTE ON THE MERGE TIMESTAMP, BECAUSE IT CAN BE MISREAD. The merge is recorded
+by GitHub at 2026-10-12 23:09:59 UTC. The merge commit's own committer date
+renders as 2026-10-13 01:09:59 in the repository's local offset, two hours ahead
+of UTC. THESE ARE THE SAME INSTANT. The slice was implemented, corrected,
+re-reviewed and merged ON 12 OCTOBER 2026 IN UTC, and that is the subject date
+this note carries. The evidence date is 13 OCTOBER 2026 and belongs to the
+writing of this note, not to any event in the slice. [S1,R1]
+
+THE BRANCH CARRIES FIVE COMMITS, AND THEIR ORDER IS LOAD-BEARING. [S1,R1]
+
+  1  ea923910028a504eda3a88c6bc11716e9254e559
+     The before-change capture. THREE FILES, ALL UNDER THE TEST TREE, AND NOT
+     ONE FILE UNDER THE SOURCE TREE. 1,776 insertions, zero deletions. This
+     session recounted both facts and additionally confirmed BY GIT ANCESTRY
+     that this commit is an ancestor of the first commit that changes source.
+     [R1]
+  2  a196281e783bbd073894c6710e862196b3e416ec
+     The implementation. Twenty-two files, of which seven are source files.
+  3  ac29c6ad4ed4291103c3d705407fba5004af3bb7
+     One document: the continuous-integration result recorded into the source
+     evidence.
+  4  0dcfdc5da3f5b4db2aed73a905217103f50a0323
+     One document: the step-2.4 plan. PLAN ONLY.
+  5  b53837cb8965c49a962b866a974ca4fa032682b3
+     The correction round that answers the first independent review. Six files:
+     two source, three test, one document.
+
+CONTINUOUS INTEGRATION, ON THE GITHUB-HOSTED RUNNER, NODE 24. Three runs on the
+pull-request branch, ALL THREE SUCCESSFUL. [S1]
+
+  Run 38296591492  CI #80  head a196281  SUCCESS
+                   the implementation commit
+  Run 38297175058  CI #81  head 0dcfdc5  SUCCESS
+                   the head the FIRST independent review examined
+  Run 38310134865  CI #82  head b53837c  SUCCESS
+                   THE EXACT FINAL REVIEWED HEAD THAT WAS MERGED
+
+THE RUN ON THE FINAL HEAD IS THE ONE THAT MATTERS, AND ITS NUMBERS ARE THESE.
+Read from the run's own log through the GitHub API. [S1]
+
+  Tests        9,396 passed, 0 failed, 658 skipped, 0 todo
+  Of           10,054 tests across 1,639 suites
+  Test files   254 passed, 1 skipped, of 255
+  Duration     258.13 seconds
+  Gates        whole-tree whitespace, type check, lint, test, build, clean tree
+  Created      2026-10-12 21:21:36 UTC, completed 21:27:45 UTC
+
+THE RUN'S OWN SUMMARY LINE STATES THE SKIP REASON IN ITS OWN WORDS: the skipped
+tests are the guarded real-PostgreSQL suites, they lack scratch-database
+configuration, AND THEY DID NOT RUN THERE. This note repeats that rather than
+restating the pass count alone. THE GUARDED POSTGRESQL TESTS DID NOT RUN. [S1]
+
+ONE CHRONOLOGY FACT IS INCOMPLETE AND IS RECORDED AS SUCH. The push-triggered
+run on the merge commit itself, run 38320678604, CI #84, was created three
+seconds after the merge and WAS STILL IN PROGRESS WITH NO CONCLUSION when this
+session read it. EVERY EARLIER MILESTONE IN THIS PACKAGE HAS A SUCCESSFUL
+POST-MERGE RUN RECORDED; THIS ONE DOES NOT YET. The run on the exact reviewed
+head succeeded, and that is the run the acceptance rests on, but the post-merge
+confirmation on the merge commit IS NOT YET AN OBSERVED SUCCESS AND IS NOT
+CLAIMED AS ONE. [S1]
+
+THE MERGE DIFF'S COMPOSITION, RECOUNTED BY THIS SESSION FROM THE REPOSITORY
+RATHER THAN TAKEN FROM ANY DOCUMENT. Twenty-seven files. [R1]
+
+  2 documents, both NEW
+      the source evidence record for this slice, and the step-2.4 plan
+  6 source files, of which 1 IS NEW AND 5 ARE MODIFIED
+      the new one builds the paid profile's observations; the five modified are
+      the profile table, the engine, scoring, report composition and the web
+      orchestrator, the last of these by THREE LINES
+  19 files under the test tree
+      15 test files — 7 NEW and 8 MODIFIED
+      1 captured golden data file
+      3 shared helper modules that are not themselves test files
+
+THE SEPARATE DRAFT PULL REQUEST THAT HOLDS THE RE-REVIEW. [S1]
+
+  Pull request  #49, in the same repository
+  Title         an independent re-review of PR #48 together with preparation
+                for later steps, marked in the title itself as NON-NORMATIVE
+                and NOT ACCEPTANCE
+  State         OPEN, DRAFT, UNMERGED
+  Head          7f71c457bffb02a48804a07475aafc288da1215f
+  Diff          17 files, 1,767 insertions, ZERO DELETIONS
+  Reviews       ZERO formal reviews, ZERO comments
+  On main       NONE OF ITS SEVENTEEN FILES EXISTS ON THE MAIN BRANCH
+
+This session confirmed that last line directly: the review directory does not
+resolve at the merge commit. PR #49 IS NOT AN ACCEPTED MILESTONE, AND NOTHING IN
+IT IS AN APPROVAL. Its own first page states that it changes no design document,
+no evidence record, no oracle, no status table and no source or test file, and
+that where the owner must decide, the matter is marked as pending. [S1,R1,D1]
+
+================================================================================
+2. WHAT M14-2.3 IS, AND WHAT IT IS NOT
+================================================================================
+
+WHAT IT IS. The step that makes the scanner engine take an assessment profile
+as an argument, and makes the catalogue tier a DERIVED CONSEQUENCE of that
+profile rather than something a caller can state. Under the free profile the
+engine behaves exactly as it did, byte for byte. Under the paid profile it
+computes the same forty-two free results with the same semantics, performs
+exactly two additional lookups, assembles the facts the step-2.2 primitives
+extract, and returns a DRAFT that nothing downstream will accept. [S2]
+
+WHAT IT IS NOT. Not one of the ten paid checks. Not a catalogue entry, a content
+entry, an evidence-policy entry, a priority methodology or a report composition
+for the paid tier — those are steps 2.4 through 2.6. Not a worker protocol
+change, which is M14-3. Not a route, an entitlement or an orchestration, which
+is M14-4. Not a change to any network, redirect, address, resolver or
+authorisation policy. Not a fix for any of the four measured free-path findings.
+Not a schema or migration change. [S2]
+
+THE DESIGN'S OWN NAME FOR THE ENGINE OPERATION WAS ALREADY TAKEN, and the slice
+renamed its own entry point rather than shadow the existing one. A function of
+the design's chosen name already existed in the web layer and is named in the
+project's boundary rules. Introducing a second export of the same name in a
+different layer was judged worse than renaming, so the engine entry point
+carries a distinct name and is documented in place as the design's conceptual
+operation. THE FREE ENTRY POINT IS KEPT AS A ONE-LINE WRAPPER around the new
+one, so EVERY EXISTING CALLER — the worker above all — IS UNCHANGED. [S2]
+
+THE PAID RETURN VALUE IS DELIBERATELY INCOMPLETE, AND THAT IS THE POINT. No
+paid catalogue version exists yet; asking for one throws. The implementing
+session's choice was to let the draft CARRY NO CATALOGUE VERSION AT ALL rather
+than invent a placeholder. The consequence is structural: the draft is not
+assignable to the free result type, so the compiler refuses to hand it to report
+composition or to the worker result schema, and a test pins that refusal. IT IS
+THEREFORE NEVER "A COMPLETE PAID REPORT", AND NOT BECAUSE ANYONE PROMISED NOT TO
+TREAT IT AS ONE. [S2,D1]
+
+================================================================================
+3. THE BEFORE-CHANGE NETWORK TRACE, AND WHY ITS ORDER MATTERS
+================================================================================
+
+THE AUTHENTIC CAPTURE IS THE FIRST COMMIT ON THE BRANCH, AND IT TOUCHES NO
+SOURCE FILE. Before any source change, the implementing session built a
+recording harness and ran the UNCHANGED engine through eight scripted worlds,
+recording every network operation the engine performed and committing the
+result as a golden data file. THE COMMIT CONTAINS THREE FILES, ALL UNDER THE
+TEST TREE, AND NOTHING UNDER THE SOURCE TREE. [S2]
+
+THIS SESSION DID NOT TAKE THAT ON TRUST, AND CONFIRMED IT THREE WAYS. [R1]
+
+  1. The commit's own file list contains ZERO paths under the source tree.
+  2. The commit IS A GIT ANCESTOR of the first commit that changes a source
+     file. Commit timestamps are author-controlled and prove little; ANCESTRY IN
+     THE COMMIT GRAPH CANNOT BE BACKDATED AFTER THE FACT without rewriting every
+     descendant. The capture genuinely precedes the change.
+  3. The three files are BYTE-IDENTICAL at the merge commit. The golden
+     captured before the change is the golden the merged tree asserts against.
+
+AND THIS SESSION RECOMPUTED THE GOLDEN'S OWN DIGEST FROM THE MERGE COMMIT. The
+SHA-256 it computed matches, character for character, both the value recorded in
+the merged source evidence AND the value the independent re-reviewer reports
+having obtained by REGENERATING THE FILE FROM UNCHANGED MAIN. Three independent
+paths to one digest. [R1,S2,D1]
+
+THE RE-REVIEWER WENT FURTHER THAN THIS SESSION COULD. It checked out unchanged
+main, set the capture environment variable, REGENERATED the golden from scratch,
+and reports the regenerated file as BYTE-IDENTICAL to the committed one. That is
+the strongest available form of the claim "this baseline was not written to
+match the change", and THIS SESSION DID NOT REPRODUCE IT, because reproducing it
+requires running the suite. [D1]
+
+WHAT THE HARNESS RECORDS, AND WHY IT IS NOT A MOCK OF THE TRANSPORT. The harness
+drives the REAL fetch implementation — real redirect policy, real site-boundary
+rule, real address classification, real connect-time peer re-check, real byte
+caps — over an in-memory connection factory that the transport documents as a
+test seam. Requests are routed by their written request line, so concurrent
+chains stay deterministic. It records every engine fetch and the option keys
+passed with it, every connection with its protocol, host and port, every request
+line and header-name list, every connection-path resolution both pre-flight and
+guarded, every record query, every certificate probe and every registration
+lookup. THE POLICY CODE UNDER TEST IS THE SHIPPING POLICY CODE. [S2]
+
+THE EIGHT WORLDS ARE CHOSEN TO EXERCISE REFUSALS, NOT HAPPY PATHS. A direct
+site; a same-site redirect from the bare domain to the conventional web
+subdomain; a cross-site redirect that must be STOPPED; a secure-to-insecure
+downgrade that must be STOPPED; a same-site host that resolves to a private
+address and must be REFUSED BEFORE CONNECT; a redirect chain that EXCEEDS THE
+HOP CAP; a site whose secure service is down; and an input that is already a
+subdomain. Each world plants decoy hostnames in page markup, in several record
+types, in the mail reporting destination and in the registration body. [S2]
+
+THE DECOY HOSTNAMES ARE THE NON-VACUOUSNESS CONTROL, AND THE SOURCE SAYS SO. It
+is not enough to assert that no decoy host was contacted; a test that never
+parsed the decoys would pass trivially. The source records that the run DID READ
+the decoys and still contacted none of them, matched at label boundaries. [S2]
+
+================================================================================
+4. THE PROFILE-AWARE ENGINE, AND THE BINDING STEP 2.1 MADE MANDATORY
+================================================================================
+
+STEP 2.1 SHIPPED A NARROW GUARD AND A WRITTEN PROMISE THAT THIS STEP WOULD
+WIDEN IT. The earlier accepted record in this repository describes a fourth P2
+finding from the step-2.1 reviews: the reviewer asked for a safety property the
+slice did not have, the slice gained a NARROW FAIL-CLOSED GUARD, and a MANDATORY
+BINDING CONTRACT was written into the design as a requirement on THIS step. That
+contract is now met, and this section is the record of its being met. [S2,
+HISTORICAL]
+
+WHAT THE NARROW GUARD DID, AND WHAT IT DID NOT DO. It tolerated unknown profile
+stamps and it checked ONE DIRECTION ONLY: a paid stamp could not be composed as
+a non-paid tier. It did not refuse an unknown stamp, and it did not check that a
+free stamp was being composed as free. [S2]
+
+WHAT THE BINDING NOW IS. [S2,D1]
+
+  1. THE PROFILE TABLE HAS EXACTLY TWO ENTRIES, each mapping a profile
+     identifier to a stamped version string and to one catalogue tier. This
+     session read the table and recounted it. [R1]
+  2. THE LOOKUP IS AN OWN-PROPERTY LOOKUP AND REFUSES EVERYTHING ELSE,
+     including the inherited property names that would otherwise resolve
+     through the prototype chain. It is called FIRST — BEFORE THE CLOCK IS READ
+     AND BEFORE ANY NETWORK OPERATION IS PERFORMED.
+  3. DERIVING THE TIER FROM THE STAMP IS THE ONLY WAY SCORING AND COMPOSITION
+     LEARN THE TIER. An unknown stamp — INCLUDING THE WORD THE OLD TEST
+     FIXTURES USED — throws. THE ERROR DOES NOT ECHO THE STRING BACK.
+  4. THE AGREEMENT CHECK RUNS IN BOTH DIRECTIONS and refuses unknowns.
+  5. THE OPTIONAL TIER ARGUMENT IS GONE FROM BOTH SCORING AND REPORT
+     COMPOSITION. It used to default to free. A caller that still passes one is
+     now a COMPILE ERROR and is IGNORED AT RUN TIME.
+  6. REPORT COMPOSITION ADDITIONALLY REFUSES A SCORE whose catalogue version is
+     not the derived tier's, so a score computed for one profile cannot be
+     composed with a scan of another.
+
+THE WEB ORCHESTRATOR CHANGED BY THREE LINES, AND CHOOSES NOTHING. It now passes
+the scan's OWN STAMP through to scoring. NOTHING IN THE ORCHESTRATOR SELECTS A
+TIER OR A PROFILE. [S2,R1]
+
+UNTRUSTED CALLERS CANNOT SELECT THE TIER, AND FOUR SEPARATE THINGS HAVE TO HOLD
+FOR THAT TO BE TRUE. The public request schema is strict and has no profile
+field; the worker command schema is strict and has no profile field; the
+orchestrator never passes a profile; and the worker calls only the free entry
+point. EACH IS ASSERTED. A SMUGGLED PROFILE OR TIER FIELD IS REFUSED BY BOTH
+SCHEMAS. [S2,D1]
+
+THE EXISTING TEST EXPECTATIONS THAT CHANGED ARE MECHANICAL, AND THE RE-REVIEWER
+CHECKED THAT CLAIM INDEPENDENTLY. Nineteen literal scoring inputs across four
+files gained the stamp field; three fixtures that stamped a placeholder word now
+stamp the real free version; one reachability allow-list was re-scoped from
+empty to exactly the two engine files that now legitimately reference the
+primitives; and the step-2.1 guard tests were rewritten from the removed
+argument to the derived contract. NO GOLDEN, SCORE, GRADE, COVERAGE, FINDING
+COUNT, ACTION PLAN, VERSION LITERAL, BYTE COUNT OR STATUS EXPECTATION CHANGED.
+The re-reviewer examined the same edits and reports the same conclusion
+independently. [S2,D1]
+
+ONE OF THOSE RE-SCOPINGS DESERVES ITS OWN SENTENCE, BECAUSE IT RETIRES A CLAIM
+THE PREVIOUS MILESTONE MADE. Step 2.2's record asserted that NO SOURCE FILE
+OUTSIDE THE PRIMITIVES REFERENCED THEM, and that assertion was a TEST, not a
+promise. THIS STEP IS WHAT ENDS THAT PREMISE, DELIBERATELY AND FOR THE PAID
+PROFILE ONLY. The allow-list now names exactly two engine files. The free
+profile still never calls the primitives, and nothing outside the scanner
+references them; both are asserted. The source records that THE FIRST FULL LOCAL
+RUN CAUGHT THIS, NOT CONTINUOUS INTEGRATION, because the earlier run predated
+the re-scoping. [S2]
+
+================================================================================
+5. THE TWO ADDITIONAL LOOKUPS, PAID PROFILE ONLY
+================================================================================
+
+WHAT THEY ARE, BY PURPOSE. Two DNS text-record lookups beneath the domain the
+free scan already derives for its mail assessment: one for the declaration of a
+mail transport security policy, one for the declaration of a transport
+reporting endpoint. THEY ARE THE EXACT TWO OPERATIONS THE LOCKED CONTENT MEMO
+LISTS for the paid profile, and no third was added. [S2]
+
+HOW THEY ARE ISSUED, AND WHAT WAS NOT BUILT TO ISSUE THEM. Through the
+ALREADY-INJECTED resolver the free scan uses. NO NEW RESOLVER, NO NEW CLIENT, NO
+NEW TIMEOUT, NO NEW RETRY POLICY AND NO NEW EGRESS RULE. The domain they are
+issued beneath is the free scan's own derivation. The seven free members of the
+record wave, their order and their semantics are UNTOUCHED, and the free profile
+NEVER REACHES THE PAID CODE PATH. [S2]
+
+THE PROBE LISTS, RECOUNTED BY THIS SESSION FROM SOURCE. The free profile
+declares TWELVE retrieval operations; the paid profile declares THOSE TWELVE
+PLUS EXACTLY TWO, FOURTEEN IN ALL, and the paid list is literally constructed
+from the free list plus two entries, so it cannot drift from it. The source
+notes that NOTHING CONSUMES THESE LISTS YET and that enforcing membership at the
+worker boundary is an M14-3 deliverable. [R1,S2]
+
+THE PLAN SAID TO AWAIT THEM WITH THE WAVE. THE IMPLEMENTATION DELIBERATELY DID
+NOT, AND THE REASON IS THE MOST INTERESTING ENGINEERING DECISION IN THIS SLICE.
+Had the two queries been awaited as members of the same concurrent wave, a SLOW
+ANSWER TO ONE OF THEM WOULD HAVE DELAYED the start of the certificate probe and
+the registration lookup, and WOULD HAVE MOVED THE FREE SCAN'S OBSERVATION CLOCK.
+A paid run could then have observed LESS than a free run of the same target —
+which contradicts the whole premise that the paid profile computes the forty-two
+free checks with identical semantics. THE QUERIES ARE THEREFORE ISSUED WITH THE
+WAVE BUT AWAITED ONLY AFTER EVERY FREE RESULT HAS BEEN COMPUTED. [S2]
+
+THAT DECISION IS TESTED IN BOTH DIRECTIONS, AND IT IS MUTATION-CHECKED. A test
+proves the certificate probe and the registration lookup START BEFORE a slow
+paid answer arrives, and that free results — INCLUDING THEIR OBSERVATION TIMES
+UNDER A TICKING CLOCK — are byte-identical however slow the paid queries are. A
+mutation that awaits them with the wave is CAUGHT. The implementing session
+recorded this as a deliberate deviation from its own plan rather than quietly
+shipping it. [S2]
+
+THE RE-REVIEWER CONFIRMED THE SAME DEVIATION MUTATION INDEPENDENTLY, and also
+confirmed that a mutation issuing the two queries on the FREE profile — even
+with the result discarded — is caught. [D1]
+
+================================================================================
+6. THE FIVE OUTCOME STATES, AND WHAT NONE OF THEM MAY BECOME
+================================================================================
+
+THE SLICE GIVES EACH OF THE TWO LOOKUPS FIVE POSSIBLE OUTCOMES, AND THIS SESSION
+READ ALL FIVE IN SOURCE. [R1,S2]
+
+  PRESENT        issued and answered, a record was found
+  ABSENT         issued and answered, and the answer was a genuine absence
+  FAILED         issued and answered with a failure — a resolver timeout, a
+                 server failure, a refusal, or a resolver that threw or
+                 rejected in breach of its own contract
+  NOT_ATTEMPTED  the scan deadline had ALREADY EXPIRED before the wave began,
+                 SO NO QUERY WAS SENT AT ALL
+  ABANDONED      the query WAS SENT, but the deadline fired before an answer
+                 arrived; any later answer is DISCARDED
+
+EXACTLY ONE OF THE FIVE IS AN ABSENCE, AND THE SOURCE IS EMPHATIC ABOUT IT. Only
+ABSENT means "there is no record". A resolver timeout is a FAILURE, NEVER an
+absence. A resolver that breaches its contract by throwing is CONTAINED TO ITS
+OWN SLOT as a failure, so it cannot fail a paid run that a free run would have
+survived. THE TWO DEADLINE STATES ARE NOT ABSENCES EITHER, AND THE SOURCE
+FORBIDS THEM EVER BECOMING ONE. [S2]
+
+THE PROHIBITION IS WRITTEN IN THE SOURCE ITSELF AND REPEATED IN THE STEP-2.4
+PLAN, IN BOTH PLACES AS A STOP CONDITION. Neither deadline state may ever map to
+an absence, to a warning that says "not published", or to a pass. A deadline
+state or a failed lookup reaching any of those three IS A STOP. [S2]
+
+THESE ARE INTERNAL ENGINE FACTS AND NOT STATUS TOKENS, AND THE MAPPING IS NOT
+THIS STEP'S TO MAKE. The step-2.4 plan records TWO PRECEDENTS FROM THE EXISTING
+FREE SCAN for how a deadline-curtailed retrieval is reported, lays them out as
+two named options for the step-2.4 reviewer, AND CHOOSES NEITHER. It states
+explicitly that this is NOT one of the five open owner decisions and is written
+down SO THAT IT IS NOT DECIDED SILENTLY. It further requires that whichever
+option is chosen, the new oracle rows for it ENTER AS PROPOSED AND BE REVIEWED.
+[S2]
+
+THE DEADLINE IS A TIMER, AND THE SOURCE IS PRECISE ABOUT WHAT A TIMER CANNOT
+DO. The scan budget is unchanged. A platform resolver query TAKES NO CANCEL
+SIGNAL, so an already-issued query RUNS ON TO ITS OWN RESOLVER TIMEOUT after the
+scan has stopped waiting for it — a question to a resolver, NEVER TRAFFIC TO THE
+TARGET. And a timer CANNOT INTERRUPT SYNCHRONOUS WORK AT ALL, which is precisely
+why the step-2.2 parse limits are counts rather than durations. ABANDONING THE
+WAIT IS NOT CANCELLING THE QUERY, and the source says so in three places rather
+than once. [S2]
+
+THE FREE RECORD WAVE IS STILL NOT CANCELLABLE EITHER, AND THAT IS PRE-EXISTING
+AND UNCHANGED. Making it cancellable is an M14-3 deliverable. [S2]
+
+================================================================================
+7. FREE OUTPUT AND FREE REQUEST INVARIANCE
+================================================================================
+
+FOUR INDEPENDENT KINDS OF EVIDENCE ARE OFFERED, AND THEY FAIL DIFFERENTLY,
+WHICH IS WHY ALL FOUR ARE KEPT. [S2,D1]
+
+  1. THE STEP-2.1 REPORT GOLDEN PASSES, AND ITS FILE IS UNCHANGED. It pins the
+     score, the contributions, the report model, the public report artifact's
+     BYTES, the rendered page bytes, the printable document bytes, the priority
+     plan, the not-produced list, every version string, the six-part cache key
+     and the worker-result bound — for three fixtures, through both the direct
+     path and the orchestrator. IDENTICAL.
+  2. THE STEP-2.2 DIGESTS PASS, AND THAT FILE IS UNCHANGED TOO. Seven pinned
+     digests over parser and report output. IDENTICAL.
+  3. THE FREE WRAPPER AND THE NEW ENTRY POINT PRODUCE IDENTICAL OUTPUT AND
+     IDENTICAL NETWORK TRACES, over the three report fixtures and all eight
+     recorded worlds.
+  4. THE NEW NETWORK-TRACE GOLDEN, CAPTURED BEFORE ANY SOURCE CHANGE, MATCHES
+     FOR ALL EIGHT WORLDS.
+
+THE FOURTH IS THE ONE THIS SLICE ADDS TO THE PROJECT'S VOCABULARY, AND IT PROVES
+SOMETHING THE OTHER THREE CANNOT. The first three prove that FREE OUTPUT did not
+move. The fourth proves that FREE BEHAVIOUR ON THE WIRE did not move — that the
+same requests went to the same hosts on the same ports with the same methods,
+paths and header names, in the same order. A CHANGE COULD LEAVE EVERY BYTE OF
+OUTPUT IDENTICAL AND STILL HAVE ALTERED WHAT THE SCANNER DOES TO A STRANGER'S
+SERVER. Only the trace golden excludes that. [S2]
+
+THE TRANSPORT POLICY FILES ARE PINNED BY DIGEST, AND THIS SESSION CHECKED THE
+DIFF ITSELF. The source records SHA-256 pins for six transport-policy source
+files at the base commit. This session went straight at the question: THE DIFF
+BETWEEN THE BASE AND THE MERGE COMMIT ACROSS THE WHOLE TRANSPORT DIRECTORY IS
+ZERO LINES. The re-reviewer reports the same zero independently. [R1,S2,D1]
+
+THE PARITY RESULT, STATED EXACTLY. For EVERY ONE of the eight worlds: the paid
+profile's ordered trace, with the two text-record events removed, EQUALS the
+free profile's ordered trace; the paid profile has exactly FREE PLUS TWO events;
+PER OPERATION TYPE — fetch, connect, request, resolution, lookup, certificate
+probe, registration — the sequences are identical; and the free profile issues
+NEITHER query. [S2,D1]
+
+THE SEVEN NAMED HOST-SCOPE REQUIREMENTS THE OWNER APPROVED IN THE PREVIOUS
+MILESTONE ARE EACH ASSERTED HERE. Authorisation scope, with no authorisation
+code in the diff at all. Initiation: every engine fetch goes to the exact input
+host, with one method, one of two paths, two ports by protocol, and an EXACT
+header-name list. Redirects: the same-site hop followed identically, the
+cross-site hop stopped with the other site NEVER RESOLVED OR CONTACTED, the
+downgrade stopped, the private-address host refused BEFORE CONNECT, and the
+over-cap chain stopped at the cap — THE PAID PROFILE IDENTICAL TO THE FREE ONE
+IN EVERY CASE. No host selection: the contacted-host sets are equal in every
+world and NO DECOY HOST IS RESOLVED, CONTACTED, QUERIED OR SENT TO
+REGISTRATION. Attribution and cross-host attribution: covered in section 9.
+Free unchanged: the zero-line transport diff above. [S2,D1]
+
+================================================================================
+8. THE DEFECT THAT WAITED FOREVER
+================================================================================
+
+THE FIRST INDEPENDENT REVIEW EXAMINED THE FOURTH COMMIT AND RETURNED A VERDICT
+OF CORRECT, WITH ONE REQUIRED DEFECT AND FOUR GROUPS OF SMALLER ONES. Zero P0,
+ONE P1 marked required, FOUR P2 groups. It ran in a separate assistant session
+from the one that implemented the slice and reported to the owner on 2026-10-12.
+[S2]
+
+WHAT THE DEFECT WAS. The function that issues one paid text-record query
+checked whether the deadline had expired, THEN called the resolver, AND ONLY
+THEN attached its cancel listener. If the deadline fired SYNCHRONOUSLY INSIDE
+the resolver call — either the scan's own deadline or the caller's parent signal
+— and the resolver returned a promise that never settled, THE LISTENER WAS
+ATTACHED TO AN ALREADY-FIRED SIGNAL. A cancel signal dispatches its event EXACTLY
+ONCE, so THE LISTENER NEVER RAN, the returned promise NEVER SETTLED, AND THE
+PAID RUN WAITED FOREVER. [S2,D1]
+
+THE CLAIM THAT THIS COULD NOT HAPPEN WAS WRITTEN IN TWO PLACES, AND BOTH WERE
+WRONG AS WRITTEN. The function's own comment and the slice's first source record
+both said a paid query could never hold the wave open past the deadline. THE
+MERGED RECORD NOW SAYS, IN PLACE, THAT THE STATEMENT WAS NOT TRUE IN THIS CASE —
+and it says it in an APPENDED SECTION that leaves the original paragraphs
+standing rather than quietly editing them. THAT DISCIPLINE IS WHY THE
+DISAGREEMENT IS LEGIBLE AT ALL. [S2]
+
+IT WAS NOT REACHABLE IN PRODUCTION, AND THE RECORD SAYS SO IN THE SAME BREATH AS
+CALLING IT A REAL DEFECT. The platform resolver cannot abort the deadline
+synchronously, and the paid profile has no caller outside unit tests. NO USER,
+NO CUSTOMER AND NO SCAN COULD HAVE REACHED IT. It was fixed because it was a
+genuine hole in the function's OWN CONTRACT. [S2,D1]
+
+THE MOST UNCOMFORTABLE FACT ABOUT IT IS THAT FIFTEEN MUTATIONS HAD ALREADY BEEN
+RUN AND NONE OF THEM COVERED IT. The implementing session had injected fifteen
+deliberate regressions and recorded that every one was caught. THE MUTATION SET
+WAS DRAWN FROM THE AUTHOR'S OWN MODEL OF WHAT COULD GO WRONG, and the defect lay
+outside that model. A MUTATION SCORE IS EVIDENCE ABOUT THE TESTS, NOT A PROOF
+ABOUT THE CODE. [S2]
+
+THE CORRECTION. One settle helper that resolves EXACTLY ONCE and REMOVES THE
+LISTENER ON EVERY PATH, and — after the listener is attached — A RE-CHECK OF
+WHETHER THE SIGNAL HAS ALREADY FIRED. If it has, the query WAS issued and is
+recorded as abandoned. Everything else is unchanged: a deadline already expired
+before issuance still sends nothing; a rejection or a synchronous throw is still
+a failure and NEVER AN ABSENCE; a late answer is still discarded; with no
+deadline the plain query behaves exactly as before. NO NEW TIMEOUT WAS
+INTRODUCED, AND THE FREE RECORD WAVE IS UNTOUCHED. [S2,D1]
+
+ABANDONING THE WAIT STILL DOES NOT CANCEL THE QUERY, AND THE CORRECTION DOES NOT
+PRETEND OTHERWISE. Both the merged record and the draft review state this
+limitation explicitly as something NOT CLAIMED. [S2,D1]
+
+THE BEFORE-AND-AFTER WAS MADE DETERMINISTIC RATHER THAN DEMONSTRATED ONCE. The
+new tests were run against the PRE-CORRECTION versions of the two source files,
+with every other file at the corrected tree, and then against the corrected
+sources. The merged record reports NINETEEN FAILURES BEFORE and ALL PASSING
+AFTER. The re-reviewer, running the same three test files against the whole
+pre-correction tree, reports THE SAME NINETEEN FAILURES. [S2,D1]
+
+THE RE-REVIEWER ALSO WROTE ITS OWN REPRODUCER RATHER THAN RUNNING THE AUTHOR'S.
+Thirteen cases, using only shared fixtures and none of the author's helpers, run
+against both trees. Against the pre-correction tree FIVE FAILED AND EIGHT
+PASSED; against the corrected head ALL THIRTEEN PASSED. The cases that hung
+before and settle now include the deadline firing synchronously inside the
+resolver call, the caller's parent signal firing synchronously, a signal firing
+inside a custom promise-like object's own callback, AND THE WHOLE PAID SCAN
+NEVER SETTLING in two variants. THE DEFECT WAS REPRODUCED INDEPENDENTLY AT BOTH
+THE FUNCTION LEVEL AND THE WHOLE-SCAN LEVEL, AND IS FIXED AT BOTH. [D1]
+
+THE CORRECTION ITSELF WAS THEN MUTATED, BY BOTH SIDES. The implementing side
+reports that removing the new re-check, making the settle helper stop removing
+the listener, and removing the single-settlement flag each cause failures. The
+re-reviewer re-ran all three and reports FAILURE COUNTS IN ITS OWN TESTS AS WELL,
+agreeing in every case that the mutation is caught. EACH OF THE THREE PARTS OF
+THE FIX IS INDEPENDENTLY LOAD-BEARING. [S2,D1]
+
+THE CORRECTION WAS MADE IN THE SESSION THAT FOUND THE DEFECT, AND THE MERGED
+RECORD FLAGS THAT AS A PROBLEM RATHER THAN HIDING IT. The reviewing session
+implemented the fix at the owner's instruction, which means THE SAME SESSION
+WROTE THE FINDING, THE FIX AND THE TESTS FOR THE FIX. The record states in its
+own words that this therefore NEEDS ITS OWN INDEPENDENT RE-REVIEW. THAT
+RE-REVIEW IS WHAT SECTION 10 DESCRIBES, AND IT IS THE REASON THAT ROUND MATTERS.
+[S2]
+
+================================================================================
+9. THE FOUR P2 RESOLUTION GROUPS
+================================================================================
+
+GROUP ONE — NON-STRING PROFILE IDENTIFIERS. FIXED IN SOURCE. The profile lookup
+used two operations that each COERCE a non-string argument to a string. An
+object whose string conversion returned a valid profile name the FIRST time and
+an inherited property name the SECOND time PASSED THE FIRST CHECK AND REACHED
+THE PROTOTYPE CHAIN IN THE SECOND — after which the engine performed SEVENTEEN
+NETWORK OPERATIONS BEFORE FAILING. It requires a deliberate type bypass and the
+argument is trusted input, which is why it was a P2 and not a P1. The fix checks
+that the argument IS PRIMITIVELY A STRING BEFORE ANY COERCION HAPPENS. Fifteen
+non-string values are now refused BY THE LOOKUP AND BY THE ENGINE, WITH ZERO
+NETWORK OPERATIONS AND NO CLOCK READ; the shape-shifting object is NEVER COERCED
+AT ALL; and a property planted on the shared prototype is not a profile.
+Removing the guard is caught. [S2,D1]
+
+THE RE-REVIEWER DROVE THE SAME PATH WITH TWENTY-TWO HOSTILE IDENTIFIERS OF ITS
+OWN. A stateful string conversion, boxed strings of both valid names, a symbol,
+an array, two empty-ish values, a plain object, a custom primitive conversion, a
+throwing conversion, a proxy, a number, three inherited property names, two more
+method names, a lower-case variant, a trailing-space variant, a name with a
+trailing null character, THE VERSION STRING MISTAKEN FOR AN IDENTIFIER, and the
+empty string. EVERY ONE WAS REFUSED, WITH ZERO CLOCK READS AND ZERO NETWORK
+OPERATIONS OF ANY KIND, AND THE ERROR MESSAGE DOES NOT ECHO THE VALUE BACK. It
+also confirmed that a mutation validating the profile only AFTER the first clock
+read is caught, which is the ordering guarantee the whole group rests on. [D1]
+
+GROUP TWO — ATTRIBUTION. TESTS ONLY; NO CHECK ADDED, NO DISCOVERY CHANGED. The
+question is which host a given observation belongs to, and it matters because
+the ten paid checks will compare observations across hosts and MUST ABSTAIN
+rather than guess when the hosts differ. Two halves. [S2,D1]
+
+  CERTIFICATE ATTRIBUTION. The certificate is attributed to THE HOST WHOSE
+  RESPONSE CARRIED IT, never to the authorised input host, while the
+  certificate-authority authorisation walk STARTS AND STAYS ON THE AUTHORISED
+  HOST. Cases: same host; a same-site redirect from the bare domain to the web
+  subdomain, where the certificate belongs to the subdomain AND NEVER TO THE
+  AUTHORISED HOST; a subdomain input completing at a sibling; the walk's FIRST
+  query being the authorised host and NEVER THE REDIRECT TARGET; the cross-host
+  case EXPOSING BOTH HOSTS so the later step can abstain; and no certificate
+  attributed where there was no certificate evidence. The re-reviewer added
+  four worlds of its own — the reverse redirect direction, a path-only
+  redirect, a two-hop chain, and a stopped cross-site final response — and
+  reports the same behaviour in each.
+  MAIL POLICY OWNERSHIP. Where a domain's own mail policy record is unusable
+  and the effective policy comes from a PARENT SUFFIX that publishes a record
+  marked as a public-suffix policy, the facts are attributed TO THAT PARENT and
+  the reporting facts are THE SELECTED RECORD'S, not the tenant's. The author
+  tested one such arrangement; THE RE-REVIEWER CONSTRUCTED A DIFFERENT ONE IN A
+  DIFFERENT SUFFIX FAMILY and reports the same result, AND ADDITIONALLY
+  CONFIRMED THAT THE PARENT'S REPORTING DESTINATION APPEARS NOWHERE IN THE
+  SERIALISED OBSERVATIONS. A failed lookup yields an explicit failure marker
+  AND NEVER AN ABSENCE.
+
+SEVEN SEPARATE ATTRIBUTION MUTATIONS WERE TRIED BY THE RE-REVIEWER AND ALL SEVEN
+ARE CAUGHT, including attributing the certificate to the wrong host, dropping it,
+asserting it WITHOUT any evidence, moving the walk's starting point,
+misattributing the document, treating a document as observed when the transport
+did not complete, and collapsing the effective host onto the authorised one.
+[D1]
+
+GROUP THREE — LISTENER CLEANUP AND SINGLE SETTLEMENT. TESTS ONLY. These are
+tests about RESOURCE DISCIPLINE, and the notable thing is that they OBSERVE THE
+SIGNAL ITSELF rather than inferring from results — the listener count is read
+from the signal, and the add and remove operations are spied on the instance.
+Normal completion, a reported failure, a rejection and a throw EACH LEAVE ZERO
+LISTENERS WITH EXACTLY ONE REMOVAL. An abort settles ONCE with ONE REMOVAL even
+when a late answer follows. An already-fired signal accumulates ZERO LISTENERS
+OVER A HUNDRED CALLS. A hundred settled queries on one live deadline leave ZERO.
+Unhandled rejections are TRAPPED AND NONE OCCURS, for a throw, a rejection, a
+non-promise return and a rejection arriving after the abort. [S2,D1]
+
+ONE RETAINED REFERENCE IS DISCLOSED RATHER THAN CLAIMED AWAY. The resolver's
+promise receives EXACTLY ONE reaction on both the answered and the abandoned
+path, so the engine adds no second chain; but after abandonment that reaction
+HOLDS A REFERENCE until the resolver answers or times out. BOUNDED, AND AT MOST
+TWO PER RUN. THE RECORD STATES THE RETENTION INSTEAD OF ASSERTING THERE IS NONE.
+[S2]
+
+GROUP FOUR — CONFIDENTIALITY AND THE FUTURE WIRE BOUNDARY. A REQUIREMENT
+RECORDED, NOT A PROTOCOL CHANGE. The paid observations hold the two answers'
+RAW RECORD TEXT in memory, exactly as the free scan's own record lookups do, and
+that text can include a policy identifier and a reporting destination. THIS IS
+ACCEPTABLE ONLY INSIDE TODAY'S UNREACHABLE ENGINE DRAFT, and the finding is that
+the phrase "never leaves the worker" described THE CURRENT CALLERS, NOT A
+TYPE-LEVEL GUARANTEE. [S2,D1]
+
+WHAT WAS DONE ABOUT IT, AND WHAT WAS DELIBERATELY NOT DONE. The CURRENT boundary
+is now tested: the strict worker result schema REFUSES the draft, both as
+produced and with every non-conforming difference except the raw block removed,
+and the envelope refuses a completed result carrying it. THE WIRE SCHEMA AND THE
+WORKER PROTOCOL ARE UNCHANGED. Four requirements are recorded as BINDING ON
+LATER STEPS, in the source record and in the module's own comment: step 2.4 must
+reduce the raw text to bounded findings and must never carry the policy
+identifier or the reporting destination; the protocol change must carry only
+approved, content-free retrieval metadata and validated findings; no raw record
+value, reporting destination, policy text, page body, path or query may appear in
+persisted evidence or any transfer object; AND BEFORE ANY PAID WORKER RESULT IS
+ACCEPTED, A TEST MUST SHOW THAT A TRANSFER OBJECT CONTAINING THE RAW
+OBSERVATIONS IS REFUSED. [S2]
+
+THE RE-REVIEWER TESTED THE CONFIDENTIALITY BOUNDARY WITH PLANTED CANARY VALUES
+AND REPORTS BOTH HALVES OF THE RESULT. The raw text IS present in the draft's
+paid block — the documented in-memory exception — AND IS ABSENT FROM THE
+FORTY-TWO FREE RESULTS AND FROM THE TRANSPORT SUMMARY. It states plainly what is
+NOT claimed: THE EXPORTED TYPES DO NOT THEMSELVES PREVENT FUTURE SERIALISATION,
+which is the same thing the module's own comment says. [D1]
+
+AND IT RAISED ONE ITEM OF ITS OWN THAT IS NOT A DEFECT IN THIS PULL REQUEST. The
+current worker schema accepts ANY profile stamp as a string; a free-shaped
+payload stamped with the paid version PASSES THE SCHEMA and is refused only by
+the tier derivation downstream. THE RE-REVIEWER RECOMMENDS THAT THE PROTOCOL
+CHANGE PIN THE EXACT LITERAL PER PROFILE AT THE BOUNDARY. THAT IS A
+RECOMMENDATION FOR M14-3 AND IS NOT APPROVED BY ANYONE. [D1]
+
+================================================================================
+10. THE INDEPENDENT RE-REVIEW, AND ITS TWENTY-NINE MUTATIONS
+================================================================================
+
+WHAT IT REVIEWED, AND WHY THE EXACTNESS MATTERS. A separate assistant session
+re-reviewed PR #48 AT THE EXACT HEAD THAT WAS MERGED, read-only, on disposable
+worktrees created from that exact commit. It re-read the head identifier at the
+start and confirmed the head had not moved during the review. ITS VERDICT IS FOR
+ONE EXACT COMMIT AND THE DOCUMENT STATES THAT IT DOES NOT CARRY OVER TO ANY
+OTHER. [D1]
+
+IT VERIFIED ITS OWN TOOLCHAIN BEFORE VERIFYING ANYTHING ELSE. The container's
+default platform runtime was the WRONG MAJOR VERSION for this project, so the
+reviewer downloaded the required version and CHECKED ITS PUBLISHED DIGEST
+AGAINST THE PUBLISHER'S OWN DIGEST LIST before using it. The container default
+was not used. That is a small thing and it is recorded here because it is the
+difference between a gate result and a gate result you can trust. [D1]
+
+THE GATES IT RAN ITSELF, ON THE MERGED HEAD. Dependency install from the locked
+file; type check; lint; the full test suite; build, with a clean tree afterwards;
+the whitespace gate both against the base and across the whole tree. ALL PASSED.
+ITS TEST TOTALS ARE IDENTICAL TO CONTINUOUS INTEGRATION'S: 9,396 passed, 0
+failed, 658 skipped of 10,054, with 254 files passed and one skipped. AND IT
+STATES, UNPROMPTED, THAT THE 658 SKIPPED ARE THE GUARDED POSTGRESQL SUITES, THAT
+THEY ARE NOT REPORTED AS PASSED, AND THAT NO POSTGRESQL WAS PROVISIONED. [D1]
+
+THE LINT RESULT IS NOT PERFECTLY CLEAN, AND THE RE-REVIEWER CORRECTED THE PULL
+REQUEST'S WORDING ABOUT IT. There are zero errors and TWO WARNINGS, both in one
+test file. The pull request described them as pre-existing in an untouched file.
+THE RE-REVIEWER POINTS OUT THAT THE FILE WAS ADDED BY THIS VERY PULL REQUEST,
+two commits earlier, so the description is accurate only RELATIVE TO THE FINAL
+COMMIT and not relative to the pull request. A WORDING DEFECT IN THE RECORD, NOT
+A CODE DEFECT. [D1]
+
+THE MUTATION CAMPAIGN: TWENTY-NINE MUTANTS, TWENTY-EIGHT KILLED, ONE SURVIVOR.
+Each mutant was applied ALONE to a disposable copy and the copy was RESTORED AND
+THE RESTORATION ASSERTED after every run. Each run executed the module suites
+plus the reviewer's own tests — 978 tests per run. THE CAMPAIGN IS THE
+RE-REVIEWER'S OWN, NOT A RE-RUN OF THE AUTHOR'S FIFTEEN. [D1]
+
+  Twelve mutants against the corrected race fix and the lookup's state
+  machine — removing the new re-check, stopping the listener removal, removing
+  the single-settlement flag, removing the pre-issuance check, turning each of
+  rejection, synchronous throw and abort into a false ABSENCE, returning the
+  wrong one of the two deadline states, removing a redundant one-shot option,
+  awaiting the paid queries with the free wave, and issuing the paid queries on
+  the free profile.
+  Six against the profile and tier binding — removing the string guard,
+  weakening the own-property lookup to an inherited one, coercing instead of
+  guarding, validating the profile after the first clock read, defaulting an
+  unknown stamp to free, and dropping the score-and-profile agreement check.
+  Nine against attribution.
+  Two against the DNS-security fact's single-lookup property.
+  One against the strictness of the worker result schema root.
+
+THE ONE SURVIVOR IS EQUIVALENT, AND THE DOCUMENT SAYS WHY. Removing the
+one-shot listener option changes NOTHING OBSERVABLE, because the corrected
+settle helper removes the listener on EVERY path regardless. IT IS A REDUNDANT
+BELT BESIDE A WORKING BRACE. NO MUTANT THAT CHANGES OBSERVABLE BEHAVIOUR
+SURVIVED THE COMBINED SUITES. [D1]
+
+ONE MUTANT SURVIVED THE PULL REQUEST'S OWN TESTS AND WAS KILLED ONLY BY THE
+REVIEWER'S, AND THAT IS RECORDED AS A GAP IN THE SHIPPED TEST SET. Removing the
+new refusal of a score computed for a different profile's catalogue caused ZERO
+failures in the pull request's tests. The property is claimed in the pull request
+body and IS IMPLEMENTED, but NOTHING IN THE MERGED TEST SUITE WOULD NOTICE ITS
+REMOVAL. It is unreachable in practice today because there is one caller and the
+score comes from the same scan. THE RECOMMENDED FIX IS A THREE-LINE TEST, AND IT
+IS DEFERRED TO A LATER STEP. [D1]
+
+THE VERDICT. MERGE, FOR THAT ONE EXACT COMMIT: NO P0, NO P1, NO P2, and no
+further technical correction needed before acceptance. AND THE DOCUMENT
+IMMEDIATELY QUALIFIES ITS OWN VERDICT: this is A REVIEWER VERDICT, NOT
+ACCEPTANCE; the pull request stays draft and unmerged; THE OWNER ACCEPTS, and
+Personal Project evidence synchronisation follows acceptance. The owner did then
+accept and merge, four hours and twenty minutes later. THE SEQUENCE IS:
+RE-REVIEW, THEN OWNER ACCEPTANCE, THEN MERGE, THEN THIS NOTE. [S1,D1]
+
+WHAT THE RE-REVIEW DID NOT DO, IN ITS OWN WORDS. No merge, no push to the pull
+request's branch, NO FORMAL GITHUB REVIEW SUBMITTED, no comment on the pull
+request, no PostgreSQL, no migration, no live scan, no production, no virtual
+private server, no payment provider, no DNS, no web-server action, AND NO
+CONTACT WITH THIS PERSONAL PROJECT EVIDENCE REPOSITORY. This session confirmed
+the formal-review and comment part directly against the GitHub API: PR #48 has
+ZERO OF EACH. [S1,D1]
+
+================================================================================
+11. TESTS AND CONTINUOUS INTEGRATION AS RECORDED IN SOURCE
+================================================================================
+
+THE GATE PROGRESSION ACROSS THE SLICE, AS RECORDED. All three figures are the
+same suite at three points, and the deltas are what matter. [S2,D1]
+
+  At the base commit            9,130 passed, 0 failed, 658 skipped, of 9,788
+                                across 1,604 suites
+  At the implementation commit  9,328 passed, 0 failed, 658 skipped, of 9,986
+                                across 1,632 suites — PLUS 198 TESTS
+  At the merged corrected head  9,396 passed, 0 failed, 658 skipped, of 10,054
+                                across 1,639 suites — A FURTHER PLUS 68, ALL
+                                NEW
+
+THE SKIPPED FIGURE IS IDENTICAL AT ALL THREE POINTS, AND THAT IS THE POINT OF
+QUOTING IT THREE TIMES. 658 before, 658 after, because the slice touches NO
+PERSISTENCE CODE. THEY DID NOT RUN AT ANY OF THE THREE POINTS AND NONE IS
+CLAIMED AS PASSED. [S2,D1]
+
+THE SUITES AND THEIR RECORDED COUNTS. These are SOURCE-RECORDED and
+DRAFT-REVIEW-RECORDED figures; this session did not run them. [S2,D1]
+
+  the before-change trace comparison              2 tests
+  network parity and the seven host-scope rules  64 tests
+  profile, wrapper identity and hostile ids      76 tests
+  deadline, race and listener discipline         43 tests
+  paid fact assembly and hostile documents       43 tests
+  boundaries and smuggled-field refusals         14 tests
+  the step-2.1 guard, now rewritten              15 tests
+  tier leakage, now reached by stamping          11 tests
+  attribution, new in the correction              8 tests
+
+A CAUTION ABOUT THOSE COUNTS, FROM THIS SESSION'S OWN READING. The suites are
+TABLE-DRIVEN: they generate cases from data at run time, so the number of test
+declarations VISIBLE IN THE FILE IS SMALLER THAN THE NUMBER OF TESTS THAT RUN.
+This session counted declarations in each file and confirmed the table-driven
+construct is present in the three largest. THE STATIC COUNTS THEREFORE NEITHER
+CONFIRM NOR CONTRADICT THE FIGURES ABOVE, AND THE FIGURES REMAIN
+SOURCE-RECORDED. [R1]
+
+ONE FIGURE IN THE MERGED RECORD DISAGREES WITH THE RE-REVIEWER'S MEASUREMENT OF
+THE SAME THING, AND BOTH ARE PRINTED HERE. For the three test files used in the
+before-and-after demonstration, the merged record reports a total of 126 tests
+and the re-reviewer measured 127. THE FAILURE COUNT OF NINETEEN AGREES EXACTLY
+IN BOTH. The re-reviewer records this as a nonblocking observation and suggests
+correcting the figure in a later revision of the record. THIS NOTE DOES NOT
+DECIDE WHICH TOTAL IS RIGHT, BECAUSE IT RAN NEITHER MEASUREMENT. [S2,D1]
+
+ONE EARLIER LOCAL RUN ON THE BRANCH HAD A FAILURE, AND THE SOURCE RECORDS IT.
+The step-2.2 reachability assertion failed, because this slice ENDS THAT
+ASSERTION'S PREMISE BY DESIGN for the paid profile. It was re-scoped, and the
+recorded clean run is the one after that change. THE SOURCE NOTES THAT THE FIRST
+FULL LOCAL RUN CAUGHT IT AND CONTINUOUS INTEGRATION DID NOT, because the earlier
+continuous-integration run predated the re-scoping. [S2]
+
+THE FIFTEEN MUTATIONS THE IMPLEMENTING SESSION RAN, AND WHAT THEY SHOW. Each was
+injected into source alone, four suite groups totalling 332 tests were run, and
+the source restored. EVERY ONE WAS CAUGHT, with failure counts from 1 to 78. They
+cover the free profile issuing the paid queries, a third query, an extra request,
+an unknown profile defaulting to free, an unknown stamp scored as free, a paid
+stamp scored or composed as free, composition ignoring the agreement check, the
+page parsed twice, a query issued after the deadline, a failure reported as an
+absence, a second registration request, the paid queries awaited with the wave, a
+query not released at the deadline, document facts attributed to the wrong host,
+and a stopped redirect's body parsed as the page. THE ONE THING THEY DO NOT
+COVER IS THE DEFECT OF SECTION 8. [S2]
+
+THE OBSERVATIONS ABOUT COST ARE ONE MACHINE'S AND THE SOURCE SAYS SO IN ITS OWN
+HEADING. Twenty-three hostile document families each complete under the paid
+profile; twenty-one of them STOP AT AN EXPLICIT ENFORCED LIMIT; the element count
+never exceeds its cap; AND ANY LIMIT REACHED MAKES ABSENCE UNASSERTABLE. Across
+whole runs the paid profile added between roughly minus 0.8 and plus 1.2 seconds
+— A RANGE THAT INCLUDES NEGATIVE NUMBERS, WHICH IS ITSELF THE HONEST SIGNAL THAT
+THIS IS NOISE AND NOT A BOUND. The worst whole paid run observed was about 8.1
+seconds against an unchanged 25-second budget. [S2]
+
+AND THE DOMINANT COST IS NOT THIS SLICE'S, WHICH THE SOURCE STATES PLAINLY. The
+existing free scan's OWN TWO UNBUDGETED PARSES dominate, up to roughly 7.3
+seconds on this machine, and ONE of them was measured raising process memory
+from about 108 to about 414 megabytes on a hostile body, against about 107 to
+about 159 for the budgeted paid parse. THIS SLICE NEITHER BOUNDS NOR CHANGES
+THAT. It is the step-2.2 free-path finding, still open, still outside M14. [S2]
+
+================================================================================
+12. NONBLOCKING OBSERVATIONS CARRIED FORWARD
+================================================================================
+
+Three from the re-review, none requiring a change to the merged commit. [D1]
+
+  1. THE SCORE-AND-PROFILE AGREEMENT REFUSAL HAS NO TEST THAT WOULD NOTICE ITS
+     REMOVAL. Implemented, claimed in the pull request body, and killed only by
+     the reviewer's own test. A three-line test is recommended at step 2.4 or
+     2.5. SECTION 10 RECORDS THE SURVIVING MUTANT.
+  2. THE TEST-TOTAL FIGURE IN THE MERGED RECORD IS OFF BY ONE against the
+     re-reviewer's measurement. SECTION 11 PRINTS BOTH.
+  3. THE TWO LINT WARNINGS ARE IN A FILE THIS PULL REQUEST ADDED, so the pull
+     request's description of them as pre-existing in an untouched file is
+     accurate only relative to the final commit. WORDING ONLY.
+
+And five limits the merged source record states about itself. [S2]
+
+  1. THE EXISTING FREE SCAN'S PARSE COST IS UNBOUNDED AND UNTOUCHED, and a paid
+     run inherits it. Its fix is a separately reviewed free change, never part
+     of M14.
+  2. AN ISSUED RECORD QUERY CANNOT BE CANCELLED, so after the deadline an
+     abandoned query may hold a socket until its own resolver timeout. Bounded,
+     resolver-facing, pre-existing for the free wave, and an M14-3 deliverable.
+  3. THE PAID DRAFT IS STRUCTURALLY ACCEPTABLE TO SCORING'S INPUT TYPE. Scoring
+     REFUSES IT AT RUN TIME, which is tested, but there is no compile-time
+     block for that one call.
+  4. REPORT COMPOSITION STILL COPIES THE SCAN'S CATALOGUE VERSION VERBATIM and
+     does not check it against the derived tier. The new check covers the
+     SCORE'S version; a scan-side check is a small later follow-up, and two
+     fixtures still carry a placeholder.
+  5. THE ORDERED TRACE GOLDEN DEPENDS ON THE FAKE SOCKET'S TIMER ORDERING.
+     Stable across repeated local runs and continuous integration, but A
+     RUNTIME TIMER CHANGE COULD REORDER EVENTS WITHOUT ANY FREE BEHAVIOUR
+     CHANGE. The per-operation comparisons would still hold.
+
+================================================================================
+13. STEP 2.4 IS PLANNED AND NOT ACCEPTED
+================================================================================
+
+A PLAN-ONLY DOCUMENT WAS MERGED WITH THIS SLICE, AND ITS FIRST LINE SAYS
+NOTHING IN IT IS IMPLEMENTED, APPROVED OR MERGED. It was prepared read-only
+during the step-2.3 session, and it states that it DEPENDS ON STEP 2.3 BEING
+REVIEWED AND MERGED and MUST BE RE-VERIFIED against the main branch afterwards
+because its file and line references will have drifted. [S2]
+
+WHAT IT CONTAINS. A file-level plan for ten check modules and two supporting
+modules; the inputs each check will receive, which are EXISTING FREE OBSERVATION
+OBJECTS PLUS THIS SLICE'S PAID OBSERVATIONS AND NEVER A PAGE BODY OR A NETWORK
+CAPABILITY; a status and reason matrix derived from the locked content memo; the
+precedence order for the three page-based checks; and the two options for the
+deadline-state mapping of section 6. [S2]
+
+THE ORACLE'S COMPOSITION IS RESTATED IN THE PLAN AND MATCHES WHAT THE PREVIOUS
+MILESTONE RECORDED: 111 cases, of which 84 BIND, 20 ARE PROPOSED AND NEED THE
+STEP-2.4 REVIEWER'S EXPLICIT CONFIRMATION, and 7 CARRY NO STATUS AT ALL because
+they are blocked on owner decisions. The plan says the counts were verified by
+executing the fixture module at the base commit. THIS SESSION DID NOT RECOUNT
+THEM HERE; THE PREVIOUS NOTE IN THIS PACKAGE DID, FROM THE FIXTURE, AND REACHED
+THE SAME THREE NUMBERS. [S2, HISTORICAL]
+
+THE PLAN'S OWN STOP CONDITIONS ARE WORTH RECORDING, BECAUSE THEY ARE WHAT WOULD
+MAKE STEP 2.4 STOP RATHER THAN GUESS. Stop if a check needs a network
+capability, a page body or a parser call; if a status or reason token outside the
+existing vocabulary is needed; IF ANY OWNER-DECISION ROW WOULD HAVE TO BE GIVEN
+A STATUS; if a proposed row is asserted as binding without recorded reviewer
+confirmation; if a deadline state or a failed lookup could reach an absence, a
+"not published" warning or a pass; if a page-based check answers a
+subject-absence status when absence is not assertable; if a cross-host
+comparison answers anything other than an undetermined state; or IF ANY FREE
+BYTE, TRACE OR RESULT MOVES. [S2]
+
+AND THE PLAN STATES WHAT TO DO WITH AN UNDECIDED SITUATION, WHICH IS THE PART
+THAT MATTERS MOST. Until each owner decision is taken, the affected situation
+must be reachable ONLY through an explicit, tested branch that REFUSES TO
+DECIDE, preferably by not wiring the check into any reachable path at all, with
+each site marked by the decision's identifier so a reviewer can find every one.
+A DEFAULT THAT QUIETLY PICKS ONE CANDIDATE IS A STOP CONDITION. [S2]
+
+THE TEN PAID CHECKS STILL DO NOT EXIST IN CODE. NOT ONE CHECK MODULE, CATALOGUE
+ENTRY, CONTENT ENTRY, EVIDENCE-POLICY ENTRY, ROUTE OR INTERFACE FOR ANY OF THEM
+EXISTS. ALL FORTY-TWO CATALOGUE ENTRIES REMAIN FREE. [S2, HISTORICAL]
+
+================================================================================
+14. THE FIVE OPEN OWNER SEMANTIC DECISIONS — STILL NOT DECIDED
+================================================================================
+
+THESE ARE THE SAME FIVE THE PREVIOUS MILESTONE OPENED. NONE HAS BEEN DECIDED,
+NONE IS IMPLIED, AND THE MERGED PLAN LISTS THEM AS OPEN AND REFUSES TO CHOOSE.
+They are described here BY PURPOSE ONLY, as every earlier note in this package
+describes them. [S2,D1]
+
+  1. Whether a security policy delivered by MARKUP rather than by a response
+     header may act as mitigation for an insecure-subresource finding.
+  2. Which kinds of EMBEDDED CONTENT count as active content for that finding.
+  3. Whether a non-empty but UNRECOGNISABLE integrity value counts as integrity
+     being present, together with its cross-origin sub-question.
+  4. Whether an enforced directive that NORMALLY TAKES NO VALUE but has been
+     given one should be credited.
+  5. What an EMPTY REPORTING-DESTINATION TAG means for the mail reporting
+     finding.
+
+SEVEN ORACLE CASES CARRY NO STATUS BECAUSE OF THESE FIVE, AND THE PLAN NAMES
+WHICH DECISIONS BLOCK WHICH CHECKS. Three cases on the insecure-subresource
+check are blocked by decisions one, two and four; three on the integrity check by
+decision three; one on the mail reporting check by decision five. [S2]
+
+A SIXTH QUESTION EXISTS AND IS DELIBERATELY NOT COUNTED AMONG THE FIVE. The
+mapping of this slice's two deadline states onto reportable statuses is a
+decision for the STEP-2.4 REVIEWER, not the owner, and the plan says so
+explicitly while still writing it down SO IT IS NOT DECIDED SILENTLY. Section 6
+records both options. [S2]
+
+THE RE-REVIEW PACKAGE CONTAINS A BRIEFING DOCUMENT ON ALL FIVE, WITH OPTIONS AND
+RECOMMENDATIONS. IT IS A DRAFT, IT IS NOT MERGED, AND ITS OWN TEXT MARKS EVERY
+RECOMMENDATION AS BINDING NOBODY AND REQUIRING OWNER APPROVAL. A RECOMMENDED
+OPTION IS NOT AN APPROVAL, AND NOTHING IN THIS NOTE TREATS ONE AS APPROVED.
+[S1,D1]
+
+================================================================================
+15. CONTINUING RISKS AND BLOCKERS CARRIED FORWARD
+================================================================================
+
+NONE OF THE FOLLOWING WAS INTRODUCED BY THIS SLICE AND NONE WAS CLOSED BY IT.
+Each is recorded so the Personal Project record does not present a merged
+milestone as a cleared field. [S2,D1]
+
+THE FOUR MEASURED FREE-PATH FINDINGS REMAIN OPEN AND DELIBERATELY UNFIXED. A
+truncation hazard that produces a FALSE PASS on large pages; an exposure group
+that LOSES THREE RESULTS when its parser overflows, with all four reported under
+ONE identifier; the unbounded hostile-input parse cost of the existing free
+scan; and a comma-joined policy field MISREAD IN BOTH DIRECTIONS, which can turn
+a weak policy into a strong verdict. The re-review reproduced all four
+independently and reports minimal reproductions for each. EACH FIX WOULD MOVE
+FREE OUTPUT BYTES FOR SOME INPUT, SO EACH NEEDS ITS OWN REVIEWED CHANGE, ITS OWN
+GOLDEN REVISION AND THE OWNER'S APPROVAL. NONE IS M14 WORK AND NONE IS
+SCHEDULED. [S2,D1]
+
+TWO FURTHER FREE-PATH FINDINGS WERE ADDED BY THE RE-REVIEW, AND THEY ARE NEW TO
+THIS PACKAGE. [D1]
+
+  A MAIL CONFIGURATION THAT EXPLICITLY DECLARES THE DOMAIN ACCEPTS NO MAIL IS
+  NOT RECOGNISED. The platform resolver represents that declaration one way and
+  the free check tests for another, so a domain that has correctly declared it
+  receives no mail is treated as if it had a mail host. The re-reviewer
+  reproduced this against an in-process resolver on the loopback interface, and
+  reports that the existing fixtures use the form the code expects rather than
+  the form the resolver returns — WHICH IS WHY NO TEST CAUGHT IT. The effect is
+  on EVIDENCE ACCURACY AND NOT ON ANY SCORE, and it is also a prerequisite for
+  step 2.4's mail checks.
+  THE WEB TIER DOES NOT CORRELATE THE WORKER'S REPORTED TARGET WITH THE TARGET
+  THAT WAS REQUESTED. A worker answering with a different hostname than the one
+  requested yields a COMPLETED assessment whose report carries THE WORKER'S
+  HOSTNAME. It requires a compromised or malfunctioning worker to matter, so it
+  is DEFENCE IN DEPTH rather than a live exposure, and the re-reviewer assigns
+  the protocol half to M14-3 and notes the free half needs owner approval.
+
+BOTH ARE REVIEWER FINDINGS IN A DRAFT, UNMERGED DOCUMENT. NEITHER IS AN APPROVED
+WORK ITEM AND NEITHER HAS BEEN ACTED ON. [D1]
+
+THE M14-4 AND M14-6 RELEASE GATES ARE UNCHANGED AND UNMET. [S2,D1]
+
+  M14-4 must constrain or replace the authorisation re-check, which is STILL A
+  RAW TRANSACTION CALLBACK, BEFORE ANY RUNTIME CALLER EXISTS, with adversarial
+  tests for a MISBEHAVING callback — one that throws, returns the wrong kind of
+  value, reads another account or domain, performs input or output, or
+  re-enters. The re-review reports FINDING NO SUCH TESTS TODAY.
+  M14-4 must prove that every failure of that re-check releases the run as
+  lapsed and that NO REPORT, SHARE OR ARTIFACT ROW SURVIVES.
+  M14-4 AND M14-6 must prove that an erasure which would delete an entitlement
+  a run still references FAILS CLOSED RATHER THAN CASCADING, including after a
+  tombstone, which is an update and therefore does not trigger the restricting
+  keys at all.
+  M14-6 must EXECUTE AND RECORD the guarded real-PostgreSQL suites SERIALLY and
+  EXPLICITLY, and no record may say a skipped suite passed.
+  M14-6 must time migration 0005 ON A RESTORED PRODUCTION-SHAPE COPY and record
+  the time and the lock wait. The only existing measurement is on a disposable
+  fixture.
+  M14-6 must restate the rollback floor, confirm the older renderer either
+  renders a paid document or fails closed, and put the zero-point statement in
+  a rollback view to the owner.
+  PAYMENTS MUST STAY CLOSED THROUGHOUT, and the paid-assessment switch and the
+  payment switches must be INDEPENDENT. The re-review reports FINDING NO
+  BOUNDARY TEST THAT ASSERTS THAT INDEPENDENCE.
+
+AND THE RE-REVIEW FOUND ONE PREFLIGHT OBSTACLE OF ITS OWN THAT NOBODY HAD
+RECORDED. THE EXISTING ACCEPTANCE RUNNER CANNOT RUN THE M14 GUARDED SUITE AS
+WRITTEN. It validates the guarded phase against an EXACT ALLOW-LIST OF FILES and
+REJECTS ANY FILE NOT ON THE LIST; the M14 persistence suite, added by an earlier
+accepted milestone, IS NOT ON IT. An M14-6 run of the runner as it stands WOULD
+FAIL ON THE M14 SUITE'S PRESENCE RATHER THAN CERTIFY IT. The recommendation is to
+update the runner's list as part of M14-6 preparation, IN ITS OWN REVIEWED
+CHANGE. THIS IS A DRAFT REVIEWER FINDING AND NOT AN APPROVED WORK ITEM. [D1]
+
+THE OWNER ITEMS THAT NO ENGINEERING STEP CAN UNBLOCK ARE UNCHANGED. The
+customer-facing copy, which now also holds the control-count explanation and the
+zero-score statement; the public, legal and privacy wording, without which no
+paid assessment may run in production; and the methodology's sensitive-file
+exposure review. ALL THREE STILL OPEN. [S2, HISTORICAL]
+
+PRODUCTION IS UNCHANGED, AND THIS IS THE FOURTH CONSECUTIVE MILESTONE FOR WHICH
+THAT SENTENCE IS TRUE. Migration 0005 IN SOURCE ONLY and NOT RUN ANYWHERE.
+Schema contract m13-0004, migration ledger 0000-0004, PAYMENTS CLOSED. NOTHING
+FOR SALE AND NO PAID ASSESSMENT EVER PERFORMED. [S2, HISTORICAL]
+
+================================================================================
+16. GAPS IN THIS EVIDENCE — IDENTIFIED, NOT FILLED
+================================================================================
+
+  1. NO TEST, SUITE, PARSE, SCAN, TIMING OR MEASUREMENT WAS RUN IN THIS
+     SESSION. Every test count, gate result and timing figure above is
+     continuous-integration output, a committed document's figure, or a draft
+     review document's figure. WHAT THIS SESSION DID WAS READ AND RECOUNT.
+  2. THE RE-REVIEW LIVES IN AN UNMERGED DRAFT. It is readable, cited and
+     checkable, which is a real improvement on the previous milestone's
+     unlocatable final review, BUT IT IS NOT MERGED SOURCE EVIDENCE AND IT IS
+     NOT THE OWNER'S ACCEPTANCE. If that draft is abandoned or rewritten, the
+     record of the round that cleared this head for merge GOES WITH IT.
+  3. NO REVIEW ROUND LEFT A TRACE ON GITHUB. Zero formal reviews and zero
+     comments on PR #48 and on PR #49. Both rounds are known only through
+     documents, and the FIRST round's record was written by the session that
+     was itself corrected.
+  4. THE CORRECTION WAS WRITTEN BY THE SESSION THAT FOUND THE DEFECT. The
+     finding, the fix and the fix's tests share one author. The re-review is
+     what mitigates this, AND THE RE-REVIEW IS THE ITEM IN GAP 2.
+  5. THE POST-MERGE CONTINUOUS-INTEGRATION RUN HAD NOT CONCLUDED when this
+     note was written. The run on the exact reviewed head succeeded; THE RUN ON
+     THE MERGE COMMIT IS NOT YET AN OBSERVED SUCCESS.
+  6. ONE RECORDED TEST TOTAL IS DISPUTED BY ONE, AND THIS NOTE DOES NOT RESOLVE
+     IT. Section 11 prints both figures.
+  7. NO WALL-CLOCK OR MEMORY BOUND EXISTS. The timings are ONE MACHINE'S
+     OBSERVATIONS; the limits that are enforced are COUNTS. The paid profile's
+     measured overhead RANGE INCLUDES NEGATIVE VALUES, which is the honest sign
+     that it is noise.
+  8. THE DEADLINE BEHAVIOUR WAS NEVER MEASURED AGAINST A REAL RESOLVER. Every
+     deadline test uses injected or never-answering fixtures. A pre-existing
+     observation about a silent nameserver's retry tail REMAINS
+     UN-RE-MEASURED, and the source says so.
+  9. ABANDONING A QUERY DOES NOT CANCEL IT, AND NOTHING IN THIS SLICE MAKES IT
+     CANCELLABLE. The socket may be held until the resolver's own timeout.
+ 10. THE PAID PROFILE HAS NEVER RUN AGAINST A REAL TARGET, because nothing can
+     select it. Every fact about its behaviour comes from scripted worlds and
+     synthetic hostile documents.
+ 11. THE TRACE GOLDEN'S ORDER IS NOT GUARANTEED BY THE RUNTIME. It depends on
+     the fake socket's timer ordering, and a runtime change could reorder
+     events with no behaviour change.
+ 12. THE SHIPPED TESTS WOULD NOT NOTICE ONE IMPLEMENTED SAFETY CHECK BEING
+     REMOVED. Section 12, item 1.
+ 13. THE TWENTY PROPOSED ORACLE ROWS ARE STILL UNCONFIRMED, and the previous
+     milestone recorded that ELEVEN OF THEM HAVE NEVER BEEN INDEPENDENTLY
+     REVIEWED. The re-review package contains a draft row-by-row review, WHICH
+     IS NOT MERGED AND IS NOT A CONFIRMATION.
+ 14. THE PER-SUITE TEST COUNTS COULD NOT BE REPRODUCED STATICALLY, because the
+     suites are table-driven. Section 11 says so where the counts appear.
+
+================================================================================
+17. AI TRANSPARENCY, AND REFLECTION PROMPTS
+================================================================================
+
+The engine change, its tests, the before-change capture, the step-2.4 plan, the
+committed source evidence record, the independent review, the correction, the
+independent re-review and this Personal Project note were all produced by
+Claude, an AI coding assistant, under task specifications written by the project
+owner. THE FIRST REVIEW, THE CORRECTION AND THE RE-REVIEW WERE THREE SEPARATE
+ASSISTANT SESSIONS, AND THE SECOND AND THIRD OF THOSE ARE DISTINCT: THE SESSION
+THAT FIXED THE DEFECT IS NOT THE SESSION THAT CLEARED THE FIX.
+
+THE OWNER'S ACTS IN THIS SLICE ARE THE INSTRUCTION TO CORRECT, THE ACCEPTANCE
+AND THE MERGE. No owner decision was taken, and the five open semantic decisions
+were neither decided nor implied. This note was compiled from the sources in
+section 18, from the GitHub API and from its own reading of both repositories,
+AND IT RAN NO TEST OF ITS OWN. No assistant session held production access at
+any point in M14-2.3.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. Fifteen deliberate regressions were injected and every one was caught, and
+     then a review found a defect none of them covered. What does a mutation
+     score actually measure, and what did this one not measure?
+  2. The defect could not be reached by any user, any customer or any scan, and
+     it was fixed anyway. What is the argument for spending a review round on
+     unreachable code, and when does that argument stop being true?
+  3. The code's comment said the thing that turned out to be false. Is a comment
+     that asserts a safety property an asset or a liability, and what would have
+     to be true for it to be an asset?
+  4. The session that found the defect also wrote the fix and the fix's tests.
+     What exactly is wrong with that, given that a further session checked the
+     result — and what would have been lost by waiting for a fresh session to
+     do the fixing?
+  5. The baseline network trace was captured before any source changed, in a
+     commit that touches no source file, and its position in the commit graph
+     was checked rather than its timestamp. Why is ancestry better evidence than
+     a date, and what does that say about evidence in general?
+  6. The plan said to await the two queries with the others. The implementation
+     deliberately did not, and wrote down that it had deviated. What makes a
+     recorded deviation better than a plan that was never written down?
+  7. The paid result deliberately lacks a field, and that absence is what stops
+     it becoming a report. Why is a structural impossibility worth more than a
+     rule that says "do not do this"?
+  8. The review that cleared this commit for merge lives in a draft pull request
+     that may never be merged. Is that better or worse than the previous
+     milestone's final review, which could not be found at all, and what would
+     good enough look like?
+  9. Twenty-nine mutations were attempted and one survived because it was
+     genuinely equivalent. Why report an equivalent survivor at all, instead of
+     quietly calling it twenty-eight of twenty-eight?
+ 10. One implemented safety check has no test that would notice its removal, and
+     that was found by a reviewer's test rather than the project's. What should
+     happen to a correct implementation nobody is protecting?
+ 11. The open owner decisions have not gone down across three milestones. When
+     is it right to keep building underneath undecided questions, and what would
+     tell you that you had built too far?
+
+================================================================================
+18. SOURCE LOCATORS
+================================================================================
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #48, its title, base, branch, head,
+     state, open and merge times, merging account and diff totals; the final
+     reviewed head b53837cb8965c49a962b866a974ca4fa032682b3; the merge commit
+     e256830f6873c0c2a19143aa61cce95f337c11df; the branch's five commits with
+     their subjects and file lists; the continuous-integration conclusions and
+     recorded counts for runs 38296591492 (CI #80), 38297175058 (CI #81) and
+     38310134865 (CI #82), including the final run's own summary line and its
+     skip statement; the still-unconcluded post-merge run 38320678604 (CI #84);
+     the ABSENCE of any formal review and of any issue or review comment on PR
+     #48; and pull request #49 with its draft and open state, head
+     7f71c457bffb02a48804a07475aafc288da1215f, seventeen files, zero deletions
+     and likewise zero reviews and zero comments.
+[S2] docs/evidence/M14_2_3_PROFILE_ENGINE_2026-10-12.md at the merge commit —
+     the committed source evidence record for this slice, from which the
+     implementation approach, the naming decision, the draft's shape, the
+     binding rules and their consumer sites, the two lookups and the deliberate
+     late await, the five outcome states and their prohibitions, the file
+     inventory, the free-invariance evidence, the network-parity method and the
+     eight worlds, the per-suite test counts, the gate progression, the fifteen
+     mutations, the one-machine cost observations, the seven stated limits, the
+     first independent review's verdict and all four P2 resolution groups with
+     their before-and-after and mutation figures are taken. Also
+     docs/M14_2_4_IMPLEMENTATION_PLAN.md at the merge commit, A PLAN ONLY, for
+     the oracle composition restatement, the per-check status matrix, the
+     deadline-state mapping options, the five open owner decisions and the
+     step-2.4 stop conditions.
+[R1] Reproduced in this session from the technical repositories, not taken from
+     any document: the merge diff's 27-file, +4,998, −91 shape and its
+     distribution across documents, source and test files, including that one
+     source file is new and five are modified and that fifteen of the nineteen
+     test-tree files are test files; that the before-change capture commit
+     ea92391 contains ZERO files under the source tree AND IS A GIT ANCESTOR of
+     the first commit that changes one; that its three files are byte-identical
+     at the merge commit; the SHA-256 of the committed network-trace golden,
+     recomputed from the merge commit and matching both the source record and
+     the re-reviewer's regenerated value; that the diff across the whole
+     transport-policy directory between the base and the merge commit is ZERO
+     LINES; that the correction commit touches neither the engine's free entry
+     file nor any transport file; the two-entry profile table and the twelve and
+     fourteen retrieval-operation lists, the paid list being constructed from
+     the free one plus exactly two; all five outcome states and the two deadline
+     causes present in source with the prohibition written beside them; that
+     none of pull request #49's seventeen files resolves at the merge commit;
+     that the merge timestamp in UTC and the merge commit's local committer date
+     are the same instant two hours apart; and that the large test suites are
+     table-driven, so static declaration counts are lower than the reported test
+     counts and neither confirm nor contradict them.
+[D1] docs/review-prep/01_PR48_INDEPENDENT_REVIEW_b53837c.md and
+     docs/review-prep/06_RELEASE_GATES_AND_FREE_FOLLOWUPS.md, with the package
+     README, read on the branch of DRAFT, UNMERGED pull request #49 — the
+     independent re-review of the exact merged head and the release-gate
+     preflight. From these are taken: the re-review's own identity checks,
+     chronology and toolchain verification; its independently run gates and
+     their agreement with continuous integration; its own thirteen-case race
+     reproducer and both trees' results; its disputed test total; the
+     twenty-nine-mutant campaign with twenty-eight killed and the one
+     equivalent survivor; the surviving mutant in the pull request's own tests;
+     its twenty-two hostile profile identifiers; its additional attribution and
+     mail-ownership worlds; its confidentiality canary result; the three
+     nonblocking observations; the verdict and its own qualification of that
+     verdict; the two newly found free-path findings; the acceptance-runner
+     preflight obstacle; and the M14-4 and M14-6 gate coverage gaps. EVERY
+     STATEMENT MARKED [D1] COMES FROM AN UNMERGED DRAFT THAT IS NOT ACCEPTANCE,
+     NOT AN OWNER DECISION AND NOT A RELEASE GATE, AND THE DOCUMENTS SAY SO
+     THEMSELVES.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_Step2.1_PP_Evidence_2026-10-12.txt  the tier foundation whose
+                                                    narrow guard and MANDATORY
+                                                    binding contract this slice
+                                                    was required to complete,
+                                                    and whose report golden
+                                                    passes here unmodified
+  SCANCOMPASS_M14_Step2.2_PP_Evidence_2026-10-12.txt  the parsing primitives
+                                                    this slice integrates for
+                                                    the paid profile only,
+                                                    whose unreachability
+                                                    premise this slice ends by
+                                                    design, and whose digests
+                                                    pass here unmodified
+  SCANCOMPASS_M14_OWNER_DECISIONS_H4_M3_M4_PP_Evidence_2026-10-12.txt
+                                                    the owner approvals whose
+                                                    seven host-scope
+                                                    requirements are each
+                                                    asserted by this slice's
+                                                    parity tests
+  SCANCOMPASS_M14_OD1_DECISION_PP_Evidence_2026-10-11.txt  the content lock
+                                                    that names the two
+                                                    additional retrieval
+                                                    operations and whose memo
+                                                    rows are the 84 binding
+                                                    oracle cases
+  SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt   the design lock whose
+                                                    §24 stops and §25.8
+                                                    binding requirement govern
+                                                    this slice
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/  the production state this
+                                                    slice did not change
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data, raw
+provider payload, host identifier, private target hostname, nameserver address,
+production environment value, production filesystem path, backup identifier,
+email address or server detail appears in this note. No check or probe
+identifier, header name, directive name, record name, tag name, function name or
+source file path is reproduced; every profile, lookup, observation, outcome
+state and open decision above is described BY PURPOSE ONLY, so this note carries
+NO SCANNING RECIPE AND NO REUSABLE ADVERSARIAL INPUT — the hostile documents and
+the scripted worlds are described by shape and never given as markup or as
+addresses, and the canary values the re-review planted are referred to and never
+reproduced. No target hostname, fixture body or decoy host is reproduced; the
+redirect and refusal worlds are described by relationship only. The one
+loopback-resolver reproduction is described without its address literal. No
+unsanitised transcript or command output is included; both independent reviews
+are summarised from committed documents. The golden file's SHA-256 is referred
+to as having been recomputed and matched, AND ITS VALUE IS NOT REPRODUCED HERE,
+so the only long identifiers in this note are Git commit SHAs and GitHub
+pull-request and workflow-run numbers. NO SCREENSHOT ACCOMPANIES THIS NOTE: the
+slice changed nothing a user can see, no paid assessment is reachable, and none
+is invented.
+
+END OF EVIDENCE
