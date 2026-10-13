@@ -733,4 +733,396 @@ invented.
 
 END OF SECOND ADDENDUM
 
+================================================================================
+THIRD ADDENDUM, OF 13 OCTOBER 2026 — TWO FURTHER ACCEPTED MILESTONES
+================================================================================
+
+NOTHING ABOVE THIS LINE HAS BEEN CHANGED. The index of 2026-10-11 and the
+addenda of 2026-10-12 and earlier on 2026-10-13 are all preserved exactly as
+written and are HISTORICAL from here on. This third addendum was appended later
+on 2026-10-13, after two further milestones were implemented, independently
+reviewed, corrected, owner-decided, merged and owner-accepted. SUPERSEDED TEXT
+IS MARKED, NOT REWRITTEN.
+
+WHAT THE INDEX AND THE EARLIER ADDENDA SAY THAT IS NOW HISTORICAL
+
+  "FOUR M14 MILESTONES ARE MERGED AND OWNER-ACCEPTED" (index)
+  "SEVEN are now merged and owner-accepted" (first addendum)
+  "EIGHT are now merged and owner-accepted" (second addendum)
+      TEN are now merged and owner-accepted. The ninth and tenth are below.
+  "STEP 2.3 IS MERGED. Steps 2.4 to 2.7 have not started." (second addendum)
+      STEP 2.4 HAS STARTED AND IS PARTLY BUILT. Its first two slices are
+      merged. Steps 2.5, 2.6 and 2.7 have not started, and the remaining five
+      check modules of step 2.4 are not built by any merged branch.
+  "THE TEN EXTENDED CHECKS ARE SPECIFIED AND LOCKED, NOT BUILT: no scanner
+   module, check, catalogue entry, route or interface for them exists in code"
+   (index, restated as STILL TRUE in both earlier addenda)
+      NO LONGER TRUE OF THE CHECKS THEMSELVES, AND THIS IS THE FIRST TIME THAT
+      SENTENCE HAS HAD TO BE RETIRED. FIVE OF THE TEN CHECK MODULES NOW EXIST
+      IN SOURCE as pure functions. What is STILL true, and asserted by tests,
+      is that NO CATALOGUE ENTRY, SCORING RULE, ENRICHMENT ENTRY, CONTENT
+      ENTRY, EVIDENCE-POLICY ENTRY, REPORT COMPOSITION, ENGINE WIRING, WORKER
+      PROTOCOL FIELD, ROUTE OR INTERFACE FOR ANY OF THEM EXISTS. ALL 42
+      CATALOGUE ENTRIES ARE STILL FREE, AND NOTHING CAN CALL ANY OF THE FIVE.
+  "PULL REQUESTS #45, #46 AND #47 CARRY NO COMMENTS AT ALL" (first addendum)
+  "NO FORMAL GITHUB REVIEW HAS EVER BEEN SUBMITTED ON ANY M14 PULL REQUEST.
+   All seven were queried." / "ALL NINE HAVE NOW BEEN QUERIED" (addenda)
+      ALL ELEVEN HAVE NOW BEEN QUERIED. STILL NO FORMAL GITHUB REVIEW ON ANY
+      M14 PULL REQUEST AND STILL NO REVIEW COMMENT ON ANY OF THEM. BUT THE
+      CLAIM THAT NO M14 PULL REQUEST CARRIES ANY COMMENT IS NOW HISTORICAL:
+      PULL REQUESTS #50 AND #51 EACH CARRY ONE ISSUE COMMENT, WRITTEN BY THE
+      OWNER, RECORDING AN OWNER DECISION. [S1]
+  "Every review described anywhere in this package was conducted in an
+   assistant session and recorded inside a committed document or a
+   pull-request description." (first addendum)
+      STILL TRUE OF EVERY REVIEW. It is NO LONGER TRUE OF EVERY OWNER
+      DECISION: two are now recorded on GitHub where they can be read
+      independently of any document the implementing sessions wrote.
+  "THE PUSH-TRIGGERED CONTINUOUS-INTEGRATION RUN ON THE MERGE COMMIT ITSELF
+   WAS STILL IN PROGRESS WITH NO CONCLUSION" (second addendum, on step 2.3)
+      THAT RUN NOW READS SUCCESS, and so do the post-merge runs of both
+      milestones below. THE DECLARED GAP IS CLOSED. Every merged M14 milestone
+      in this package now has an observed successful post-merge run. [S1]
+
+STILL TRUE, AND UNCHANGED BY BOTH MILESTONES
+
+NOTHING IN M14 HAS REACHED PRODUCTION. Migration 0005 exists IN SOURCE ONLY and
+is NOT APPLIED. Production still runs M13 Decision A: schema contract m13-0004,
+migration ledger 0000-0004, payments CLOSED, payment era ERA 1, the second
+deployment decision not run. NO M14 MILESTONE HAS CONTACTED production, the
+virtual private server, the production database, Stripe in either mode, the web
+server, DNS, the firewall or any production configuration file. NO LIVE TARGET
+HAS EVER BEEN SCANNED BY ANY M14 SESSION. THERE IS STILL NOTHING FOR SALE AND NO
+PAID ASSESSMENT HAS EVER BEEN PERFORMED. [S1,S2]
+
+NO PAID ASSESSMENT IS REACHABLE, EVEN NOW THAT FIVE OF ITS TEN CHECKS EXIST.
+Across both milestones, EVERY SOURCE FILE THAT CHANGED LIES INSIDE ONE
+DIRECTORY, and no file under the source tree outside that directory references
+it. Nine source files, all new. ZERO files under the engine, the transport, the
+parsers, the worker, the server or the application layer. [R1]
+
+NO TEST IN THIS PACKAGE WAS RUN BY THE SESSIONS THAT WROTE THESE NOTES, and
+none was run by the project owner.
+
+NO TIMING OR MEMORY FIGURE IS CLAIMED FOR EITHER MILESTONE, and the sources
+claim none either: both slices' checks are linear in facts that were already
+bounded before they arrived.
+
+THESE REMAIN RETROSPECTIVE RECORDS. The two notes below were written on
+2026-10-13 and carry that date in their file names. Their subject dates are
+stated in their own opening lines.
+
+THE NINTH AND TENTH MILESTONES
+
+  2026-10-13  PR #50   M14-2.4A FOUR DECISION-INDEPENDENT CHECK MODULES. Four
+              07:54    of the ten paid checks — the four depending on NONE of
+              merged   the five open owner semantic decisions — as PURE
+              ecd8260  FUNCTIONS, plus three shared helpers. ALL THIRTY BINDING
+                       ORACLE ROWS SATISFIED; the eleven proposed rows that
+                       touch them agree but are asserted only in a block whose
+                       own name says they are NOT BINDING. BUILDING THE CHECKS
+                       FOUND AN ERROR IN THE ORACLE: a row labelled a pass
+                       because no insecure submission target remained reachable
+                       was corrected to a high-severity failure, because the
+                       form's OWN target stays reachable programmatically; its
+                       basis stayed PROPOSED. The independent review found NO
+                       P0 AND NO P1, FOUR P2 AREAS, AND NINE OF ITS OWN
+                       TWENTY-SIX MUTANTS SURVIVING — against the slice's own
+                       runner reporting forty-four of forty-six killed. One P2
+                       was a FORGED FACT REACHING A PASS: an object claiming
+                       three forms while listing none. Another WITHDREW A
+                       SEVERITY THE SLICE HAD INVENTED, where ownership of a
+                       password field could be neither confirmed nor excluded.
+                       THREE OF THE RECORD'S OWN CLAIMS WERE WITHDRAWN OR
+                       QUALIFIED IN PLACE, including the test-first claim, which
+                       GIT HISTORY CANNOT CORROBORATE because the first commit
+                       bundles tests and modules. THE OWNER THEN DECIDED THREE
+                       NARROW QUESTIONS ON THE PULL REQUEST ITSELF.
+    SCANCOMPASS_M14_Step2.4A_PP_Evidence_2026-10-13.txt
+
+  2026-10-13  PR #51   M14-2.4B THE CERTIFICATE-AUTHORISATION CONSISTENCY
+              10:14    CHECK. The fifth paid check and its sourced authority
+              merged   table: ONE operator, ONE published identifier, SIXTEEN
+              474c8e5  issuing names, exact-match only, closed, version-stamped,
+                       with THREE OTHER AUTHORITIES DELIBERATELY NOT COMPILED
+                       because their own documents were unreachable and the
+                       secondary sources DISAGREED. TESTS WERE COMMITTED BEFORE
+                       THE IMPLEMENTATION IN THREE SEPARATE PLACES, AND GIT
+                       HISTORY PROVES IT. The independent security review found
+                       TWO P1s. The first: a WILDCARD CERTIFICATE WAS JUDGED
+                       AGAINST THE WRONG RECORDS, since a wildcard's governing
+                       records live at the parent name — seven of thirteen
+                       reproducers failed before the fix, all thirteen passed
+                       after, and the fix ABSTAINS rather than walking further.
+                       The second was not a bug but a FALSE PREMISE UNDER THE
+                       WHOLE CHECK: the only identity fact the scanner holds
+                       about a certificate authority is A NAME THE AUTHORITY
+                       CHOSE FOR ITSELF, and the earlier argument that a
+                       verified chain mitigated this WAS WITHDRAWN AS FALSE.
+                       Every captured field was examined and NONE can identify
+                       the issuer. THE OWNER CHOSE THE OPTION THAT MAKES THE
+                       CHECK UNABLE TO REACH A VERDICT: in this version it
+                       produces ONLY an error, a not-tested or an undetermined
+                       result, and the module contains NO PASS, WARNING OR
+                       FAILURE LITERAL AT ALL. The two oracle rows this
+                       contradicts WERE PRESERVED EXACTLY, with a test
+                       asserting BOTH readings. A mutation run also exposed A
+                       FAULT IN THE HARNESS ITSELF rather than in the code.
+    SCANCOMPASS_M14_Step2.4B_PP_Evidence_2026-10-13.txt
+
+A NINTH PROVENANCE CLASS APPEARS IN THE TWO NOTES BELOW, AND ONE USED FOR STEP
+2.3 IS NOT AVAILABLE FOR THEM
+
+  OWNER-RECORDED    A decision of the project owner, recorded as a COMMENT ON
+  ON GITHUB         THE PULL REQUEST and read for the notes THROUGH THE GITHUB
+                    API. Marked [O1]. NEW IN THESE TWO MILESTONES, AND THE
+                    FIRST TIME IN THIS PACKAGE THAT AN OWNER DECISION CAN BE
+                    READ WITHOUT RELYING ON A DOCUMENT WRITTEN BY THE SESSION
+                    DOING THE WORK. Both comments state about themselves that
+                    they are ISSUE COMMENTS AND NOT FORMAL GITHUB CODE REVIEWS;
+                    one adds that it AUTHORISES NO MERGE OR DEPLOYMENT. One
+                    instructs that later source documentation and Personal
+                    Project evidence MUST PRESERVE THE APPROVALS, THEIR
+                    PROVENANCE AND THEIR NON-FORMAL CHARACTER, and the notes
+                    below are written to that instruction.
+
+  THE DRAFT-REVIEW-RECORDED CLASS OF THE STEP-2.3 NOTE IS NOT AVAILABLE HERE,
+  AND THAT IS A LOSS. For step 2.3 the independent re-review could be cited as
+  a readable document on a draft pull request's branch. FOR BOTH MILESTONES
+  BELOW, NO REVIEW DOCUMENT EXISTS ANYWHERE. Each review was relayed to the
+  correcting session through the owner's task specification, so what survives
+  is THAT SESSION'S ACCOUNT OF A REVIEW OF ITS OWN PREDECESSOR'S WORK. The
+  notes mark those statements REVIEW-RELAYED and say so wherever it matters. SO
+  THE PROVENANCE OF THE DECISIONS IMPROVED WHILE THE PROVENANCE OF THE REVIEWS
+  GOT WORSE, and both facts are recorded rather than averaged.
+
+  SESSION-REPRODUCED is used again, marked [R1]. Across the two notes it
+  covers: both merge diffs and their distributions; that every source-tree file
+  differing between the step-2.3 merge commit and the second merge commit lies
+  inside one directory, nine files in all, with zero under the engine,
+  transport, parser, worker, server or application layers; that no file outside
+  that directory references it; that the catalogue still holds forty-two
+  entries; that the single deletion in the first merge is the oracle label
+  correction and the single deletion in the second is a plan matrix row
+  replaced by itself plus a dated annotation; that the oracle fixture's change
+  in the second merge is five added comment lines and ZERO deletions; that the
+  test pinning the whole oracle's composition still pins 111 cases as 84
+  binding, 20 proposed and 7 owner-blocked with the proposed breakdown
+  unchanged; that the compiled authority table has exactly one row, one
+  identifier and sixteen issuing names; that the check module contains no pass,
+  warning or failure literal; that the first branch commit of the second
+  milestone is tests-only while the first commit of the first milestone bundles
+  tests with modules; and that the second owner comment names a head five
+  commits before the one that was merged.
+
+THE THREE OWNER DECISIONS OF PR #50, AND THEIR LIMITS
+
+Each was approved as the conservative option, and in each case the comment
+bounded the approval in the same sentence. [O1]
+
+  1. An insecure form without positively confirmed ownership of a password
+     field is a failure at the MIDDLE severity with an unresolved-ownership
+     flag. THE HIGHEST SEVERITY REQUIRES POSITIVE EVIDENCE, and ownership MUST
+     NOT BE INFERRED FROM AN UNRELATED FIELD.
+  2. A single malformed comma-containing transport-security field is not BY
+     ITSELF a conflicting duplicate, so the consistency comparison may pass.
+     AND THE COMMENT STATES THIS IS NOT AN ASSERTION THAT THE POLICY IS VALID:
+     a pass for one comparison is not a verdict that the policy is sound, and
+     the separate prerequisite check owns that condition.
+  3. Two occurrences differing only by the preload token are an INCONSISTENT
+     OPERATOR-PUBLISHED CONFIGURATION. AND THE COMMENT FORBIDS describing the
+     difference as altered browser-enforced semantics.
+
+THE OWNER APPROVED NOTHING ELSE, AND THE COMMENT LISTS WHAT IT DOES NOT COVER:
+the five unresolved semantic decisions, the two deadline-state mappings from
+step 2.3, the customer-facing copy, the public, legal and privacy wording, and
+the sensitive-file scope review. THE APPROVALS RATIFIED THE CODE AS IT ALREADY
+STOOD, so no source change fell between the approval and the merge, sixteen
+seconds apart. [O1]
+
+THE ONE OWNER DECISION OF PR #51, AND WHAT IT COST
+
+The owner approved that where an otherwise-decisive comparison rests ONLY on the
+issuer's common name, the answer is UNDETERMINED with honest bounded evidence —
+NEVER A PASS AND NEVER A WARNING — because a trusted chain does not make a short
+intermediate name globally unique, so a table lookup, ALTHOUGH SOURCED, is
+insufficient evidence of identity. THE PRICE IS THAT THE CHECK CANNOT REACH A
+VERDICT IN THIS VERSION AT ALL. The owner accepted that rather than accept a
+path that could attribute a certificate to the wrong authority. [O1]
+
+AND THE INSTRUCTION ABOUT THE ORACLE IS THE PART WORTH CARRYING FORWARD: RECORD
+THE APPARENT DISCREPANCY AND ITS PROVENANCE RATHER THAN SILENTLY WEAKENING AN
+ORACLE. The two affected rows stay binding FOR THEIR OWN VERIFIED-IDENTITY
+PREMISE; they were kept exactly as written; a new numbered section was APPENDED
+to the locked content memo; dated annotations were added in three normative
+documents; and a comment was added beside the fixture rows. NOTHING EARLIER WAS
+REWRITTEN. [O1,R1]
+
+WHAT IS PROVEN BY THESE TWO MILESTONES, AND WHAT IS NOT
+
+PROVEN, and confirmed by continuous integration on both exact reviewed heads:
+that five of the ten paid checks exist as pure functions which receive only
+already-collected facts and can receive no resolver, client, address, page body
+or clock; that each is TOTAL, so a hostile or forged fact object is contained as
+an undetermined result rather than thrown or answered reassuringly; that the
+thirty binding oracle rows of the first slice and the twelve of the second are
+all satisfied, with the second slice's two name-dependent rows superseded at
+runtime by an owner decision and preserved as written; that nothing can call any
+of the five, that no source file outside their directory references them, that
+the catalogue still holds forty-two free entries and that neither scoring
+version holds any of their identifiers; that free output is byte-identical, with
+the step-2.1 golden, the step-2.2 digests and the step-2.3 trace golden and
+host-scope parity all passing with their files unedited; that a forged fact
+object claiming forms it does not list can no longer reach a pass; that a
+wildcard certificate is no longer judged against records that do not govern it;
+that a comparison resting only on a self-asserted authority name can no longer
+produce a verdict, with no flag, table or test path able to bypass that gate;
+and that the authority table abstains rather than guesses, with two mutants
+pinning exactly that.
+
+NOT PROVEN, AND NOT CLAIMED: any timing or memory figure, since none was
+measured or asserted for either slice; that the first slice's tests were written
+before its modules, WHICH GIT HISTORY CANNOT CORROBORATE and which its own
+record therefore marks author-reported; that the shipped tests of the first
+slice detect every breakage of its decisions, since an independent reviewer's
+own mutants showed NINE OF TWENTY-SIX SURVIVING before the corrections and one
+of those nine is answered by a recorded INFERENCE rather than a test; that
+browser behaviour matches the duplicate-header reasoning, which was done BY
+READING SPECIFICATIONS AND WITHOUT RUNNING A BROWSER; that the authority
+identifier is stated in the OFFICIALLY POSTED policy document, since that
+document's text was never read and the claim rests on a repository head and a
+version number matching; the exact case and whitespace rules for the
+authorisation records, since the specification could not be re-read in that
+environment, which is why the check is strict and abstains; which of the second
+slice's two corrections caused its decisive-result count to fall to zero, since
+NO MEASUREMENT WAS TAKEN BETWEEN THEM; the twenty proposed oracle rows, which
+remain unconfirmed, eleven of them still never independently reviewed; the
+readings both slices made beyond the memo, apart from the three the owner
+decided; and anything at all about the five remaining check modules, WHICH
+STILL DO NOT EXIST IN ANY MERGED BRANCH.
+
+AND ONE ACCEPTANCE CONDITION IS NOT RECORDED AS MET, WHICH THIS PACKAGE STATES
+RATHER THAN SMOOTHS OVER. THE MERGED RECORD OF PR #51 SAYS IN ITS OWN FINAL
+SECTION THAT THE MILESTONE WAS NOT READY TO MERGE, naming an INDEPENDENT FINAL
+RE-REVIEW OF THAT HEAD as the first of three remaining conditions, and the
+pull-request description in the same merged tree opens with the words "Do not
+merge." The pull request was marked ready for review four seconds before it was
+merged. Every branch in the technical repository was searched for a review
+document covering that head and NONE WAS FOUND. THE MERGE AND THE GREEN RUN ARE
+VERIFIED; THE CONDITION IS NOT RECORDED ANYWHERE AS SATISFIED. For PR #50 the
+equivalent re-review of the merged head exists ONLY as the owner's own summary
+of it inside the decision comment. [S1,S2]
+
+OPEN OWNER DECISIONS AFTER TEN MILESTONES
+
+  DECIDED, TECHNICAL LEVEL ONLY: host scope; control-count presentation;
+  extended priority ordering; and now the three narrow questions of PR #50 and
+  the one question of PR #51, all four recorded ON GITHUB.
+  STILL OPEN: OD-10 customer-facing copy, which also holds the control-count
+  explanation's wording, the zero-score statement's wording and, newly, the
+  renewal framing the certificate check's memo requires and does not yet have;
+  B-6 public, legal and privacy wording, without which no paid assessment may
+  run in production; the methodology's sensitive-file exposure review.
+  THE FIVE SEMANTIC CHOICES OPENED BY M14-2.2 ARE ALL STILL OPEN, UNCHANGED AND
+  UNIMPLIED. Both milestones were chosen or built so as to touch none of them,
+  and both comments say explicitly that they approve none of them. THE COUNT OF
+  OPEN OWNER DECISIONS IS UNCHANGED BY THESE TWO MILESTONES.
+  THE SIXTH QUESTION — how step 2.3's two deadline states should be reported —
+  IS ALSO STILL OPEN AND IS STILL NOT COUNTED AMONG THE FIVE. Both comments
+  name it as not covered. It blocks the two mail-declaration check modules,
+  which are otherwise the readiest of the remaining five.
+  A SEVENTH QUESTION IS NEWLY RECORDED: whether to build cryptographic
+  identity evidence for the issuing authority, which is the ONLY route to the
+  certificate check ever reaching a verdict. It would change a code path the
+  free product depends on, so it needs the owner's approval and its own
+  byte-invariance proof. IT IS DESIGNED AND MEASURED IN THE SOURCE RECORD AND
+  DELIBERATELY NOT BUILT.
+
+OTHER CONTINUING BLOCKERS, UNCHANGED OR NEWLY RECORDED
+
+THE FIVE REMAINING CHECK MODULES. The two mail-declaration checks await the
+deadline-state mapping. The mail-reporting check awaits one of the five semantic
+decisions and six proposed rows. The mixed-content and subresource-integrity
+checks await three and one of the five respectively, and the source recommends
+building them LAST for that reason. Then step 2.4's wiring, step 2.5's
+registration — catalogue, enrichment, content and evidence policy, which is
+where customer copy and the published evidence keys first matter — step 2.6's
+composition including the older renderer's behaviour on a paid document, and
+step 2.7.
+
+M14-3's protocol change, which must carry only approved, content-free retrieval
+metadata, enforce probe-list MEMBERSHIP at the boundary, PIN THE EXACT PROFILE
+LITERAL rather than accept any string, and prove that a transfer object carrying
+raw paid observations is REFUSED. M14-4's authorisation-callback guard, still a
+raw transaction callback to be constrained BEFORE ANY RUNTIME CALLER EXISTS,
+with adversarial tests for a misbehaving callback that were reported as not
+existing; its fail-closed lapse semantics; and its account-erasure path across
+restricting keys. M14-5's interface and off-production acceptance, which also
+needs the two open owner wording items. M14-6's guarded real-PostgreSQL release
+gate, the production-shape timing of migration 0005, the rollback floor
+restatement, and the acceptance-runner obstacle recorded with step 2.3.
+
+THE FREE-PATH FINDINGS REMAIN AT SIX AND ALL SIX ARE STILL OPEN. The first
+milestone below re-verified one of them read-only — that the web tier does not
+correlate the worker's reported target with the target that was requested — and
+wrote a concrete fail-closed proposal for a separate owner-approved change,
+WHICH IT DID NOT IMPLEMENT because it would change free behaviour on malformed
+worker output. It also preserved the unrecognised null-mail-exchange
+declaration without changing it, noting that the two mail-declaration checks
+must each decide their own no-exchange input explicitly. A DRAFT PULL REQUEST
+FOR THE WORKER-TARGET HARDENING NOW EXISTS AND IS NOT MERGED; see below. EACH OF
+THE SIX WOULD MOVE FREE OUTPUT OR FREE FAILURE BEHAVIOUR FOR SOME INPUT, SO EACH
+NEEDS ITS OWN REVIEWED CHANGE, ITS OWN GOLDEN REVISION AND THE OWNER'S
+APPROVAL. NONE IS M14 WORK AND NONE IS SCHEDULED.
+
+AND ONE OPEN ITEM BELONGS TO THE AUTHORITY TABLE ITSELF: it has no review
+cadence and no named owner, its listed issuing names expire in 2027, and new
+ones will simply be unlisted — safe, because unlisted abstains, but a quiet
+loss of coverage.
+
+TWO FURTHER SOURCE BRANCHES ARE DRAFT WORK AND ARE NOT MILESTONES
+
+PULL REQUESTS #52 AND #53 ARE OPEN, DRAFT AND UNMERGED, and NEITHER IS AN
+ACCEPTED MILESTONE. They are recorded here only so that this package is not
+later read as having overlooked them, and NOTHING IN THEM IS APPROVED,
+ACCEPTED, REVIEWED OR COMPLETE. [S1]
+
+  PR #52  draft, open, unmerged — the worker-target correlation hardening
+          described above, which would change free failure behaviour on
+          malformed worker output and therefore needs its own owner decision.
+  PR #53  draft, open, unmerged — three further paid check modules for the
+          mail declarations and mail reporting, together with a
+          pending-decision boundary. It is draft work on exactly the questions
+          listed as open above, AND ITS EXISTENCE DOES NOT DECIDE ANY OF THEM.
+
+NO NOTE IN THIS PACKAGE DESCRIBES EITHER AS A COMPLETED MILESTONE, and no
+figure from either is used anywhere in it.
+
+SANITISATION OF THE TWO ADDED NOTES
+
+The sanitisation statements above apply unchanged to the two notes added later on
+2026-10-13. In neither is any check or probe identifier, record tag name, header
+name, directive name, abstention token, evidence key, issuing-certificate name,
+authority domain, function name or source file path reproduced; every check,
+fact, helper, evidence key, outcome and open decision is described BY PURPOSE
+AND BY COUNT ONLY, so the package still carries NO SCANNING RECIPE, NO LOOKUP
+TABLE AND NO REUSABLE ADVERSARIAL INPUT. The certificate authority, its
+identifier and its sixteen issuing names are described by purpose and count and
+never named. NO PUBLIC-KEY DIGEST, CERTIFICATE FINGERPRINT, UPSTREAM COMMIT
+IDENTIFIER OR SOURCE-FILE DIGEST from the authority table is reproduced. The
+hostile documents, forged fact objects, generated adversarial cases and canary
+values are described by shape and count and never given as markup or as data;
+the wildcard, redirect and inheritance situations are described by relationship
+only. The owner decisions are summarised from their pull-request comments, which
+contain no personal information beyond the owner's authorship, and no
+unsanitised transcript, command output or log line is included. NO PERSONAL
+DOCUMENT, SUBMISSION OR ASSESSMENT ARTIFACT OF ANY KIND IS INCLUDED IN OR
+REFERENCED BY THIS PACKAGE, and nothing submitted separately by the student
+appears in this repository. The only long identifiers remain Git commit SHAs of
+this project and GitHub pull-request, comment and workflow-run numbers. NO
+SCREENSHOT ACCOMPANIES EITHER NOTE: neither slice changed anything a user can
+see, none of the five checks is reachable, and none is invented.
+
+END OF THIRD ADDENDUM
+
 END OF INDEX

@@ -1,0 +1,957 @@
+SCANCOMPASS — M14 STEP 2.4A PERSONAL PROJECT EVIDENCE
+Four of the ten paid checks, built as pure functions that nothing can call; an
+independent review that withdrew three of the record's own claims and found a
+forged fact reaching a reassuring answer; and the first owner decisions in this
+project recorded where anyone can verify them
+Subject dates: implemented 12-13 October 2026; independently reviewed,
+               corrected, owner-decided and merged 13 October 2026
+Evidence written: 13 October 2026
+Classification: Confidential project evidence
+
+STATUS
+M14-2.4A IS IMPLEMENTED IN SOURCE, MERGED AS PR #50 AND OWNER-ACCEPTED. IT IS
+NOT DEPLOYED. It adds FOUR OF THE TEN PAID CHECK MODULES — the four that
+depend on NONE of the five open owner semantic decisions — as pure functions,
+plus three shared helper modules. [S1,S2]
+
+THE CHECKS ARE REACHABLE FROM NOTHING, AND THIS SESSION CONFIRMED IT FROM
+SOURCE RATHER THAN FROM THE RECORD. No catalogue entry, scoring rule,
+enrichment entry, content entry, evidence-policy entry, report composition,
+engine wiring, worker protocol field, route or profile admission was added.
+NO FILE UNDER THE SOURCE TREE OUTSIDE THE CHECK DIRECTORY REFERENCES IT. Unit
+tests are the only consumers. [R1,S2]
+
+EVERY SOURCE FILE THIS MILESTONE TOUCHES LIVES INSIDE THE PAID-CHECK
+DIRECTORY. This session listed the source-tree changes directly: SEVEN NEW
+FILES, ALL INSIDE THAT ONE DIRECTORY, AND NOTHING ELSE UNDER THE SOURCE TREE AT
+ALL. No engine, transport, parser, worker, server or application file differs
+from the base. [R1]
+
+THE THIRTY BINDING ORACLE ROWS FOR THESE FOUR CHECKS ARE ALL SATISFIED. Twelve,
+six, six and six. The ELEVEN PROPOSED rows that touch them are asserted ONLY IN
+A SEPARATELY NAMED CONDITIONAL BLOCK, are recorded as agreeing with the
+conservative reading, AND ARE NOT PROMOTED TO BINDING. NO OWNER-DECISION ROW
+BELONGS TO THESE FOUR CHECKS, which is why they could be built at all. [S2]
+
+IMPLEMENTING THE CHECKS FOUND AN ERROR IN THE ORACLE ITSELF. One proposed row
+had been labelled as a pass on the ground that no insecure submission target
+remained reachable. Building the check showed the form's OWN insecure target
+STAYS REACHABLE PROGRAMMATICALLY even when a secure-looking override is
+present, so the row's expectation was corrected to a HIGH-severity failure. The
+label now says so and says it was corrected. ITS BASIS REMAINS PROPOSED AND IT
+WAS NOT PROMOTED TO BINDING. [S2,R1]
+
+THE INDEPENDENT REVIEW FOUND NO P0 AND NO P1, FOUR P2 AREAS, AND NINE OF ITS
+OWN MUTANTS SURVIVING. Verdict CORRECT. Of twenty-six mutants the reviewer
+wrote, SEVENTEEN WERE KILLED AND NINE SURVIVED — meaning nine deliberate
+breakages of this slice's decisions went unnoticed by the tests as they stood.
+Eight of the nine now have load-bearing tests. [S2]
+
+ONE OF THE FOUR P2 AREAS WAS A FORGED FACT REACHING A REASSURING ANSWER. The
+record had claimed that every contradictory fact object answers "unknown". It
+did not: a fact object claiming three forms while listing none REACHED A PASS. A
+consistency guard now runs before any absence answer. THE CLAIM WAS MARKED
+SUPERSEDED IN PLACE RATHER THAN QUIETLY EDITED. [S2]
+
+THE REVIEW WITHDREW A SEVERITY THE SLICE HAD INVENTED. Where ownership of a
+password field could be neither confirmed nor excluded, the slice answered the
+HIGHEST severity with lowered confidence. The locked content memo requires an
+OWNED password field for that severity, so the answer ASSERTED SOMETHING IT HAD
+NO EVIDENCE FOR. It is now the middle severity with an explicit
+unresolved-ownership flag. [S2]
+
+THREE OF THE RECORD'S OWN CLAIMS WERE WITHDRAWN OR QUALIFIED, NOT DELETED. The
+"no P0, P1 or P2 was found" claim is marked superseded; the
+contradictory-facts claim is marked corrected; and THE CLAIM THAT THE TESTS WERE
+WRITTEN BEFORE THE MODULES IS NOW MARKED AUTHOR-REPORTED, because the first
+commit bundles tests and modules together and the failing run's output was never
+committed, SO GIT HISTORY DOES NOT CORROBORATE IT. [S2,R1]
+
+FOR THE FIRST TIME IN THIS PROJECT, AN OWNER DECISION IS RECORDED WHERE ANYONE
+CAN VERIFY IT. Every earlier M14 milestone's owner decisions existed only inside
+committed documents. THE THREE DECISIONS THAT CLEARED THIS MILESTONE ARE IN A
+PULL-REQUEST COMMENT, read for this note through the GitHub API. It is an
+ISSUE COMMENT, NOT A FORMAL GITHUB REVIEW, and the comment says so itself.
+[S1,O1]
+
+THE THREE DECISIONS ARE NARROW AND THE COMMENT DEFINES THEIR LIMITS ITSELF.
+Unresolved password ownership is the middle severity with a flag, never the
+highest without positive evidence. A single malformed comma-containing
+transport-security field is not by itself a conflicting duplicate, AND THE
+COMMENT STATES THIS IS NOT AN ASSERTION THAT THE POLICY IS VALID. Two
+occurrences differing only by the preload token are an operator configuration
+inconsistency, AND THE COMMENT FORBIDS DESCRIBING IT AS DIFFERENT BROWSER
+ENFORCEMENT. [O1]
+
+THE OWNER DID NOT APPROVE ANYTHING ELSE, AND THE COMMENT LISTS WHAT IT DOES NOT
+COVER. Not the five unresolved M14 semantic decisions, not the two
+deadline-state mappings from step 2.3, not the customer-facing copy, not the
+public, legal and privacy wording, and not the sensitive-file scope review. A
+DECISION ON THREE NAMED OPTIONS IS NOT A DECISION ON ANYTHING ELSE. [O1]
+
+THE OWNER'S APPROVAL RATIFIED THE CODE AS IT ALREADY STOOD. The correction
+round had left all three situations at the conservative option. The owner then
+approved exactly those three options, so NO FURTHER SOURCE CHANGE WAS NEEDED
+between the approval and the merge — sixteen seconds apart. [S1,S2,O1]
+
+THE 658 POSTGRESQL-DEPENDENT TESTS WERE SKIPPED BY ORDINARY CONTINUOUS
+INTEGRATION, NOT PASSED. The figure is identical to the base, which this slice
+does not change, because it touches no persistence code. THEY DID NOT RUN AND NO
+CLAIM IS MADE THAT ANY OF THEM PASSED. The continuous-integration summary line
+states this itself, and so does the owner's comment. [S1,S2,O1]
+
+NO WALL-CLOCK, MEMORY OR TIMING FIGURE IS CLAIMED ANYWHERE IN THIS NOTE, AND
+THE SOURCE CLAIMS NONE EITHER. The source records that no processor or
+wall-clock figure is asserted for this slice, because the checks are linear in
+facts that were already bounded before they arrived. [S2]
+
+FREE OUTPUT IS UNCHANGED, AND THE EASIEST PROOF IS THAT NO FREE FILE EXISTS IN
+THE DIFF. The step-2.1 report golden, the step-2.2 parser digests and the
+step-2.3 network-trace golden all pass with their files BYTE-UNCHANGED, and the
+catalogue still holds FORTY-TWO ENTRIES, EVERY ONE FREE. [R1,S2]
+
+NOTHING REACHED PRODUCTION. Migration 0005 remains IN SOURCE ONLY and was NOT
+RUN ANYWHERE. Production still runs the M13 Decision A state carried in the
+earlier accepted record in this repository: schema contract m13-0004, migration
+ledger 0000-0004, payments CLOSED. NO PRODUCTION CONTACT OF ANY KIND, AND NO
+LIVE TARGET WAS SCANNED. [S2]
+
+================================================================================
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+================================================================================
+
+Six kinds of statement appear in this note and are kept apart throughout. One is
+NEW TO THIS PACKAGE and one used in the step-2.3 note is NOT USED HERE; both
+differences are results and are explained after the list.
+
+  SESSION-VERIFIED   Repository, pull-request, comment and
+                     continuous-integration state read directly from the GitHub
+                     API while this note was being written. Marked [S1].
+  SOURCE-RECORDED    Figures taken from the committed source evidence document
+                     in the technical repository, READ AT THE MERGE COMMIT.
+                     Marked [S2].
+  SESSION-REPRODUCED A fact this session recounted, listed or re-read from the
+                     repository itself rather than accepting a document's word
+                     for it. Marked [R1] and named in place.
+  OWNER-RECORDED     A decision of the project owner, recorded as a comment on
+  ON GITHUB          the pull request and READ FOR THIS NOTE THROUGH THE GITHUB
+                     API. Marked [O1]. NEW IN THIS MILESTONE. It is an ISSUE
+                     COMMENT AND NOT A FORMAL GITHUB REVIEW, which the comment
+                     states about itself.
+  REVIEW-RELAYED     A finding of the independent review, as RELAYED BY THE
+                     OWNER to the correcting session and recorded by that
+                     session in the committed evidence document. Attributed in
+                     place. THE REVIEW ITSELF COULD NOT BE FOUND AS A DOCUMENT
+                     ANYWHERE, and that limit is stated wherever it matters.
+  HISTORICAL         Production facts and earlier milestone facts carried from
+                     an accepted record in this repository, named where used.
+                     M14-2.4A ADDS NONE.
+
+WHAT IS NEW: AN OWNER DECISION ANYONE CAN CHECK. Across the seven earlier M14
+milestones, every note in this package had to record that NO M14 PULL REQUEST
+CARRIED ANY COMMENT AT ALL, and that every owner decision and every review
+existed only inside documents written by the sessions doing the work. THAT
+CHANGED WITH THIS MILESTONE. PR #50 carries ONE ISSUE COMMENT, written by the
+owner, containing the three decisions, their limits, their provenance and an
+explicit instruction that later records must preserve the fact that they were
+not formal review submissions. THIS NOTE OBEYS THAT INSTRUCTION. [S1,O1]
+
+WHAT IS STILL MISSING: THE REVIEW ITSELF. The step-2.3 note could cite an
+independent re-review as a readable document, because that review lived in a
+draft pull request. NO SUCH DOCUMENT EXISTS FOR THIS MILESTONE. The independent
+review of PR #50 was relayed to the correcting session through the owner's task
+specification, and what survives is THAT SESSION'S ACCOUNT OF THE REVIEW OF ITS
+OWN PREDECESSOR'S WORK, plus the owner's comment attesting to the verdict of a
+re-review of the final head. THE PROVENANCE OF THE REVIEWS IS THEREFORE WEAKER
+HERE THAN IN THE PREVIOUS MILESTONE, EVEN THOUGH THE PROVENANCE OF THE
+DECISIONS IS STRONGER. [S1,S2,O1]
+
+STILL NO FORMAL GITHUB REVIEW AND NO REVIEW COMMENT. Queried through the GitHub
+API while this note was written: PR #50 has ZERO formal reviews and ZERO review
+comments, and exactly ONE issue comment, the owner's decision record. Where this
+note says "review", it means an assistant session's review relayed in prose, and
+NEVER a formal GitHub review. [S1]
+
+NO TEST, SUITE, MUTATION, MEASUREMENT OR SCAN WAS RUN BY THIS SESSION. Every
+test count, gate result and mutation figure below is continuous-integration
+output read from the GitHub API, a figure recorded in the committed evidence, or
+a figure stated in the owner's comment. WHAT THIS SESSION DID ITSELF was read
+both repositories and recount structural facts from them; each such fact is
+marked [R1] and named.
+
+NO STUDENT ACTIVITY OF ANY KIND IS RECORDED HERE. No reflection, no research
+activity, no supervisor feedback, no user testing and no personal date. The
+owner's acts in this milestone are the three decisions, the marking of the pull
+request as ready, and the merge. NOTHING ELSE IS ATTRIBUTED TO ANY PERSON.
+
+================================================================================
+1. REVIEWED VERSION, PULL REQUEST, MERGE AND CONTINUOUS INTEGRATION
+================================================================================
+
+All of the following was read from the GitHub API while this note was being
+written, and every commit named resolves in the technical repository with the
+subject line recorded for it. [S1,R1]
+
+  Pull request        #50, in stanciuks/site-security
+  Title               four decision-independent paid check modules; the title
+                      itself carries the words "draft" and "unreachable"
+  Base                main, at the step-2.3 merge commit
+  Branch              claude/gracious-knuth-8oo1yg
+  Opened              2026-10-12 23:58:59 UTC
+  Final reviewed head de290add10905469dd57add644d4d9ddf9b39bed
+  State               MERGED, by the project owner
+  Merge commit        ecd8260bcffe17b10630f8b0c8c15d1c332dffdb
+  Merge time          2026-10-13 07:54:16 UTC
+  Merge diff          17 files changed, 3,590 insertions, 1 deletion
+  Formal reviews      ZERO
+  Review comments     ZERO
+  Issue comments      ONE — the owner's decision record, 6140964431
+
+THE BRANCH CARRIES FOUR COMMITS. [S1,R1]
+
+  1  2f6486b9925c2d95bdb28c298e6cf58a2ae1dbe4   2026-10-12 23:58:36 UTC
+     The implementation, its tests and the first evidence record, in ONE
+     COMMIT. That bundling is why the test-first claim could later only be
+     recorded as author-reported.
+  2  72600c5d2f97068cbca30f7c0f1e4d53177beb8e   2026-10-13 00:02:07 UTC
+     Additional cases that re-run the form rows through the real step-2.3
+     observation assembler.
+  3  7ac312718bafbe708a53dbc5c5be95ddd8a09139   2026-10-13 00:09:50 UTC
+     One document: the continuous-integration result. THIS IS THE HEAD THE
+     INDEPENDENT REVIEW EXAMINED.
+  4  de290add10905469dd57add644d4d9ddf9b39bed   2026-10-13 07:08:37 UTC
+     The corrections answering that review. THE FINAL REVIEWED AND MERGED HEAD.
+
+CONTINUOUS INTEGRATION, ON THE GITHUB-HOSTED RUNNER, NODE 24. Four runs on the
+pull-request branch. [S1]
+
+  Run 38324941590  CI #85  head 2f6486b  CANCELLED
+                   superseded by the next push while still in progress; the
+                   source record claims NO RESULT for it, and neither does this
+                   note
+  Run 38325228022  CI #86  head 72600c5  SUCCESS
+  Run 38325878947  CI #87  head 7ac3127  SUCCESS
+                   the head the independent review examined
+  Run 38360838576  CI #88  head de290ad  SUCCESS
+                   THE EXACT FINAL REVIEWED HEAD THAT WAS MERGED
+
+THE RUN ON THE FINAL HEAD IS THE ONE THE ACCEPTANCE RESTS ON. Read from the
+run's own log through the GitHub API. [S1]
+
+  Tests        9,833 passed, 0 failed, 658 skipped, 0 todo
+  Of           10,491 tests across 1,688 suites
+  Test files   260 passed, 1 skipped, of 261
+  Gates        whole-tree whitespace, type check, lint, test, build, clean tree
+
+AND THE POST-MERGE RUN ON THE MERGE COMMIT ALSO SUCCEEDED. Run 38365677500, CI
+#90, push event, head at the merge commit: SUCCESS. The step-2.3 note had to
+record its own post-merge run as not yet concluded; THIS ONE IS CONCLUDED AND
+GREEN. [S1]
+
+AND THAT EARLIER GAP IS NOW CLOSED TOO. The step-2.3 post-merge run, 38320678604,
+CI #84, WAS STILL IN PROGRESS when the step-2.3 note was written and was
+recorded there as not an observed success. IT NOW READS SUCCESS. This note
+records the follow-up rather than leaving the earlier note's declared gap
+dangling. [S1]
+
+THE MERGE DIFF'S COMPOSITION, RECOUNTED BY THIS SESSION FROM THE REPOSITORY
+RATHER THAN TAKEN FROM ANY DOCUMENT. Seventeen files. [R1]
+
+  1 document, NEW
+      the source evidence record for this slice
+  7 source files, ALL NEW, ALL INSIDE THE PAID-CHECK DIRECTORY
+      four check modules, and three shared helper modules: a document-gate and
+      completeness helper, a strict reader for one transport-security field,
+      and a set of defensive fact readers with the evidence host-list bound
+  9 files under the test tree
+      6 new test files
+      1 new shared input-builder helper
+      1 new mutation harness, which is a script and not a test file
+      1 MODIFIED oracle fixture — the only modified file in the whole diff, and
+      the source of the single deletion
+
+THE SINGLE DELETION IS THE ORACLE CORRECTION, AND THIS SESSION READ IT DIRECTLY.
+One proposed row's label changed from a pass on the ground that no insecure
+target remained reachable, to a HIGH-severity failure, with the reason given in
+the label and with the words "corrected from" retained in it. NOTHING ELSE IN
+THE ENTIRE MERGE IS A DELETION. [R1]
+
+================================================================================
+2. WHAT M14-2.4A IS, AND WHAT IT IS NOT
+================================================================================
+
+WHAT IT IS. Four of the ten paid checks, written as PURE FUNCTIONS that take
+already-collected observations and return a result. They were chosen because
+each depends on NONE of the five open owner semantic decisions, so each could be
+built without pre-empting a decision the owner has not taken. [S2]
+
+THE FOUR, BY PURPOSE AND NOT BY IDENTIFIER. [S2]
+
+  1. INSECURE SUBMISSION TARGETS. Whether the secure page contains a form whose
+     submission would travel without encryption. The only one of the four that
+     can report a non-informational defect.
+  2. TRANSPORT AND FRAMING HEADER CONSISTENCY. Whether the response repeats a
+     policy header with values that would instruct a browser differently. The
+     content-security policy is RECORDED BUT NEVER JUDGED, by design and by
+     explicit stop condition.
+  3. PRELOAD PREREQUISITES. Whether the four locally observable preconditions
+     for the strongest form of transport security are met. Informational. IT
+     MAY NEVER CLAIM ANYTHING ABOUT LIST ELIGIBILITY, SUBMISSION, ACCEPTANCE OR
+     MEMBERSHIP, and that prohibition is asserted on every path.
+  4. SIGNED-DELEGATION PUBLICATION. Whether the registry publishes the facts
+     that indicate a signed delegation. Informational, derived ONLY from the
+     registration facts the earlier steps already extracted, WITH NO NEW LOOKUP
+     AND NO VALIDATING RESOLVER, and every result that read those facts carries
+     an explicit marker that validation WAS NOT ASSESSED.
+
+WHAT THEY RECEIVE, AND WHAT THEY CANNOT RECEIVE. Only already-collected facts:
+the parsed-document facts from step 2.2, a read-only header accessor, a closed
+token describing the plain-text root's first redirect, or the registration
+facts — plus an injected observation time. NO PARAMETER IS A RESOLVER, CLIENT,
+FETCH CALLBACK, URL FETCHER OR PAGE BODY, and no check reads a clock, the
+environment or any caller-supplied tier selection. EACH OF THOSE IS ASSERTED BY
+A BOUNDARY TEST. [S2]
+
+EVERY CHECK IS TOTAL, WHICH IS A STRONGER PROPERTY THAN IT SOUNDS. A hostile
+fact object — including one whose property access throws — is CONTAINED as an
+undetermined result, never as a thrown error and NEVER AS A REASSURING ANSWER.
+That last clause is the one the review tested hardest, and the one it found a
+hole in. [S2]
+
+WHAT IT IS NOT. Not wired into anything. No catalogue, scoring, enrichment,
+content or evidence-policy entry; no report composition; no engine integration;
+no worker protocol field; no route; no admission rule. Not the remaining six
+checks. NOT ANY OF THE FIVE OPEN OWNER SEMANTIC DECISIONS. Not a fix for any
+free-path finding. Not a schema or migration change. [S2]
+
+WHAT THE OUTPUTS MAY CONTAIN IS BOUNDED IN ADVANCE. Only pre-existing status,
+reason and severity tokens — no new vocabulary. At most eight flat evidence
+items, each at most two hundred characters. The customer-facing text parameters
+are ALWAYS EMPTY, because customer copy belongs to step 2.5 and has not been
+approved. NEVER A PATH, QUERY, FRAGMENT, FIELD NAME, FIELD VALUE, HEADER VALUE
+OR CRYPTOGRAPHIC DIGEST. Attempts to place each of those into evidence are
+tested and refused. [S2]
+
+================================================================================
+3. THE THIRTY BINDING ROWS, AND THE ELEVEN THAT DO NOT BIND
+================================================================================
+
+THE ORACLE'S THREE CLASSES, UNCHANGED FROM THE PREVIOUS MILESTONE AND
+RE-CONFIRMED BY THIS SESSION. Of its 111 cases, 84 BIND, 20 ARE PROPOSED and
+need a reviewer's explicit confirmation, and 7 CARRY NO STATUS because they are
+blocked on owner decisions. This session confirmed at the merge commit that the
+test which pins that composition STILL PINS EXACTLY THOSE NUMBERS, including the
+breakdown of the twenty proposed rows. NEITHER MILESTONE IN THIS NOTE OR ITS
+COMPANION CHANGED THE COMPOSITION. [R1,S2,HISTORICAL]
+
+WHAT THIS SLICE SATISFIED. [S2]
+
+  insecure submission targets        12 binding rows, 12 satisfied
+  header consistency                  6 binding rows,  6 satisfied
+  preload prerequisites               6 binding rows,  6 satisfied
+  signed-delegation publication       6 binding rows,  6 satisfied
+  TOTAL                              30 binding rows, 30 satisfied
+
+ELEVEN PROPOSED ROWS TOUCH THESE CHECKS AND THE IMPLEMENTATION AGREES WITH ALL
+ELEVEN — WHICH IS NOT THE SAME AS THEM BEING CONFIRMED. They are asserted in a
+block whose name says, in the source, that they are conditional review cases,
+proposed rows, not binding, pending reviewer confirmation. THE AGREEMENT IS THE
+IMPLEMENTING SESSION'S OWN READING AGREEING WITH THE IMPLEMENTING SESSION'S OWN
+EARLIER READING, AND IT IS NOT A SECOND OPINION. None was promoted. [S2]
+
+AND NO OWNER-DECISION ROW BELONGS TO THESE FOUR CHECKS, WHICH IS THE WHOLE
+REASON THIS SLICE EXISTS. That is asserted by a test, so the slice cannot
+silently grow a dependency on an undecided question. [S2]
+
+THE IMPLEMENTATION ALSO FOUND AN ERROR IN THE ORACLE, AND THIS IS THE MOST
+INSTRUCTIVE SINGLE FACT IN THE MILESTONE. A proposed row described a form whose
+insecure submission target was fully overridden by a secure override, and
+concluded that nothing insecure remained reachable, so the expectation was a
+pass. Building the check against the real parsed facts showed that THE FORM'S
+OWN INSECURE TARGET REMAINS REACHABLE BY PROGRAMMATIC SUBMISSION, which no
+override intercepts. The expectation is now a HIGH-severity failure. ITS LABEL
+RECORDS BOTH THE NEW READING AND THE FACT THAT IT WAS CORRECTED, AND ITS BASIS
+STAYS PROPOSED. A mutation proves a test depends on the behaviour. [S2,R1]
+
+================================================================================
+4. READINGS THE SLICE MADE BEYOND THE MEMO, AND LABELLED AS SUCH
+================================================================================
+
+THE LOCKED CONTENT MEMO DOES NOT ANSWER EVERY SITUATION, AND THE SLICE RECORDS
+EACH PLACE IT HAD TO READ FURTHER. Five groups, each listed in the source as
+needing a reviewer's explicit confirmation and NONE PRESENTED AS APPROVED. [S2]
+
+  1. Forms: what to do when password-field ownership is neither confirmed nor
+     excluded. THIS ONE WAS SUBSEQUENTLY DECIDED BY THE OWNER — see section 7.
+  2. Header consistency: when a comma inside one header field counts as two
+     folded occurrences rather than one malformed value, and how a
+     comma-separated framing policy is compared. PARTLY DECIDED BY THE OWNER —
+     see section 7.
+  3. Preload prerequisites: a strict reading of the specification, under which
+     a valued form of a directive that takes no value is NEVER CREDITED; a
+     failed secure fetch read as an error rather than as an absence of policy;
+     a policy served by a redirect destination rather than the authorised host
+     read as undetermined, because combining it with the authorised host's own
+     redirect would be an unsupported cross-host comparison.
+  4. Signed delegation: which registry failure kinds are errors and which are
+     undetermined; that a tenant's scope exclusion takes precedence over any
+     attached facts, so a provider's fact can never be attributed to a tenant;
+     and that an unsigned token sitting beside listed key material is a
+     CONTRADICTION rather than a finding.
+  5. The eleven proposed oracle rows of section 3.
+
+ONE READING IS WORTH STATING ON ITS OWN BECAUSE IT DIVERGES FROM THE FREE SCAN
+AND THE SOURCE SAYS SO. The strict reader used by the two header checks rejects
+a malformed value that the EXISTING FREE READER ACCEPTS LENIENTLY. Both
+behaviours are asserted SIDE BY SIDE in the same test, and THE FREE READER WAS
+NOT CHANGED. The divergence is deliberate: the paid check must not credit a
+prerequisite on a malformed field, while changing the free reader would move
+free output. [S2]
+
+================================================================================
+5. THE INDEPENDENT REVIEW, AND THE NINE MUTANTS THAT SURVIVED IT
+================================================================================
+
+WHAT WAS REVIEWED, AND HOW THE REVIEW REACHED THIS RECORD. An independent
+review examined the third commit — the head before any correction — and
+returned VERDICT CORRECT with P0 zero, P1 zero, FOUR P2 AREAS and some
+nonblocking notes. All thirty binding rows passed and free invariance passed in
+the reviewer's own runs. THE REVIEW WAS RELAYED TO THE CORRECTING SESSION BY THE
+OWNER AND IS NOT ITSELF LOCATABLE AS A DOCUMENT. [S2]
+
+THE NUMBER THAT MATTERS MOST IS NOT THE VERDICT. The reviewer wrote
+TWENTY-SIX MUTANTS OF ITS OWN, injected them one at a time, AND NINE SURVIVED.
+Nine deliberate breakages of decisions this slice had made were not detected by
+the tests as they stood at that head. The slice's own mutation runner had
+reported forty-four of forty-six killed; THE REVIEWER'S INDEPENDENT SET FOUND
+A THIRD OF ITS OWN MUTANTS SURVIVING. That gap between an author's mutation
+score and an independent one is the clearest measurement in this milestone.
+[S2]
+
+WHAT THE SURVIVORS WERE ABOUT, AND WHAT NOW CATCHES THEM. Eight of the nine
+received load-bearing tests, each verified to pass on the corrected branch and
+to FAIL against a disposable mutation of the named decision. [S2]
+
+  - that the exact aggregate count of password-bearing insecure forms takes
+    precedence over the bounded list of retained entries, proven with a page of
+    one hundred and five insecure forms whose password form sits OUTSIDE the
+    retained entries, asserted as a precondition of the test
+  - that a missing or malformed unresolved-ownership count is not silently read
+    as zero
+  - that a document with no serving host is never judged at all
+  - that only validated hostnames may be retained, proven against nineteen
+    refused strings — paths, queries, fragments, user information, ports, upper
+    case, empty labels, spaces, markup, schemes, percent-encoding, a backslash,
+    the empty string, over-long labels and a malformed address literal — and
+    seven accepted forms
+  - that a malformed directive value invalidates the whole field so that
+    nothing in it is credited
+  - that an extreme policy lifetime is clamped exactly, with a new flag
+    recording that it was clamped, and compared by its canonical digits rather
+    than by the clamped number
+  - that a non-boolean completeness flag is refused
+  - the preload-token difference, pinned by a labelled test and then decided by
+    the owner
+
+AND THE NINTH IS RECORDED AS AN ASSUMPTION RATHER THAN AS A FIX, WHICH IS THE
+HONEST OPTION. The reviewer's mutant text for one survivor was not available to
+the correcting session. That session identified, BY INFERENCE, which guard is
+equivalent under real transport input — the comparison that the plain-text
+root's first hop begins at the authorised host's own address, which only matters
+for forged input — and RECORDED THAT IT IS AN ASSUMPTION. No test was claimed
+for it. [S2]
+
+================================================================================
+6. THE FOUR P2 AREAS, AND WHAT CHANGED IN EACH
+================================================================================
+
+AREA ONE — A SEVERITY ASSERTED WITHOUT EVIDENCE. WITHDRAWN AND CORRECTED IN
+SOURCE. Where password-field ownership was neither confirmed nor positively
+excluded, the slice answered the HIGHEST severity with lowered confidence. The
+memo says the highest severity applies when a password field is INSIDE such a
+form, and otherwise the middle severity. THE BRANCH THEREFORE ASSERTED AN OWNED
+PASSWORD FIELD WITHOUT EVIDENCE FOR ONE, and in a severity-ordered action plan
+that would have ranked the finding first. [S2]
+
+  The correction answers the middle severity with an explicit
+  unresolved-ownership flag, and distinguishes THREE states rather than two:
+  ownership confirmed; ownership positively established as absent; and
+  ownership not established either way. Confidence stays at its highest,
+  because THE INSECURE TARGET ITSELF IS CONFIRMED — only the password question
+  is open. An unrelated, unowned password field still never escalates. [S2]
+
+  AND THE CORRECTING SESSION TRACED WHY THE BRANCH IS UNREACHABLE WITH REAL
+  FACTS, WHICH IS WHY THE DOWNGRADE COSTS NOTHING. The unresolved count is
+  incremented only when the parser's own form pointer names a form the tree
+  walk never reached; such a form is NOT AMONG THE WALKED FORMS and therefore
+  cannot be one of the reported insecure ones. So an unresolved field is an
+  UNEXAMINED OWNER, never a hidden owned password of a reported form. [S2]
+
+AREA TWO — THE NINE SURVIVING MUTANTS. Covered in section 5. Eight tested, one
+recorded as an assumption. [S2]
+
+AREA THREE — THE DUPLICATE-HEADER SEMANTICS. BEHAVIOUR DELIBERATELY LEFT
+UNCHANGED, THEN DECIDED BY THE OWNER. The correcting session did not change
+either branch, on the explicit ground that CHANGING EITHER WOULD ADOPT AN
+UNAPPROVED SEMANTIC CHOICE. It instead pinned the current behaviour with
+labelled tests and wrote up the options. [S2]
+
+  THE FACTS IT CHECKED, BY READING THE SPECIFICATIONS AND NOT BY TESTING A
+  BROWSER, and it says so. The transport-security header has no list syntax; a
+  browser receiving more than one occurrence processes ONLY THE FIRST; a
+  non-conforming field is ignored, as are unrecognised directives; and a sender
+  must not repeat a non-list field while a recipient may only comma-combine
+  list-based fields. So a comma inside one such field is EITHER a
+  non-conforming fold of two fields OR a malformed single value, AND THE FIELD
+  ALONE CANNOT TELL WHICH. The preload token is not a directive of that
+  specification at all: a browser following it ignores the token, while
+  list-submission tooling reads it. [S2]
+
+  THE AUTHOR'S OWN RECOMMENDATION WAS NOT THE BEHAVIOUR IT SHIPPED, AND IT SAID
+  SO. For the malformed comma case it recommended answering UNDETERMINED,
+  reasoning that this neither asserts a duplicate that may not exist nor
+  asserts the absence of a conflict that may have been folded away. THE OWNER
+  LATER CHOSE THE SHIPPED BEHAVIOUR INSTEAD. Section 7 records that, and records
+  the limit the owner put on it. [S2,O1]
+
+AREA FOUR — A FORGED FACT REACHING A REASSURING ANSWER. FIXED IN SOURCE, AND
+THE RECORD'S CLAIM MARKED SUPERSEDED. The record had said that malformed or
+contradictory counts always answer undetermined. They did not: a fact object
+claiming THREE FORMS WHILE LISTING NONE REACHED A PASS. [S2]
+
+  THE GUARD NOW RUNS BEFORE ANY ABSENCE ANSWER. It requires the truncation flag
+  to be a boolean, and then requires the listed entries to number exactly the
+  claimed count when nothing was truncated, or to be a non-empty proper subset
+  of it when something was. Anything else is undetermined. POSITIVE FINDINGS
+  ARE UNAFFECTED, because a positive is never suppressed by incompleteness.
+  Regression tests cover the forged case, a count above the retained bound with
+  truncation denied, truncation claimed while every form is listed, truncation
+  claimed with no entries at all, a missing flag, a string flag, and a REAL
+  page of one hundred and twenty forms that still passes. Three mutants pin it.
+  [S2]
+
+AND THE SAME AREA CORRECTED THREE RECORD INACCURACIES, WHICH IS WHY IT MATTERS
+BEYOND THE GUARD. [S2]
+
+  - "No P0, P1 or P2 defect was found" — MARKED SUPERSEDED IN PLACE. The review
+    found four P2 areas.
+  - "Test-first" — MARKED AUTHOR-REPORTED IN PLACE. The first commit bundles
+    tests and modules, and the failing run's output was never committed, SO GIT
+    HISTORY CANNOT CORROBORATE THE ORDER. This session confirmed the bundling
+    directly from the commit's file list. [R1]
+  - The final continuous-integration row was missing from the record, and the
+    task dates were imprecise. Both were restated.
+
+AND SOME NONBLOCKING NOTES WERE ANSWERED IN THE SAME ROUND. An extreme policy
+lifetime now carries an explicit clamped flag and an exact clamp, replacing a
+digit-count heuristic that had also clamped some exact values. An unsigned
+delegation token now additionally requires the key-material lists to be
+complete before the clean informational warning is given; otherwise the answer
+is undetermined. And the stale oracle label of section 3 was corrected. [S2]
+
+================================================================================
+7. THE OWNER DECISIONS — THREE, NARROW, AND VERIFIABLE
+================================================================================
+
+THIS IS THE FIRST M14 MILESTONE WHOSE OWNER DECISIONS ARE RECORDED OUTSIDE A
+COMMITTED DOCUMENT. They are a single issue comment on PR #50, read for this
+note through the GitHub API, written by the owner at 2026-10-13 07:54:00 UTC —
+SIXTEEN SECONDS BEFORE THE MERGE. [S1,O1]
+
+THE COMMENT STATES ITS OWN PROVENANCE, AND THAT MATTERS MORE THAN ITS CONTENT.
+It records that the approval was RELAYED FROM THE OWNER'S OWN EXPLICIT REPLY in
+a conversation, given against THREE SPECIFICALLY IDENTIFIED OPTIONS, and that
+it is A POLICY APPROVAL AND NOT A CLAIM OF A FORMAL GITHUB CODE REVIEW. It
+further instructs that future source documentation and Personal Project
+evidence MUST PRESERVE THE APPROVALS, THEIR PROVENANCE, AND THE FACT THAT THEY
+WERE NOT FORMAL GITHUB REVIEW SUBMISSIONS. This note is written to that
+instruction. [O1]
+
+DECISION ONE — UNRESOLVED PASSWORD OWNERSHIP. APPROVED, the conservative
+option. An insecure form without positively confirmed ownership of a password
+field is a failure at the MIDDLE severity, with an explicit
+unresolved-ownership flag where applicable. THE HIGHEST SEVERITY REQUIRES
+POSITIVE EVIDENCE that the insecure form owns a password field, and ownership
+MUST NOT BE INFERRED FROM AN UNRELATED FIELD. [O1]
+
+DECISION TWO — A SINGLE MALFORMED COMMA-CONTAINING TRANSPORT-SECURITY FIELD.
+APPROVED, the conservative option: such a field does not BY ITSELF constitute
+conflicting duplicate occurrences, so the consistency check may pass when no
+other conflict is present. AND THE OWNER BOUNDED THE DECISION IN THE SAME
+SENTENCE: this does NOT assert that the field is a valid policy, and the
+separate prerequisite check owns that condition. A PASS FOR ONE COMPARISON IS
+NOT A VERDICT THAT THE POLICY IS SOUND. [O1]
+
+DECISION THREE — TWO OCCURRENCES DIFFERING ONLY BY THE PRELOAD TOKEN. APPROVED
+as an informational warning, treated as INCONSISTENT OPERATOR-PUBLISHED
+CONFIGURATION. AND THE OWNER FORBADE THE OTHER READING EXPLICITLY: the
+difference MUST NOT be described as altered browser-enforced semantics. The
+distinction is exact — the operator published two different intentions, which
+is worth telling them, but a browser following the specification ignores the
+token, so claiming changed enforcement would be false. [O1]
+
+WHAT THE OWNER DID NOT APPROVE, IN THE COMMENT'S OWN LIST. The five unresolved
+M14 semantic decisions; the two deadline-state mappings introduced by step 2.3;
+the customer-facing copy; the public, legal and privacy wording; and the
+sensitive-file scope review. THESE THREE DECISIONS APPROVED NOTHING ELSE, AND
+THE COUNT OF OPEN OWNER DECISIONS IS UNCHANGED BY THEM. [O1]
+
+THE COMMENT ALSO RELAYS THE RE-REVIEW VERDICT ON THE EXACT MERGED HEAD, AND
+THIS IS THE ONLY RECORD OF IT. It states that an independent re-review of the
+final head was CONDITIONALLY READY, with no outstanding P0, P1 or P2 source
+defect, AND WITH THESE THREE CHOICES AS THE CONDITIONS. So the sequence is:
+corrections pushed, continuous integration green, a re-review finding no defect
+but naming three open choices, the owner taking those three choices, and the
+merge. THE RE-REVIEW DOCUMENT ITSELF DOES NOT EXIST ANYWHERE THIS SESSION COULD
+FIND; THE OWNER'S COMMENT IS ITS ONLY TRACE. [S1,O1]
+
+AND THE COMMENT RESTATES THE SKIPPED-TEST FACT WITHOUT BEING ASKED. It records
+that the successful run had 658 guarded PostgreSQL tests SKIPPED AND NOT RUN.
+[O1]
+
+THE PULL REQUEST WAS A DRAFT UNTIL THE MOMENT OF ACCEPTANCE, AND THE TIMELINE
+SHOWS IT. It was marked ready for review at 07:54:13 UTC and merged at
+07:54:16 UTC — THREE SECONDS LATER. Its description still opens with the words
+instructing that it be left unmerged pending independent review; that text is
+HISTORICAL and was accurate when written. [S1]
+
+================================================================================
+8. TESTS, GATES AND MUTATION AS RECORDED IN SOURCE
+================================================================================
+
+THE GATE PROGRESSION ACROSS THE SLICE. Three points on the same suite. [S2,S1]
+
+  At the base commit             9,396 passed, 0 failed, 658 skipped, of
+                                 10,054 across 1,639 suites
+  At the reviewed head           9,756 passed, 0 failed, 658 skipped, of
+                                 10,414 across 1,676 suites — PLUS 360
+  At the merged corrected head   9,833 passed, 0 failed, 658 skipped, of
+                                 10,491 across 1,688 suites — A FURTHER PLUS 77
+
+THE PLUS 360 IS RECONCILED IN THE SOURCE RATHER THAN LEFT AS A TOTAL. 297 tests
+in the six new files, plus 63 new cases in the project's existing architecture
+test, which runs its per-file boundary checks against each of the seven new
+source files. The further plus 77 is entirely in the slice's own suites,
+reconciled per file. [S2]
+
+THE SKIPPED FIGURE IS 658 AT ALL THREE POINTS, AND THAT IS WHY IT IS QUOTED
+THREE TIMES. The slice touches no persistence code. THEY DID NOT RUN AT ANY OF
+THE THREE POINTS AND NONE IS CLAIMED AS PASSED. [S2,S1]
+
+THE SUITES AND THEIR RECORDED COUNTS, AT THE MERGED HEAD. Source-recorded; this
+session did not run them. [S2]
+
+  the oracle driver                                      63 tests
+  insecure submission targets, adversarial              106 tests
+  header consistency, adversarial                        45 tests
+  preload prerequisites, adversarial                     57 tests
+  signed-delegation publication, adversarial             59 tests
+  purity, unreachability and the evidence contract       44 tests
+
+OTHER GATES AT THE MERGED HEAD. Type check clean. Lint zero errors, with two
+warnings that are PRE-EXISTING IN A FILE THIS SLICE DOES NOT TOUCH. Whole-tree
+whitespace gate clean. Build succeeds with a clean tree afterwards. The thirty
+binding rows pass; the eleven conditional rows agree and remain non-binding.
+[S2]
+
+ONE INTERMEDIATE RUN HAD A SINGLE FAILURE, AND ITS CAUSE IS INSTRUCTIVE. A
+step-2.2 reachability rule forbids any file outside the primitives and the
+engine from NAMING a particular parser function — and it matched A DOCUMENTATION
+COMMENT in one of the new check modules. The comment was reworded to cite the
+module it actually meant. THE EXISTING TEST AND ITS EXPECTATION WERE NOT
+CHANGED, which is the right way round. [S2]
+
+THE SLICE'S OWN MUTATION RUNNER, AND ITS TWO SURVIVORS. The runner applies one
+source mutation at a time, runs the slice's test files, records the outcome and
+RESTORES THE FILE — including on interrupt. At the merged head it ran all
+fifty-nine mutants in one pass: FIFTY-SEVEN KILLED, TWO SURVIVED, and the
+runner exits non-zero whenever any mutant survives. [S2]
+
+  BOTH SURVIVORS ARE ANALYSED AS EQUIVALENT RATHER THAN DISMISSED. One removes
+  an explicit guard against a header reader answering malformed data; the
+  reader already converts any malformed answer to an absent value and every
+  later use dereferences it, so containment returns the same undetermined
+  result. A further test was added for the one case where a length could have
+  been misread as a count, and IT PASSES WITH AND WITHOUT THE MUTANT, which is
+  what equivalence means. The other removes an unterminated-quote rejection in
+  a splitter, which the per-directive validation independently rejects. BOTH
+  GUARDS ARE KEPT AS DEFENCE IN DEPTH. [S2]
+
+THE ADVERSARIAL COVERAGE IS BROAD AND THE SOURCE LISTS IT. Truncation with and
+without a positive finding before the boundary, for both the transport and the
+parser; deeply nested documents designed to exhaust a parser, placed both
+before and after the subject; nested and malformed forms; ownership established
+through the parser's own pointer and through explicit association with a
+non-ancestor form; a sixteen-bit text encoding; implicit submission; submitter
+overrides and dialog submitters; mismatched, duplicated and folded policy
+headers; content-security policies that look contradictory only if wrongly
+merged; directives that look correct but fail a prerequisite; incomplete and
+contradictory registration facts; non-boolean fields, prototype keys and forged
+objects; missing fields and throwing property access; and attempts to place
+paths, queries, field names, field values, header values and cryptographic
+digests into evidence. [S2]
+
+================================================================================
+9. UNREACHABILITY AND FREE INVARIANCE
+================================================================================
+
+THIS SESSION CHECKED UNREACHABILITY THE SHORTEST WAY THERE IS, AND IT HOLDS. It
+listed every file under the source tree that differs between the step-2.3 merge
+commit and this milestone's merge commit. THE ANSWER IS SEVEN FILES, ALL INSIDE
+THE PAID-CHECK DIRECTORY. Zero files under the engine, the transport, the
+parsers, the worker, the server or the application layer. Then it searched the
+whole source tree for any reference to that directory from outside it: NONE.
+[R1]
+
+THAT SECOND RESULT IS THE LOAD-BEARING ONE. A new directory that nothing
+imports cannot run, whatever else is true. The source adds the complementary
+assertions: the scanner's own index does not re-export it; the eight recorded
+worlds run through both the free and the paid engine entry points PRODUCE NO
+RESULT AND NO SERIALISED BYTE naming any of the four checks; and the free scan
+still returns forty-two results. [R1,S2]
+
+AND THE CATALOGUE IS STILL FORTY-TWO ENTRIES, EVERY ONE FREE. This session
+counted the entries at the merge commit and read the catalogue's own
+documentation, which states that EVERY ENTRY TODAY IS FREE and that the paid
+tier has catalogue STRUCTURE but no versions, content or priority methodology
+until step 2.5, with every per-tier selector THROWING rather than guessing
+before then. [R1]
+
+THE FREE INVARIANCE SUITES THAT WERE RUN, AS RECORDED. Eight files, 183 tests,
+all passing, with the golden files BYTE-UNCHANGED: the step-2.1 report golden
+pinning score, grade, coverage, findings, priority actions, versions, cache key
+and report bytes; the step-2.2 parser and report digests; the step-2.3 network
+trace golden; the step-2.3 host-scope network parity; the three profile and
+tier fail-closed suites; and the free false-claim regressions. NO EXISTING TEST
+FILE WAS MODIFIED. [S2]
+
+AND NO PAID SCORING RULE EXISTS. Neither scoring version holds any of the four
+check identifiers, and there is no enrichment, content or evidence-policy entry
+for any of them — so even if something did call them, their results could not be
+scored, enriched, described or published. [S2]
+
+================================================================================
+10. GAPS IN THIS EVIDENCE — IDENTIFIED, NOT FILLED
+================================================================================
+
+  1. NO TEST, SUITE, MUTATION, PARSE OR MEASUREMENT WAS RUN IN THIS SESSION.
+     Every count above is continuous-integration output, a committed figure, or
+     a figure in the owner's comment. WHAT THIS SESSION DID WAS READ AND
+     RECOUNT.
+  2. THE INDEPENDENT REVIEW IS NOT LOCATABLE AS A DOCUMENT. It was relayed to
+     the correcting session by the owner, and what survives is THAT SESSION'S
+     ACCOUNT OF A REVIEW OF ITS PREDECESSOR'S WORK. The step-2.3 note could
+     cite a readable review document; THIS MILESTONE CANNOT.
+  3. THE RE-REVIEW OF THE MERGED HEAD EXISTS ONLY AS THE OWNER'S SUMMARY OF
+     IT. The comment reports a verdict of conditionally ready with no
+     outstanding defect. NO RE-REVIEW DOCUMENT WAS FOUND. The merge and the
+     comment are verified; THE RE-REVIEW BEHIND THE COMMENT IS NOT.
+  4. STILL NO FORMAL GITHUB REVIEW AND NO REVIEW COMMENT ON THE PULL REQUEST.
+     One owner issue comment is the whole GitHub trace of all deliberation.
+  5. THE TEST-FIRST CLAIM IS AUTHOR-REPORTED AND THE SOURCE SAYS SO. The first
+     commit bundles tests and modules and the failing run was never committed.
+     This session confirmed the bundling. THE ORDER ITSELF IS UNPROVEN.
+  6. THE ELEVEN PROPOSED ORACLE ROWS AGREE WITH THE IMPLEMENTATION, WHICH IS
+     NOT A CONFIRMATION. The agreement is the implementing side agreeing with
+     itself. Reviewer confirmation is still pending, and the twenty proposed
+     rows as a whole remain unconfirmed.
+  7. THE READINGS OF SECTION 4 BEYOND THE MEMO ARE UNCONFIRMED, except the two
+     the owner decided in section 7.
+  8. ONE SURVIVING REVIEWER MUTANT IS ANSWERED BY AN INFERENCE, NOT A TEST. The
+     reviewer's mutant text was unavailable and the correcting session recorded
+     an assumption about which guard it meant.
+  9. BROWSER BEHAVIOUR WAS NOT VERIFIED. The specification reasoning behind the
+     duplicate-header decisions was done BY READING, and the source says
+     explicitly that no browser was run. The checks simply never credit the
+     doubtful forms.
+ 10. THE CHECKS HAVE NEVER RUN ON A REAL TARGET, because nothing can call them.
+     Every fact about their behaviour comes from fixtures, forged objects and
+     synthetic adversarial documents.
+ 11. NO TIMING OR MEMORY FIGURE EXISTS FOR THIS SLICE AT ALL, and none is
+     claimed. The source states that the checks are linear in facts that were
+     already bounded.
+ 12. THE INTEGRATION INPUTS DO NOT YET EXIST. The engine does not build the
+     redirect observation these checks expect, and the header checks require the
+     final secure response's headers, which a future integration must pass from
+     the same response that produced the document facts. UNTIL THEN THE PURE
+     REDUCER IS TESTED ONLY ON SHAPED VIEWS.
+ 13. THE 658 GUARDED POSTGRESQL TESTS DID NOT RUN, at any point, and are not
+     claimed as passed.
+
+================================================================================
+11. AI TRANSPARENCY, AND REFLECTION PROMPTS
+================================================================================
+
+The four check modules, their helpers, their tests, the mutation runner, the
+committed source evidence record and this Personal Project note were produced by
+Claude, an AI coding assistant, under task specifications written by the project
+owner. THE IMPLEMENTATION, THE INDEPENDENT REVIEW AND THE CORRECTION ROUND WERE
+SEPARATE ASSISTANT SESSIONS. The source record states that the owner was
+UNAVAILABLE FOR THE WHOLE CORRECTION ROUND and that NO QUESTION WAS ASKED OR
+ANSWER ASSUMED during it, which is why the three contested behaviours were left
+unchanged and written up as options instead.
+
+THE OWNER'S ACTS IN THIS MILESTONE ARE THE THREE DECISIONS RECORDED ON THE PULL
+REQUEST, THE MARKING OF THE PULL REQUEST AS READY, AND THE MERGE. No other act
+is attributed to any person. This note was compiled from the sources in section
+12, from the GitHub API and from its own reading of both repositories, AND IT
+RAN NO TEST OF ITS OWN. No assistant session held production access at any point
+in M14-2.4A.
+
+Reflection prompts, carried forward UNANSWERED, to be written later in the
+student's own words. NOTHING IN THIS FILE IS A REFLECTION.
+
+  1. The slice's own mutation runner reported forty-four of forty-six killed.
+     An independent reviewer then wrote twenty-six mutants and nine survived.
+     What does an author's mutation score actually measure, and what would have
+     to change for it to measure the thing it appears to?
+  2. The code answered the highest severity where it could not establish the
+     fact that severity asserts. The downgrade turned out to cost nothing,
+     because the branch is unreachable with real facts. Does that make the
+     original choice harmless, or does it make it worse?
+  3. A forged fact object claiming three forms while listing none reached a
+     pass. Why is a wrong reassurance a more serious defect than a wrong
+     alarm, and does that hold for every check or only for some?
+  4. The claim that the tests were written first could not be corroborated by
+     git history, so it was relabelled rather than defended. What would a
+     commit sequence have to look like for that claim to be provable, and is
+     the discipline worth the extra commits?
+  5. Three claims in the record were marked superseded in place rather than
+     deleted. Who is served by being able to read a claim its author no longer
+     stands behind?
+  6. Implementing the check found an error in the oracle that the check was
+     supposed to be judged against. What does that say about writing the
+     expected answers before the code, and about writing them after?
+  7. The owner approved a pass for one comparison and said in the same sentence
+     that it is not a verdict that the policy is sound. Why does that
+     distinction need to be written down, and what would go wrong if it were
+     not?
+  8. The owner forbade describing a configuration inconsistency as changed
+     browser enforcement. What is the difference between telling someone their
+     configuration disagrees with itself and telling them a browser treats it
+     differently?
+  9. For the first time the owner's decisions are on the pull request where
+     anyone can read them, but the review that prompted them still is not. Which
+     of the two matters more for being able to trust this record later?
+ 10. Four checks were built and the other six were not, because the other six
+     depend on questions nobody has answered. Was building four the right call,
+     and what would tell you it was not?
+
+================================================================================
+12. SOURCE LOCATORS
+================================================================================
+
+[S1] GitHub state for stanciuks/site-security, read from the GitHub API while
+     this note was written: pull request #50, its title, base, branch, head,
+     draft and merged state, open and merge times, merging account and diff
+     totals; the final reviewed head de290add10905469dd57add644d4d9ddf9b39bed;
+     the merge commit ecd8260bcffe17b10630f8b0c8c15d1c332dffdb; the branch's
+     four commits with their subjects, times and file lists; the
+     continuous-integration conclusions and recorded counts for runs
+     38324941590 (CI #85, CANCELLED), 38325228022 (CI #86), 38325878947
+     (CI #87) and 38360838576 (CI #88, the merged head), including the final
+     run's own summary line and its skip statement; the successful post-merge
+     run 38365677500 (CI #90); the now-successful step-2.3 post-merge run
+     38320678604 (CI #84), which an earlier note in this package had to record
+     as unconcluded; the ABSENCE of any formal review and of any review comment
+     on PR #50 and the presence of exactly ONE issue comment; and the timeline
+     events showing the pull request marked ready for review three seconds
+     before the merge.
+[S2] docs/evidence/M14_2_4A_CHECK_MODULES_2026-10-12.md at the merge commit —
+     the committed source evidence record for this slice, from which the
+     per-check decisions and their precedence, the thirty binding rows and the
+     eleven conditional rows, the readings beyond the memo, the file inventory,
+     the input and output contracts, the test-first qualification, the suite
+     inventory and counts, the gate progression, the fifty-nine-mutant campaign
+     and its two equivalent survivors, the adversarial coverage, the
+     unreachability and free-invariance assertions, the independent review's
+     verdict and mutant counts, all four P2 areas with their corrections, the
+     three in-place record corrections, the nonblocking notes, and every stated
+     limitation above are taken.
+[R1] Reproduced in this session from the technical repository, not taken from
+     any document: the merge diff's 17-file, +3,590, −1 shape and its
+     distribution across the document, the seven new source files and the nine
+     test-tree files; that EVERY source-tree file differing between the base and
+     the merge commit lies inside the paid-check directory, with zero files
+     under the engine, transport, parser, worker, server or application layers;
+     that NO file under the source tree outside that directory references it;
+     that the shared catalogue still holds forty-two entries and the
+     catalogue's own documentation still states every entry is free; that the
+     single deletion in the whole merge is the oracle label correction, read
+     line by line; that the first commit bundles tests and modules together,
+     which is what makes the test-first claim author-reported; and that the test
+     pinning the oracle's composition still pins 111 cases as 84 binding, 20
+     proposed and 7 owner-blocked, with the proposed breakdown unchanged.
+[O1] The project owner's decision comment on pull request #50, identifier
+     6140964431, written 2026-10-13 07:54:00 UTC and read for this note through
+     the GitHub API — the three approvals with their exact limits, the list of
+     what was NOT approved, the statement that the approval was relayed from the
+     owner's own explicit reply against three specifically identified options,
+     the statement that it is a policy approval and NOT a formal GitHub code
+     review, the relayed re-review verdict on the exact merged head, the
+     restatement that the 658 guarded PostgreSQL tests were skipped and not run,
+     and the instruction that later source documentation and Personal Project
+     evidence must preserve the approvals, their provenance and their
+     non-formal character.
+
+RELATED EVIDENCE IN THIS REPOSITORY
+  SCANCOMPASS_M14_Step2.4B_PP_Evidence_2026-10-13.txt  the companion milestone,
+                                                    merged two hours and twenty
+                                                    minutes later, which adds
+                                                    the fifth paid check and
+                                                    whose branch had to
+                                                    reconcile two of this
+                                                    slice's boundary
+                                                    expectations
+  SCANCOMPASS_M14_Step2.3_PP_Evidence_2026-10-13.txt  the profile-aware engine
+                                                    this slice's checks will
+                                                    one day run inside, and
+                                                    whose observations they
+                                                    consume
+  SCANCOMPASS_M14_Step2.2_PP_Evidence_2026-10-12.txt  the parsing primitives
+                                                    that produce the document
+                                                    facts these checks read,
+                                                    and the oracle they are
+                                                    judged against
+  SCANCOMPASS_M14_Step2.1_PP_Evidence_2026-10-12.txt  the tier foundation whose
+                                                    forty-two free catalogue
+                                                    entries are unchanged here
+  SCANCOMPASS_M14_OD1_DECISION_PP_Evidence_2026-10-11.txt  the content lock
+                                                    whose memo rows are the
+                                                    thirty binding cases this
+                                                    slice satisfies
+  SCANCOMPASS_M14_OWNER_DECISIONS_H4_M3_M4_PP_Evidence_2026-10-12.txt
+                                                    the earlier owner
+                                                    approvals, recorded only in
+                                                    committed documents because
+                                                    no pull-request comment
+                                                    existed then
+  SCANCOMPASS_M14_Step0_PP_Evidence_2026-10-11.txt   the design lock whose stop
+                                                    conditions bound this
+                                                    slice's evidence and
+                                                    status vocabulary
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/  the production state this
+                                                    slice did not change
+
+No database password, connection string, environment-file value, capability
+value, management token, secret or restricted key, webhook signing secret,
+price identifier or amount, provider account, customer, card or payer data, raw
+provider payload, host identifier, private target hostname, nameserver address,
+production environment value, production filesystem path, backup identifier,
+email address, account identifier or server detail appears in this note. No
+check or probe identifier, header name, directive name, record name, tag name,
+function name or source file path is reproduced; every check, fact, helper,
+evidence key and open decision above is described BY PURPOSE ONLY, so this note
+carries NO SCANNING RECIPE AND NO REUSABLE ADVERSARIAL INPUT — the hostile
+documents and forged fact objects are described by shape and never given as
+markup or as data. No target hostname, fixture body or canary value is
+reproduced. No unsanitised transcript, command output or log line is included;
+the independent review is summarised from the committed record and the owner's
+decision is summarised from its pull-request comment, which contains no personal
+information beyond the owner's authorship. No personal document, submission or
+assessment artifact of any kind is included or referenced. The only long
+identifiers are Git commit SHAs and GitHub pull-request, comment and
+workflow-run numbers. NO SCREENSHOT ACCOMPANIES THIS NOTE: the slice changed
+nothing a user can see, no paid check is reachable, and none is invented.
+
+END OF EVIDENCE
