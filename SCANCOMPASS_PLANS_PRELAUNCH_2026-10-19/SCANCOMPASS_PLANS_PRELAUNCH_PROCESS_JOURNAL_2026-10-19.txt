@@ -1,0 +1,233 @@
+SCANCOMPASS — PUBLIC PLANS PRELAUNCH
+PROCESS-JOURNAL SUMMARY
+Subject dates: 13-19 October 2026
+Written: 19 October 2026
+Corrected: 20 October 2026, after a follow-up source and file audit
+
+HOW TO READ THIS FILE
+
+This is a plain-language factual summary of one milestone, prepared from the
+project record so that it can be adapted into the process journal in the
+owner's own words. It is written in the first person because that is the form a
+process journal takes.
+
+IT CONTAINS NO REFLECTION, NO FEELING, NO OPINION, NO TIME ESTIMATE AND NO
+SUPERVISOR OR USER-TESTING COMMENT. Nothing of that kind has been invented. The
+questions that would need a personal answer are collected at the end, marked and
+left unanswered, as are the ten prompts in section 21 of the technical note.
+
+Every factual claim here is recorded with its source in
+SCANCOMPASS_PLANS_PRELAUNCH_PRODUCTION_ACCEPTANCE_PP_Evidence_2026-10-19.txt.
+
+WHAT I WANTED TO CREATE
+
+ScanCompass gives away a free external website-security assessment, and I am
+building a paid Extended Security Assessment to go with it. On 13 October 2026
+I asked for both offerings to be publicly visible on the site by 15 October, so
+that I could point startup and university applications at a real page.
+
+What I wanted was a prelaunch page, not a shop. It had to say clearly that the
+free assessment works today and that the paid one does not exist yet. It had to
+have no price, no buy button, no checkout and no sign-up form, because none of
+those things existed and I did not want to promise them. It also had to be
+honest about the payment side: our hosted checkout had been tested in the
+payment provider's test mode only, and no real payment was possible.
+
+WHAT I DID AND DECIDED
+
+The page itself took one day. It came to exactly eight files: a new page, a new
+text-only component, a new copy module, one link in the site header, one word in
+the shared interface copy, one block of style rules, and two new test files. Not
+one file in the scanner, the server, the database or the report path was
+touched. That is the narrow, proven fact: the source of the assessment, its
+scoring and its report was unchanged, and after the deployment a real free
+assessment completed with both downloads working. I am not claiming that every
+possible assessment is byte-for-byte identical to before.
+
+TO BE CLEAR ABOUT WHO WROTE WHAT: the code, the tests, the release procedure and
+the operator scripts were written by an AI coding assistant working under my
+direction, and separate AI sessions reviewed them. I set the objective, decided
+what the page would and would not say, authorised each step, ran the production
+deployment myself and accepted it. I am not claiming to have typed the eight
+files. The full breakdown is in section 18 of the technical note.
+
+I decided what the page would say and what it would not. I approved naming the
+payment provider publicly in one sentence, in order to state truthfully that its
+checkout had only been tested in test mode. I approved showing four examples of
+what the paid assessment is planned to look at, labelled as planned rather than
+delivered. I approved explaining that the price would be shown before a customer
+confirmed a payment, without publishing a price. I approved a Plans link in the
+header at every screen width. I approved presentation only: no purchase control,
+no payment flag, no live provider configuration and no deployment.
+
+Then I made the decision that cost me the deadline. The page lived on a branch
+of the newer development work, and that work needs a database table production
+does not have. A build of that branch, started against a production-shaped
+database, reported its data layer as unavailable WHILE ITS HEALTH CHECK STILL
+ANSWERED OK. That is the worst kind of failure, because nothing looks broken. I
+decided not to deploy the branch, and to build the release instead from the
+exact source production was already running, with only the two interface
+commits added on top. That release differs from what was running in eight
+files and nothing else.
+
+I also decided how the release itself would be controlled: a written procedure
+of numbered blocks, each of which must fail closed; three separate
+authorisations from me rather than one, each tied to exact values so that an
+approval could not be reused for something else; and a rollback prepared and
+pre-authorised in advance, so that nobody would have to ask permission in the
+middle of a failure.
+
+PROBLEMS I RAN INTO
+
+1. THE PAGE WAS NOT THE PROBLEM. Six rounds of independent review looked at
+this work, and not one of them found a defect in the eight application files.
+Every finding was in the release procedure. One review did find a copy mistake:
+the page said none of the buying steps could be done today, which was too
+strong, because existing account holders can already sign in and verify a
+domain. I had that one sentence narrowed and its tests re-pinned.
+
+2. THE PROCEDURE WAS WRONG SIX TIMES. In order, the reviews found: a rollback
+that trusted a tag which can be moved; a file transfer whose integrity was
+never proved; instructions that printed the word "stop" and then carried on,
+because printing a message is not stopping; a build whose failure was hidden
+because its exit status came from the command it was piped into; helpers that
+could not stop their own block; a rollback that left the approvals still usable,
+so a rolled-back release could be accepted anyway; a failed check that only
+PRINTED that a rollback was needed, so clearing the fault and re-running could
+be accepted without ever rolling back; a variable inherited from my own shell
+that turned every mismatch into "ok"; and a rollback state that could not be
+recorded at all if the disk was full or the directory had become unwritable.
+
+3. THE FIRST REAL PRODUCTION ATTEMPT STOPPED, AND THE CHECK WAS WRONG, NOT THE
+DATABASE. On 15 October everything passed until a check that reads the payment
+era. The database correctly reported era 1. The check demanded a line reading
+exactly "ERA 1", and the database's default output format pads the value, so
+the line actually read " ERA 1" with one leading space. A correct database was
+rejected over one space. The reason the tests had never caught it is the part
+worth remembering: the test harness used a fake database client, and the fake
+printed the line without padding. The check and the fake agreed with each
+other, not with the real program.
+
+4. FIXING IT COST THE WHOLE RUN. The fix changed a shared library, the library's
+hash changed, and my authorisation was bound to that hash. Nothing carried
+over: not the build, not the server preparation, not the approval. Everything
+had to be done again from the beginning.
+
+5. THE CAREFUL INSTINCT WOULD HAVE WRECKED THE RELEASE. After the image was
+loaded on 16 October, the obvious thing to do before switching was to re-run the
+baseline checks. A review pointed out that starting any block deliberately
+invalidates the later blocks' records, so re-running the baseline would have
+destroyed the frozen record of the load, and the load block refuses to run twice
+while the image is already there. The safe-looking action was the dangerous one.
+
+6. ONE TEST FAILED ON THE BUILD. The first run of the test gate reported 8,623
+passed, 1 failed, 610 skipped. The failing test expected no log output and saw
+42 lines, which fits interference from other tests running at the same time;
+that file passed all 55 of its own tests on its own. One unchanged retry passed
+with 8,624 passed, 0 failed. I am recording both results, because the release
+did not have zero failures across all attempts.
+
+HOW THEY WERE RESOLVED
+
+Each review round was answered by changing only the procedure and its tests,
+never the eight application files, and the release tree was re-verified
+unchanged every time.
+
+The era check was fixed test-first. The new cases were run against the old
+procedure and thirteen of them failed, which is what writing the test first is
+for. Two of those failures mattered: it reproduced the exact production stop,
+and it exposed a SECOND, OPPOSITE defect nobody had been looking for. Had the
+output not been padded, the old check would also have accepted a report
+containing era 1 together with era 2, or era 1 twice. The check was
+simultaneously too fussy about spaces and far too relaxed about what else the
+report could say. The corrected check accepts the report only if it holds
+exactly one era line and that line is era 1, spaces and tabs allowed. A
+separate reviewer reproduced the padded ERA-1 output against a real database.
+The ERA-1 and SQL-error fixtures matched; the ERA-2 fixture was later found
+to be synthetic, not a genuine database capture.
+
+The rollback was made terminal. A failure after the switch now records that
+state permanently BEFORE it reports anything, and while that state exists every
+block except the rollback refuses to run, including the recording of manual
+results. The reproducer that used to end in a false acceptance was tested and
+now ends in refusals.
+
+For the frozen-record trap, the answer was a separate read-only preflight that
+proves the same facts without starting any block of the procedure.
+
+On 16 October the image was transferred, its identity proved against the build
+host's and loaded under its own tag, with no existing tag moved. Then the
+procedure stopped, because that is what my authorisation said. The site did not
+change: /plans still answered 404 for three more days, with the new application
+sitting on the server started by nothing.
+
+On 19 October I ran the live preflight myself, from a deliberately empty
+environment so that nothing inherited from my own shell could forge a success
+message. It passed with exit status 0 and 104 minutes still left in the window:
+the server state was exactly as frozen on 16 October, the running application
+was still the old one, the environment hashes and payment safeguards were
+unchanged, all fourteen payment routes answered 404, /plans still answered 404,
+and a fresh read-only database check passed with 18 checks, reported era 1, and
+produced a reconciliation report byte-identical to the baseline.
+
+I then gave the deployment authorisation, bound to five exact values, after
+being told the things that were not perfect: the one flaky test and its retry,
+a runtime version one patch ahead of production's, two staging and
+window deviations by an assistant session, and the fact that the baseline being
+compared against was three days old rather than newly made.
+
+The switch replaced THE APPLICATION CONTAINER ALONE. The automated acceptance
+passed: /plans answered 200 with the right copy and no purchase control, the
+data layer was ready on the old schema, payments were still disabled, the
+database audit still passed at era 1, exactly one tag had moved, and the
+database, scanner and maintenance images were untouched.
+
+Then I did the seven checks that only a person in a browser can do: the Plans
+page shows Coming soon with no purchase control; an anonymous free assessment
+completes; both report downloads work; signing in with an existing account
+works; domain management works with no purchase button; there are no browser
+console or security-policy errors; and the phone layout and Plans navigation
+work. All seven passed, and I recorded each one. The procedure allows those
+results only after automated acceptance and discards old entries if that block
+is re-run. These safeguards preserve the order of the evidence, but cannot
+observe what I did in the browser.
+
+The acceptance record was frozen, I gave a second, separate authorisation bound
+to that frozen record, and the final block passed: the running application is
+the authorised one, its tag points at it, and the rollback image is still
+there. The state check printed ACCEPTED: J, JM and K passed.
+
+THE RESULT
+
+The page is live. The free assessment works, and its relevant code was
+unchanged. The Extended Security Assessment is presented as Coming soon, with
+no price, no purchase and
+no checkout. Payments are disabled, all fourteen payment routes answer 404, the
+database schema is untouched, and migration 0005 was not applied. The previous
+application image is retained as the rollback target, and the rollback was never
+needed.
+
+The pull request is still a draft and still unmerged. What went to production
+was the old source plus eight files, not that branch, and a deployment is not a
+merge.
+
+The page went live on 19 October. I had asked for 15 October. I am recording the
+miss rather than the intention: the delay was the price of not deploying an
+application that expected a table production did not have.
+
+QUESTIONS THAT NEED MY OWN ANSWER — DELIBERATELY LEFT BLANK
+
+These are left for the owner to answer personally. Nothing has been written in
+on their behalf. The technical note's section 21 holds ten further prompts.
+
+  1. Was it the right call to miss the deadline rather than deploy the branch?
+  2. What do I take from six review rounds finding nothing in the page and
+     everything in the procedure?
+  3. What do I take from a test that agreed with a fake instead of with the real
+     program, and where else might that be true in this project?
+  4. What do I take from the safe-looking action -- re-running the baseline
+     checks -- being the one that would have wrecked the release?
+  5. Would I design the three separate authorisations the same way again?
+  6. What would I do differently if I had this week again?
+
+END OF PROCESS-JOURNAL SUMMARY

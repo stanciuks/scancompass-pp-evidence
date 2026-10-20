@@ -1,0 +1,1186 @@
+SCANCOMPASS — PUBLIC PLANS PRELAUNCH: PRODUCTION DEPLOYMENT AND ACCEPTANCE
+PERSONAL PROJECT EVIDENCE
+A public /plans page that presents the free assessment as available now and the
+paid Extended Security Assessment as coming soon, released to production as an
+application-only change on top of the source production was already running,
+with payments still closed and nothing for sale
+Subject dates: 13-19 October 2026
+  candidate built and loaded 16 October, NOT deployed
+  deployed, tested and ACCEPTED 19 October
+Evidence written: 19 October 2026
+Corrected: 20 October 2026, after a follow-up source and file audit. The
+  corrections are listed in the index. The file name keeps the date the note
+  was written, as every note in this repository does
+Classification: Public — sanitized project evidence
+
+STATUS
+
+THE PUBLIC PLANS PRELAUNCH RELEASE IS COMPLETE AND OWNER-ACCEPTED, 19 OCTOBER
+2026. The public page /plans is live. The final state check printed
+ACCEPTED: J, JM and K passed. No rollback was required at any point.
+[R1,R2,O1]
+
+WHAT WAS DEPLOYED IS NOT THE PULL REQUEST. The release was built from the exact
+source production was already running, 54774b5f4d5334f562be9a3e0a24223ffcbe1f2c,
+with two reviewed user-interface commits applied on top of it. The resulting
+release tree is 2e611c0c5bb66fcc825890826c43b89f072ddc0f. It differs from the
+deployed M13 source in exactly eight files. [S3]
+
+PR #54 WAS NOT MERGED. It is still a draft and still unmerged at head
+013890269a44f7d37037d018839181b6b4f7e1c2. A deployment is not a merge, and this
+note does not treat the branch as accepted source. [S1]
+
+NOTHING IS FOR SALE. The Extended Security Assessment is presented as Coming
+soon. There is no price, no purchase control, no checkout, no waiting list and
+no customer input anywhere on the page. All three payment flags read 0, no
+provider mode or provider value is configured, and all fourteen payment route
+probes answer 404. [R1,S2]
+
+THE FREE ASSESSMENT IS UNCHANGED AND STILL WORKS. It was exercised against the
+owner's own domain as part of the manual acceptance, including both report
+downloads. [R1]
+
+THE DATABASE WAS NOT MIGRATED. The schema contract in production is still
+m13-0004. Migration 0005 was neither applied nor authorised, and no paid
+assessment code of any kind reached production. [R1,S3]
+
+THE RELEASE REPLACED THE APPLICATION CONTAINER AND NOTHING ELSE. The database,
+the scanner, the maintenance image, the environment files, the web server, DNS,
+the firewall and the maintenance timers were not changed, and the previous
+application image was kept as the rollback target. [R1]
+
+THE PAGE WENT LIVE FOUR DAYS AFTER THE DATE THAT WAS ASKED FOR. The owner asked
+on 13 October for the offering to be publicly visible by 15 October. The page
+itself was finished on 13 October. The four days were spent on the release
+procedure, which was wrong six times over, and on one production attempt that
+stopped. This note records the delay as it happened and does not present the
+outcome as if it had been on time. [S2,V1]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE BELOW
+
+Eight kinds of statement appear in this note and are kept apart throughout.
+Nothing reported is upgraded to something verified.
+
+  [R1] OWNER-EXECUTED      A command the OWNER typed against production, and
+                           the output the owner saw and supplied.
+  [R2] OWNER-OBSERVED      A check only the owner could perform, in a real
+                           browser, and the result the owner reported.
+  [R3] LOCAL-CLAUDE-       A step an assistant session carried out on the
+       EXECUTED            owner's Mac or, in two recorded instances, on the
+                           server, under a stated owner authorisation. Figures
+                           of this class exist only as that session's own
+                           report and were not independently inspected.
+  [O1] OWNER-DECIDED       A decision or authorisation the owner gave in
+                           conversation, which an assistant then transcribed
+                           into a pull-request comment. SEE THE WARNING BELOW.
+  [S1] GITHUB-VERIFIED     Repository, pull-request and continuous-integration
+                           state read directly from the GitHub API while THIS
+                           note was being written.
+  [S2] SOURCE-RECORDED     Figures taken from a document committed in the
+                           technical repository at the exact pull-request head.
+  [S3] SESSION-DERIVED     Recomputed from the repository's own Git objects
+                           while THIS note was being written, taking no
+                           document's word for it.
+  [V1] INDEPENDENT-REVIEW- A finding or figure stated by a review. Every review
+       REPORTED            of this release was supplied in the project
+                           conversation by a separate assistant session.
+
+THE AUTHORISATION COMMENTS WERE NOT TYPED BY THE OWNER. Every AUTH-0, AUTH-1,
+AUTH-2 and window approval in the pull request was written by an assistant as a
+transcription of the owner's approval given in conversation, and each such
+comment says so about itself. In several cases the owner's actual words were a
+single word, "approve". The decisions are the owner's; the comments are not the
+owner's writing. [O1,S1]
+
+NO REVIEW OF THIS RELEASE WAS A FORMAL GITHUB CODE REVIEW. PR #54 carries 33
+issue comments, ZERO submitted reviews and ZERO review comments, confirmed
+against the GitHub API while writing this note. The reviews described in
+section 8 exist only as issue comments, and most of them were written by the
+same kind of assistant session that then acted on them. [S1,V1]
+
+WHO RAN WHAT IS NOT GUESSED. Section 18 states, step by step, who executed
+each part of this release, and says plainly where the record does not say.
+EARLIER DRAFT WORDING THAT CLAIMED THE OWNER RAN EVERY SERVER COMMAND WAS
+WRONG AND IS NOT REPEATED HERE. [R1,R3]
+
+THE SESSION THAT WROTE THIS NOTE CONTACTED NO PRODUCTION SYSTEM. It read the
+two repositories and the GitHub API, and recomputed Git objects locally. Every
+production figure in this note is of class [R1], [R2] or [R3] and was recorded
+on the day it happened. None of it was refreshed while writing. [S1,S3]
+
+1. WHAT THIS NOTE RECORDS, AND WHAT IT DOES NOT SUPERSEDE
+
+This note records one milestone: making the ScanCompass commercial offering
+publicly visible, and getting that page into production safely. It covers 13 to
+19 October 2026.
+
+It does NOT supersede any earlier Personal Project evidence. In particular:
+
+  - The M13 Decision A production acceptance note of 10 October stands. The
+    application source this release was built from is that deployment's source,
+    and payments are still closed exactly as that note describes.
+  - The M14 evidence index of 11 October stands and needs no amendment. Its
+    statement that no M14 work has reached production remains true: the
+    release tree contains no M14 migration and no paid-assessment module, which
+    section 5 proves by recomputation rather than by assertion. [S3]
+  - The committed technical record in the other repository is not rewritten by
+    this note. Where that record is wrong, section 11 says so and leaves it
+    standing, because rewriting a tested record after the fact would destroy
+    the history it holds.
+
+2. THE TWO DATES THAT MUST NOT BE CONFUSED
+
+16 OCTOBER — THE CANDIDATE WAS LOADED AND THE SITE DID NOT CHANGE.
+The release image was transferred to the server, its identity was proved, and it
+was loaded into the server's image store under its own separate tag. The running
+application was NOT switched. /plans still answered 404. No visitor could see
+anything new. The procedure stopped there by design, and production then ran the
+old application for three more days with the new one sitting beside it, started
+by nothing. THIS DATE IS NOT THE DEPLOYMENT. [R1]
+
+19 OCTOBER — THE APPLICATION WAS SWITCHED, TESTED AND ACCEPTED.
+A read-only preflight confirmed nothing had drifted, the owner authorised the
+switch against five exact values, the application container alone was replaced,
+the automated checks passed, the owner performed seven real browser checks, the
+record was frozen, the owner gave a second separate authorisation, and the final
+block passed. THIS IS THE DEPLOYMENT AND THE FORMAL ACCEPTANCE. [R1,R2,O1]
+
+3. THE MILESTONE AND ITS PURPOSE
+
+ScanCompass gives away a free external website-security assessment and is
+building a paid Extended Security Assessment. On 13 October 2026 the owner asked
+for both offerings to be publicly visible on the site by 15 October, for startup
+and university applications, as a public prelaunch presentation. [S2]
+
+The committed record states the request in those terms and no wider. It
+authorised public prelaunch marketing information, a truthful statement that
+hosted checkout had been tested in the payment provider's test mode only, and a
+visible Coming soon purchase status. It did NOT authorise live payments, a
+displayed price, a Buy or Pay control, a waiting list, any customer input, any
+change to legal or privacy wording, a deployment, migration 0005, or operating
+the server. [S2]
+
+What was built is a single public page containing:
+
+  - the free assessment, marked Available now, free, no account needed;
+  - the Extended Security Assessment, marked Coming soon and In development,
+    described as a planned one-time purchase and not a subscription;
+  - no published price anywhere;
+  - no purchase button, no checkout and no form;
+  - a plain statement that buying is not possible and no paid report can be
+    obtained;
+  - an explanation of how buying is intended to work once it exists, including
+    that the price would be shown before a customer confirms;
+  - a statement that neither assessment is a penetration test;
+  - a Plans link in the site header at every screen width. [S2]
+
+The payment provider is named once, in one sentence, to say that its hosted
+checkout was tested in test mode only and that live payments are not available.
+That was a deliberate owner decision, recorded in section 6. [O1,S2]
+
+4. WHAT CHANGED — EXACTLY EIGHT FILES
+
+  src/app/plans/page.tsx            new page; takes a per-request security
+                                    nonce; reads no request, session, database
+                                    or configuration
+  src/components/plans/
+    PlansOverview.tsx               new text-only component; imports a link
+                                    helper and its own copy, nothing else
+  src/content/en/plans.ts           new copy module; the only place the payment
+                                    provider is named
+  src/components/shell/
+    SiteHeader.tsx                  one Plans link, visible at every width
+  src/content/en/ui.ts              the single word Plans
+  src/app/styles/components.css     the page's style block, design tokens only,
+                                    plus the narrow-screen header fit
+  tests/unit/plans-page.test.tsx    new behavioural tests, pinning the exact
+                                    customer-facing sentences
+  tests/plans-boundaries.test.ts    new structural tests, pinning that the page
+                                    cannot reach the paid product's internals
+
+Nothing under the server, scanner, worker or shared library directories changed,
+and neither did the database directory, the deployment directory, the scripts,
+the dependency manifest, the lockfile, the container recipe, the legal copy, the
+report copy or any API route. The API route inventory stayed at 21. [S2]
+
+The page is pure presentation. Its markup was tested to be byte-identical with
+all three payment flags set to 0 and with all three set to 1, because it
+describes a product that cannot be bought and offers no way to buy it. [S2]
+
+5. WHY A SEPARATE RELEASE TREE WAS NECESSARY
+
+Production was running the M13 application, which requires database schema
+contract m13-0004. The pull-request branch is based on later source that
+requires m14-0005. Deploying the branch would have put an application that
+expects a table production does not have in front of real users.
+
+The committed record proves this rather than asserting it: a build of the branch
+started against a disposable m13-0004 database logged its persistence readiness
+as UNAVAILABLE, with the missing object named, WHILE THE HEALTH ENDPOINT STILL
+ANSWERED ok. A silent half-failure of that shape is exactly what an operator
+would not notice. [S2]
+
+So the release did not use the branch. It used the source production was already
+running, with the two reviewed interface commits applied on top:
+
+  deployed M13 source  54774b5f4d5334f562be9a3e0a24223ffcbe1f2c
+  first UI commit      7f4cd67b885dccef688c08425ebb77e3c2921818
+  second UI commit     d1e2e56190b23ef58cd1a08485b646b3d79bd10d
+  release tree         2e611c0c5bb66fcc825890826c43b89f072ddc0f
+
+INDEPENDENTLY RE-DERIVED WHILE WRITING THIS NOTE. The two commits' versions of
+the eight files were laid over the deployed source's tree in an isolated object
+store, touching neither repository. The result:
+
+  - the tree hash is exactly 2e611c0c5bb66fcc825890826c43b89f072ddc0f;
+  - it holds 818 files, against the deployed source's 813;
+  - it differs from the deployed source in exactly 8 paths, which are the eight
+    files of section 4 — five added, three modified;
+  - it declares schema contract m13-0004, while the pull-request head declares
+    m14-0005;
+  - it contains no 0005 migration file, while the pull-request head contains
+    two;
+  - it contains no paid-assessment module. [S3]
+
+THAT IS THE ONE NEW FACT THIS NOTE ESTABLISHES BY ITSELF. Everything else about
+the release is a record of what was reported on the day. This re-derivation is
+also what justifies leaving the M14 index alone: no M14 code was deployed, so
+nothing it says has become untrue.
+
+6. THE COPY CORRECTION, AND THE OWNER'S PRESENTATION DECISION
+
+A review of the first version found one customer-facing sentence that was too
+categorical. The page said of the buying process: "None of these steps can be
+completed today." That was not true. Existing account holders can already sign
+in and verify a domain by DNS record in production. What is unavailable is
+registration for new accounts, paying, and obtaining a paid report. [V1]
+
+The sentence was narrowed to say exactly that, the exact-copy test was re-pinned
+to the new wording, and a test was added asserting that the withdrawn sentence
+is absent. One string and its tests changed; that is the second UI commit. The
+release candidate was then rebuilt from scratch and every check re-run on the
+new tree, and the superseded tree was not reused as proof for changed bytes.
+[S2,V1]
+
+Confirmed while writing this note: the withdrawn sentence is present in the
+first UI commit's copy module and absent in the second's. [S3]
+
+Separately, on 13 October the owner approved the presentation choices: naming
+the payment provider publicly, presenting four planned topic examples as
+planned rather than delivered, explaining the intended checkout process
+including that the price would be shown before confirmation, and showing the
+Plans link in the header. That decision explicitly authorised PUBLIC
+PRESENTATION CONTENT ONLY. It authorised no merge, no deployment, no purchase
+control, no payment flag, no live provider configuration and no schema change.
+[O1]
+
+7. HOW THE PAGE WAS CHECKED BEFORE ANY RELEASE WAS CONSIDERED
+
+On the branch, under the toolchain the project pins:
+
+  whole-tree whitespace check   clean
+  type checking                 clean
+  linting                       0 errors; 2 warnings, both pre-existing on the
+                                main branch in a file this work never touched
+  test suite                    10,102 passed, 0 failed, 658 skipped, of 10,760
+                                across 270 files
+  production build              success; the page builds as dynamic, which its
+                                security-nonce policy requires
+  route inventory               21 API routes, unchanged; the eleven existing
+                                pages plus /plans
+
+THE 658 SKIPPED TESTS DID NOT RUN AND ARE NOT COUNTED AS PASSED. They are the
+guarded suites that need a real PostgreSQL database. They were run separately,
+on the release candidate, by the acceptance runner described in section 10.
+[S2]
+
+Browser checks drove a real Chromium against the built application at desktop
+width and at two phone widths, in both themes: HTTP 200; the theme and
+background follow the stored preference; zero console errors, which is where
+Chromium reports every content-security-policy violation; zero page errors;
+zero requests matching payment, checkout or the provider's name; zero requests
+to any other origin; zero buttons, forms or inputs in the page's main region;
+both links navigate; no horizontal scrolling at any width. The response carried
+the site's unchanged strict policy. [S2]
+
+A fourth header item overflowed phone screens, measured at 17 pixels at the
+common phone widths and 31 pixels at the narrowest. It was fixed in style rules
+only: below one threshold the wordmark drops its symbol, and below a second the
+header gaps tighten and the theme switch shows only its icon. The switch's
+accessible name is unchanged, so what a screen reader announces did not change.
+After the fix, the page's scroll width equals the window width at all four
+measured widths, on both the home page and the new page. [S2]
+
+THE MOST INFORMATIVE TEST WAS A DELIBERATE SABOTAGE. The paid product's
+in-account summary and a Buy button were planted into the new component to see
+whether anything would catch it. SEVEN TESTS FAILED, six of them new and one an
+existing boundary assertion from the earlier milestone. The file was then
+restored and verified byte-identical to its committed form. [S2]
+
+Four screenshots of the page were rendered against a disposable database and
+committed in the technical repository. THEY ARE NAMED IN SECTION 22 AND HAVE
+DELIBERATELY NOT BEEN COPIED INTO THIS REPOSITORY, pending a separate privacy
+and public-safety review. [S2]
+
+8. THE RELEASE PROCEDURE, AND THE SIX TIMES IT WAS WRONG
+
+The page was finished on 13 October. Everything after that is about how to put
+it into production without breaking a running site.
+
+The procedure was written as a numbered set of blocks, each pasted into a server
+terminal as one unit. Each block runs with the shell set to abort on any error,
+each writes a success marker only if it actually passed, each refuses to run
+unless the blocks it depends on have left their markers, and the ones that run
+after the application has been changed must write an attempt marker BEFORE they
+judge anything. If a block fails after the switch, it records that state
+permanently and from then on every block except the rollback refuses to run.
+That design was not there at the start. It is what six rounds of review forced.
+[S2,V1]
+
+  revision  reviewed at           what the review found
+  1         13 Oct, two reviews   rollback trusted a movable tag; transfer
+                                  integrity unproved; the base image was not
+                                  pinned; the server's working copy was dirty
+                                  and untrusted; the post-release comparison
+                                  was missing. One claim in the record was also
+                                  overstated and was corrected in place with
+                                  the old wording quoted.
+  2         13 Oct                five command defects that made the procedure
+                                  unusable as written: a command given three
+                                  arguments where it accepts one; a text
+                                  substitution that depended on a shell
+                                  variable the procedure never set; a build
+                                  whose failure was hidden because its exit
+                                  status came from the command it was piped
+                                  into; STOP instructions that merely printed
+                                  the word "stop" and returned success; and a
+                                  Git check told to run in a directory with no
+                                  Git metadata.
+  3         14 Oct                helpers that could not stop their own block,
+                                  because their failure happened inside a
+                                  command substitution; a rollback that left
+                                  the authorisations and success markers usable,
+                                  so a rolled-back run could be accepted; a
+                                  stopped block that kept its old success
+                                  marker. The reviewer also planted 36 critical
+                                  mutations and the author's own test harness
+                                  caught only 2.
+  4         14 Oct                the rollback instruction was advisory: after a
+                                  post-switch check failed, the procedure only
+                                  PRINTED that a rollback was needed. Clear the
+                                  fault, re-run, and the run could be accepted
+                                  without ever rolling back. Also: container
+                                  image identities are reported differently by
+                                  the two image-store implementations, so the
+                                  identity comparison could fail after a
+                                  perfectly good transfer.
+  5         15 Oct                the rollback state itself could not always be
+                                  recorded. If the run directory became
+                                  unwritable, the emergency marker was never
+                                  written and only a warning was printed; after
+                                  recovery the run could be accepted. Also, the
+                                  variable that decided what a failure does was
+                                  inherited from the operator's environment, so
+                                  a stray value turned every mismatch into "ok".
+  6         15 Oct                no defects of the first three severities. The
+                                  reviewer reproduced the fix independently
+                                  against a real database and confirmed it, and
+                                  raised one evidence-provenance correction,
+                                  which is section 11.
+
+NOT ONE OF THOSE SIX ROUNDS FOUND A DEFECT IN THE EIGHT APPLICATION FILES. Every
+finding was in the release procedure. [V1]
+
+The authorisations were bound to exact values so that an approval could not be
+reused for a different thing: the first to the library and release tree, the
+second to the candidate image, the transferred archive and the frozen record,
+the third to the candidate image and the frozen acceptance record. Leaving out
+any single bound value is refused. [S2]
+
+9. THE 15 OCTOBER PRODUCTION STOP
+
+The first real production attempt ran under an owner-approved window and an
+authorisation bound to that run. The early read-only checks passed: the
+application, database and scanner were healthy, the running image was the
+expected one, the scanner and maintenance images were unchanged, all three
+payment flags were 0, no provider value and no payment-era marker existed,
+health answered locally and publicly, all fourteen payment routes answered 404,
+/plans answered 404, persistence was READY on m13-0004, payments were DISABLED,
+and the database audit passed with 18 checks and reported ERA 1. [R1]
+
+THEN THE PROCEDURE STOPPED, AND IT WAS WRONG TO STOP.
+
+The reconciliation check read a report that states the payment era, and required
+a line reading exactly "ERA 1". The database said ERA 1. But the report is
+produced in the database client's default aligned table format, which pads the
+value, so the line actually read " ERA 1" with a leading space. The check
+demanded an exact whole-line match and rejected a correct database. [R1,S2]
+
+THE REASON THE TESTS NEVER CAUGHT IT IS WORTH RECORDING. The test harness used a
+fake database client, and the fake printed the line without padding. The check
+and the fake agreed with each other, not with PostgreSQL, and every revision
+since the check was added inherited that agreement. A test is only as good as
+the thing it stands in for. [S2]
+
+Nothing was forced. No success marker was written, no image was transferred, no
+later block ran, and the running application was confirmed untouched, still on
+its original container from the earlier production deployment. One earlier
+interactive paste of the block had been corrupted and had stopped; the block was
+then re-run from a hash-verified file and reproduced the same stop. [R1]
+
+The fix was written test-first. The new cases were run against the old procedure
+and 13 of them failed, which is the point of writing them first. Two of those
+failures mattered:
+
+  - the padded line was refused at the live check, with production's exact
+    message, reproducing the stop;
+  - A SECOND, OPPOSITE DEFECT CAME OUT AT THE SAME TIME. Had the output not
+    been padded, the old check would also have ACCEPTED a report that contained
+    ERA 1 together with ERA 2, or ERA 1 twice. The strict check was
+    simultaneously too strict about spaces and far too lax about what else the
+    report could say. [S2]
+
+The corrected check accepts the report only if it holds exactly one era value
+line and that line is exactly ERA 1, with surrounding spaces or tabs allowed.
+Anything else, including a failed database run, stops the release. On the
+corrected procedure the new cases passed, the full server-block run passed 1,216
+checks with none failing against the previous revision's 1,118, the build-host
+run passed 128, and 12 of 12 targeted mutations of the fixed code were killed.
+[S2]
+
+A separate reviewer reproduced the padded ERA-1 output against PostgreSQL
+with the project's own migrations applied. The ERA-1 and SQL-error outputs
+matched the corresponding fixtures byte for byte. The ERA-2 fixture was not
+validated as a real capture (see section 11). [V1]
+
+THE FIX HAD A PRICE. Changing the shared library changed its hash, and the whole
+authorised run was bound to that hash. Nothing from the stopped run carried
+over: not the build record, not the server run directory, not its run identifier,
+not the authorisation. The server-side preparation and the entire sequence of
+baseline checks had to be done again from the beginning, in a new directory,
+under a new authorisation. That is the correct behaviour of a procedure bound to
+hashes, and it is also why a one-character formatting bug cost a day. [S2,V1]
+
+10. THE BUILD, AND THE ONE TEST THAT FAILED FIRST
+
+The release image was built away from production, on the owner's Mac, by an
+assistant session, under the owner's instruction. [R3]
+
+ON THE FIRST RUN OF THE SOURCE AND TEST GATE, ONE TEST FAILED: 8,623 passed, 1
+failed, 610 skipped. The failing test concerned instrumentation of one runtime
+and asserted that nothing was logged; it saw 42 log lines, which is consistent
+with asynchronous interference from other tests running alongside it. The same
+file passed all 55 of its own tests in isolation. One unchanged re-run was
+authorised and passed: 8,624 passed, 0 failed, 610 skipped, across 1,499 test
+suites. Type checking, linting and the production build passed. [R3]
+
+BOTH RESULTS ARE RECORDED HERE DELIBERATELY. The release did not have zero
+failures across all attempts. It had one flaky failure, an authorised unchanged
+retry, and a clean result, and the retry was disclosed to the owner before the
+deployment was authorised. [R3,O1]
+
+Separately, the guarded database suites that the ordinary run skips were
+executed by a serial acceptance runner against a real disposable PostgreSQL
+18.6: RESULT PASS, including 624 guarded persistence tests across 18 files and
+41 restore-drill tests, with the resources it created cleaned up afterwards.
+These are not the same tests as the ordinary suite's skipped ones being counted
+twice; they are a separate run that actually executed them. [R3]
+
+TWO THINGS MUST NOT BE READ INTO THE TEST FIGURES.
+
+  - The pull request's green continuous integration was run against the
+    MAIN-BASED BRANCH. It is not evidence that the M13-based release candidate
+    was built or deployed correctly. The candidate had its own build and its own
+    acceptance evidence, which is what is recorded above. [S1,S2]
+  - The skipped PostgreSQL tests did not run in continuous integration and are
+    not counted as passing there. [S2]
+
+The image was built for the server's processor architecture, from a base image
+pinned by digest, and its identity, its configuration digest, its layer list and
+the archive containing it were all recorded so that the server could prove it
+had received the same bytes. The build was cached from an earlier identical
+build, and NO CLAIM IS MADE THAT A COLD BUILD WOULD PRODUCE IDENTICAL BYTES.
+[R3]
+
+The candidate's runtime language version was one patch release ahead of the
+version production was running. That difference was disclosed to the owner
+before the deployment authorisation, and is listed again in section 19. [R3,O1]
+
+Before the live preflight, the preflight package itself was rehearsed offline.
+Its recorded results were inspected, read-only, during the audit of 20 October,
+and they are these:
+
+  preflight, on macOS            100 cases: 3 expected to pass, 97 expected to
+                                 stop fail-closed, 0 unexpected outcomes
+  preflight, on Linux            100 cases, the same 3 and 97, 0 unexpected
+  authorisation validator, mac    65 cases, all 65 as expected, 0 unexpected
+  authorisation validator, Linux  65 cases, all 65 as expected, 0 unexpected
+
+THE NUMBER 100 IS NOT 100 PASSES. It is 100 cases of which 97 were SUPPOSED to
+stop, and did. The point of that matrix is that the preflight refuses to
+continue, and the single positive case produces its 54 confirmation lines and
+its PASSED line. [R3]
+
+THESE FIGURES WERE NEVER POSTED TO THE PULL REQUEST. They exist in the local
+operator package, which this audit read without re-executing anything, so they
+remain an assistant session's own record rather than an independently reproduced
+result. [R3]
+
+THAT PACKAGE STATES ITS OWN LIMITS, AND THEY ARE WORTH REPEATING HERE. AS AT
+THAT REHEARSAL, ON 18 OCTOBER, THE PREFLIGHT HAD NEVER RUN AGAINST THE REAL
+SERVER: its tools were modelled from captured output and from the procedure, so
+the realistic worst case was a false stop rather than a false pass. IT RAN
+AGAINST REAL PRODUCTION THE NEXT DAY AND PASSED, which is section 14; the limit
+stated here is a limit of the offline rehearsal, not a standing statement about
+the preflight. The database section ran against
+fixtures rather than a live database: the reconciliation fixtures are real
+database output, but THE AUDIT FIXTURE'S 18 PASS LINES WERE RECONSTRUCTED from
+the query and the earlier acceptance record, and the comparison the script makes
+reads only the result and information lines. Static analysis was not available
+on that machine, though the syntax check was clean on every script. The Linux
+matrix ran under emulation, which affects speed and not the behaviour under
+test. [R3]
+
+ONE FINDING FROM THAT OFFLINE WORK IS THE MOST INSTRUCTIVE THING IN THE WHOLE
+PACKAGE. The preflight sanitises its own environment by re-executing itself in
+an empty one. But the command it uses to do that can itself be shadowed by an
+inherited shell function of the same name, in which case the sanitised child is
+never started at all. It was reproduced on 19 October against the exact
+preflight script: a forged function printed two convincing lines, including a
+confirmation that the pinned library had been verified, and exited 0 HAVING
+CHECKED NOTHING. Launched instead from a deliberately empty environment, by
+absolute path, with the shell told to read no startup files, the same file ran
+the real preflight and stopped where it should. [R3]
+
+TWO HONEST CONSEQUENCES ARE RECORDED WITH IT. No case in the test matrix covers
+that hole, and the script's own header comment still carries the claim that the
+command cannot run a shell function, WHICH IS WRONG AND WAS LEFT IN PLACE so
+that the script's reviewed hash would not change. The hole was closed in the
+LAUNCH PROCEDURE instead, which is why the owner's authorisation required the
+empty-environment launch and why the preflight's first reported section is that
+its environment is clean. A script cannot certify the shell it is already
+running in. [R3,O1]
+
+11. THE ERA-2 FIXTURE: A PROVENANCE CORRECTION THAT IS STILL OPEN
+
+The review of the sixth revision found that one of the test fixtures was not
+what the committed record said it was.
+
+The record presents three captured database outputs as real captures, one of
+them for a payment era of 2. THE ERA-2 FIXTURE WAS NOT A REAL CAPTURE. The
+reviewer found it had been produced by editing the era-1 output with a text
+tool, and that it contained a payment event outcome which the project's own
+database schema forbids. A genuine era-2 report from a schema-valid event would
+differ in its summary and in its digest. [V1]
+
+The same review also found a counting discrepancy: the committed record states
+98 checks for the new test mode, and the reviewer independently observed 99. The
+counting method was never reconciled. [V1]
+
+VERIFIED WHILE WRITING THIS NOTE: BOTH ARE STILL UNCORRECTED IN THE COMMITTED
+RECORD. Its section on the reproduced defect still presents the three outputs as
+captures, with the era-2 row among them, and its test table still says 98. The
+reviewer recommended correcting the prose only, changing no tested code, and
+keeping the revision history append-only. That correction has not been made.
+[S2]
+
+NEITHER FINDING CHANGES THE OUTCOME OF THE CHECK. The corrected check fails
+closed on era 2 whatever the fixture's provenance, and the live checks on
+16 and 19 October ran against the real production database, which reported
+ERA 1 both times. What is wrong is a provenance claim in a document, not a
+safety property of the release. It is recorded here rather than quietly fixed,
+because the other repository's evidence is not this note's to rewrite. [R1,S2]
+
+12. 16 OCTOBER — THE CANDIDATE WAS LOADED, AND THE SITE DID NOT CHANGE
+
+Shortly after midnight on 16 October, an assistant session connected to the
+server and ran the first, preparatory block in a new private directory, which
+generates the identifier the rest of the run is bound to. It reported the
+library hash matching the build host's and the block passing. [R3]
+
+A DEVIATION WAS RECORDED THE SAME DAY. The authorisation was for one new
+directory and that one block. The operator additionally created a second
+directory and staged the checked script there before running it. That was a
+filesystem write the narrow authorisation did not enumerate. It was disclosed in
+the pull request rather than quietly cleaned up, and the record explicitly says
+the staged material must not be deleted or rewritten without separate approval.
+Nothing about the running application, the database, the timers or the payment
+configuration was touched. [R3]
+
+The owner then authorised a short window for the baseline checks and the
+transfer. Within it, the early blocks and the baseline checks passed, this time
+including the corrected reconciliation check, which passed against the live
+database. The database audit passed with 18 checks and reported ERA 1. The
+application was still the previous image. The maintenance timers were active,
+their last runs successful, and their next runs more than 1,200 minutes away.
+[R1]
+
+Only after those checks passed was the archive transferred, and the server
+computed its own hashes for the archive and the build record and matched the
+expected values. The loading block then passed: the image's identity, its
+configuration digest, its layer list and its architecture were all proved, under
+the identity rule of the image store the server actually uses; exactly one new
+tag was added; NO EXISTING TAG WAS MOVED OR REMOVED; and the running application
+was confirmed still on the previous image. The block froze a record of that
+state, which any later authorisation had to quote. [R1]
+
+AND THERE THE PROCEDURE STOPPED, BECAUSE THAT IS WHAT THE AUTHORISATION SAID.
+/plans still answered 404. The release sat on the server, loaded and not
+running, for three days. The record explicitly warned against using the window's
+remaining minutes to rush the switch without time for testing and a possible
+rollback. [R1,O1]
+
+13. 17 AND 18 OCTOBER — THE CONTINUATION REVIEW, A TRAP, AND THE PREFLIGHT
+
+A further independent review examined whether the paused run could simply be
+continued later. Its answer was yes, but only with a new approved window and a
+new, separately bound authorisation; no new build, no new run directory and no
+reloading of the image. It also required that reality be re-verified against the
+frozen record before any live switch, and listed exactly what to compare. [V1]
+
+IT IDENTIFIED A TRAP IN THE PROCEDURE, AND THIS IS THE SUBTLEST POINT IN THE
+WHOLE RELEASE. The natural instinct before deploying is to re-run the baseline
+checks. But starting any block deliberately invalidates the markers of the
+blocks after it, so re-running the baseline checks would have DESTROYED the
+frozen record of the loading block, and the loading block refuses to run again
+while the candidate is already loaded. The careful-seeming action would have
+wrecked the run. The answer was a separate read-only preflight that proves the
+same facts without starting any block of the procedure. [V1]
+
+The owner approved a window on 17 October for read-only checks only. TWO
+DEVIATIONS FROM THAT PLAN ARE ON RECORD. An assistant session made a read-only
+server check BEFORE the window it was intended for. The read-only state check
+also creates and immediately removes a temporary file, which is its documented
+way of proving the directory is writable, so the check is not purely read-only
+by the strictest reading. Both were disclosed later, in the deployment
+authorisation of 19 October. [R3,O1]
+
+The rest of 17 and 18 October went into preparing the preflight offline: a
+clean-environment launch, realistic timer output, a fresh database audit and
+reconciliation compared against the frozen baseline, strict window enforcement,
+failure propagation, resistance to injected input, secure temporary files
+outside the release directory, signal handling, interactive execution, and
+hash-verified operator scripts. No production system was contacted on either
+day beyond the disclosed read-only check. [R3,V1]
+
+14. 19 OCTOBER — THE LIVE PREFLIGHT
+
+The owner approved a two-hour window for ONE read-only production preflight and
+nothing else, explicitly not the switch. The approval named the script's hash,
+required a real foreground terminal with the owner entering the administrative
+password, required the clean-environment launch, and required that output be
+accepted only on both the exact PASSED line AND an exit status of 0. [O1]
+
+The owner ran it and supplied the complete terminal output. It reported, in
+order: a clean execution environment, with no inherited functions, no startup
+hooks and no tracing; deliverable signal handlers, a terminal on standard input
+and a foreground process group; the pinned library hash verified BEFORE the
+library was loaded; a private working directory outside the release directory,
+cleaned up on exit; the approved window, by reference to the authorisation
+comment, with 104 minutes remaining both at the start and at the end. [R1]
+
+On state, it confirmed that the markers of the completed blocks were present and
+that no deployment, rollback, emergency or authorisation marker existed; that
+the state check said NOT DEPLOYED; and that the build record, the library and
+the frozen record were unchanged. [R1]
+
+On the live system, it confirmed that the application, database and scanner were
+healthy; that the application was still the previous image; that the candidate,
+rollback, maintenance and scanner tags were correct; that the image inventory
+and layer lists were byte-identical to the frozen evidence from the loading
+block; that the environment file hashes were unchanged, all three payment flags
+were 0, no provider mode or value was configured and no payment-era marker
+existed; that the deployed source's compose file matched the pinned source blob;
+that both maintenance timers were active with successful last runs and next runs
+early the following morning, safely after the window; that health answered
+locally and publicly; that /plans still answered 404; and that all fourteen
+payment routes answered 404. The application log was confirmed readable, 182
+lines, and NONE OF IT WAS PRINTED. [R1]
+
+A FRESH READ-ONLY DATABASE CHECK RAN AGAINST REAL PRODUCTION. The audit and
+reconciliation files were confirmed by hash first. The audit passed with 18
+checks and reported ERA 1, its result and information lines byte-identical to
+the frozen baseline, and the full reconciliation report was byte-identical to
+that baseline, holding exactly ERA 1. No raw output and no row identifiers were
+pasted anywhere. [R1]
+
+The terminal printed PREFLIGHT PASSED, and the exit status was 0. [R1]
+
+15. 19 OCTOBER — THE FIRST AUTHORISATION, THE SWITCH, AND AUTOMATED ACCEPTANCE
+
+The owner then gave the first deployment authorisation, bound to five exact
+values: the server run identifier, the candidate image identity, the archive
+hash, the build record hash and the frozen record hash. The owner's actual words
+in conversation were "approve", in answer to a fully specified request stating
+those bindings, the window, the scope, the disclosures and the rollback rules.
+[O1]
+
+It authorised the authorisation block, then the switch of the application
+container only, then immediately the automated acceptance, then all seven human
+browser checks with their real results recorded, then the block that freezes
+that record. IT DID NOT AUTHORISE FINAL ACCEPTANCE. That needed a separate
+decision. [O1]
+
+It also pre-authorised the emergency rollback, so that no one would have to ask
+permission in a failure, and required it on ANY failed, missing, inconclusive or
+interrupted check after the switch, with fixing forward forbidden. The rollback
+was allowed to run past the window's end if needed. [O1]
+
+The disclosures the owner acknowledged before authorising were: the runtime
+language patch difference; the one flaky test and its authorised clean retry;
+the staging directory created outside the enumerated scope; a state check run
+inline rather than from the staged script; the 17 October read-only access and
+its temporary write before the planned window; and that the baseline being
+compared against was the one frozen on 16 October rather than newly recreated.
+NOTHING WAS SMOOTHED OVER TO GET THE APPROVAL. [O1]
+
+THE SWITCH. The deployment block passed with exit status 0. It re-checked that
+both maintenance timers were active with successful last runs and next runs more
+than 650 minutes away, that the compose file still matched the pinned source,
+that the application was still on the previous image and that the candidate tag
+matched the authorised identity. It then recreated THE APPLICATION CONTAINER
+ALONE, with no dependency restart, no rebuild and no image pull, and confirmed
+the running application was the authorised candidate. The owner entered the
+administrative password interactively. The database and scanner were not
+recreated. [R1]
+
+THE AUTOMATED ACCEPTANCE. The next block passed with exit status 0. The owner
+needed two attempts at the password; every automated check then passed. It
+verified the running image and the application's health; persistence READY on
+m13-0004 with checkout and webhook payments DISABLED; the new boot's readiness
+line matching the baseline frozen on 16 October; all three payment flags 0 with
+no duplicate assignments, no provider mode, no provider value and no payment-era
+marker; environment hashes unchanged; all fourteen payment routes answering 404;
+PUBLIC /plans ANSWERING 200, carrying the planned prelaunch copy, with the
+withdrawn wording absent and no form and no buy or pay control present; the
+scanner healthy and unchanged, the database healthy and unchanged, the
+maintenance image unchanged; exactly one tag moved, the application's own, from
+the previous image to the candidate; a fresh database audit passing with 18
+checks and reporting ERA 1, with its summary and the full reconciliation report
+identical to the baseline; and both timers active with next runs more than 650
+minutes away. [R1]
+
+That is the moment the page became publicly visible. It was not yet accepted.
+
+16. 19 OCTOBER — THE SEVEN MANUAL CHECKS, THE SECOND AUTHORISATION, ACCEPTANCE
+
+The automated acceptance is automated acceptance only. The owner then performed
+seven checks that only a human in a real browser can perform, and recorded each
+one's actual result:
+
+  J12  Plans shows the paid assessment as Coming soon, with no purchase
+       control.                                                     PASS [R2]
+  J13  An anonymous free assessment completes.                      PASS [R2]
+  J14  Both report downloads, HTML and PDF, work.                    PASS [R2]
+  J15  Sign-in with an existing account works.                       PASS [R2]
+  J16  Domain management works, with no purchase button and no product
+       summary shown.                                               PASS [R2]
+  J17  No browser-console errors and no security-policy violations.  PASS [R2]
+  J18  The phone layout and the Plans navigation work.               PASS [R2]
+
+The procedure refuses to record manual results until J has passed and
+discards them if J is re-run. This enforces the recording sequence, but cannot
+independently establish whether a browser check was performed. The owner
+reported performing all seven, recorded each as PASS and received exit
+status 0. [R1,R2,S2]
+
+The freezing block then re-checked each of the seven recorded results, printed
+them, froze the acceptance record and passed with exit status 0. [R1]
+
+THE SECOND AUTHORISATION. The owner gave AUTH-2 separately, bound to three exact
+values: the server run identifier, the running candidate identity and the hash
+of the freshly frozen acceptance record. Again the owner's word in conversation
+was "approve". It authorised the final block ONLY, for this exact candidate and
+run, inside the already approved window, and restated that any ambiguous or
+incomplete outcome required the pre-authorised rollback rather than a retry.
+[O1]
+
+FINAL ACCEPTANCE. The final block was staged, its hash verified on the server
+against the previously reviewed value, and it passed with exit status 0. It
+confirmed that the authorisation quoted all three required values, and then the
+three identity facts that matter at the end: the running application is still
+the authorised candidate, the application tag still points at it, and THE
+ROLLBACK TAG STILL POINTS AT THE PREVIOUS IMAGE. It recorded the authorisation
+and the frozen record's hash, and removed only the prescribed transferred copies
+of the image and build record on the server. The original build on the owner's
+Mac was not deleted. [R1]
+
+The owner then ran the read-only state check, which printed:
+
+      ACCEPTED: J, JM and K passed
+
+NO ROLLBACK WAS EVER REQUIRED. The emergency path was prepared, pre-authorised
+and tested throughout, and never used. [R1]
+
+THE EXACT WALL-CLOCK TIMES OF THESE STEPS WERE NOT SUPPLIED, and the record of
+the final acceptance says so itself and gives the date only. THIS NOTE INVENTS
+NO TIME. What can be stated, because it was read from the GitHub API while
+writing this note, is when each report was PUBLISHED, which bounds each step
+from above and places the whole sequence inside the approved window:
+
+  14:26  the preflight-only window approved
+  14:47  the live preflight reported PASSED
+  14:53  the deployment authorisation
+  15:17  the switch and the automated acceptance reported passed
+  15:35  the seven manual results recorded and the record frozen
+  15:40  the final-acceptance authorisation
+  15:49  the final block passed and the state check reported ACCEPTED
+
+THOSE ARE PUBLICATION TIMES, NOT EXECUTION TIMES. Each step happened at or
+before the time shown. The approved window ran to 16:30, and the preflight
+reported 104 minutes still remaining at both its start and its end. [S1,R1]
+
+17. THE ACCEPTED STATE
+
+As accepted on 19 October 2026:
+
+  1. /plans is publicly available.
+  2. Free security assessments are operational.
+  3. The Extended Security Assessment is presented as Coming soon.
+  4. No purchase or checkout is available, and no price is published.
+  5. Payments are DISABLED: three flags at 0, no provider mode, no provider
+     value, no payment-era marker, 14 of 14 payment routes answering 404.
+  6. The database schema contract is m13-0004.
+  7. Migration 0005 was NOT applied.
+  8. The scanner, database and maintenance images are unchanged.
+  9. The previous application image is retained as the rollback target.
+  10. PR #54 remains a draft and unmerged.
+  11. No paid-assessment code was deployed.
+                                                              [R1,R2,S1,S3]
+
+THESE ARE HISTORICALLY ACCEPTED RESULTS, RECORDED AS AT 19 OCTOBER. The session
+that wrote this note did not contact production to refresh them, and no claim of
+real-time verification is made. [S1]
+
+THREE LIMITS ON THE ABOVE, STATED SO THEY ARE NOT OVERREAD.
+
+  - It is NOT claimed that the database was never written to during the release
+    period. The audit and reconciliation queries were read-only, but ordinary
+    production use writes to the database, and the owner's own free assessment
+    during the manual checks is itself such use. What was verified is that the
+    schema, the payment state and the era were unchanged.
+  - The final block did NOT independently recheck the payment flags. It checked
+    the final image identities and that the rollback target was preserved. The
+    payment state was verified by the preflight and by the automated acceptance.
+  - It is NOT claimed that every possible free assessment produces byte-
+    identical results. What was verified is that no file in the assessment,
+    scoring, presentation or report path changed, and that one real assessment
+    completed with both downloads working.
+                                                                       [R1,S2]
+
+18. WHO DID WHAT
+
+THIS SECTION EXISTS BECAUSE AN EARLIER DRAFT OF THIS EVIDENCE GOT IT WRONG. That
+draft stated repeatedly that the owner ran every server command and that no
+assistant ever had access to the server. BOTH CLAIMS WERE FALSE. They are
+corrected here from the primary record.
+
+THE OWNER:
+  - set the objective and the deadline, and defined what was and was not being
+    approved;
+  - made the presentation and release decisions;
+  - authorised each time window;
+  - gave AUTH-0, AUTH-1 and AUTH-2 as separate decisions, each bound to exact
+    values, after being shown the disclosures;
+  - supplied the administrative password at the terminal, which no assistant
+    can do;
+  - executed the live preflight, the switch, the automated acceptance, the
+    recording of the manual results, the freezing block, the final block and
+    the state check, and supplied their complete output;
+  - performed the seven real browser checks;
+  - accepted the release.
+                                                                    [R1,R2,O1]
+
+AN ASSISTANT SESSION ON THE OWNER'S MAC:
+  - built the release image away from production and ran the source, test and
+    acceptance gates there, across three successive revisions;
+  - prepared the operator scripts and the offline preflight package.
+                                                                         [R3]
+
+AN ASSISTANT SESSION ON THE SERVER, TWICE, AND THIS IS THE CORRECTION THAT
+MATTERS:
+  - on 16 October it connected to the server and ran the preparatory block in a
+    new directory, and additionally staged a script in a directory the narrow
+    authorisation had not enumerated;
+  - on 17 October it made a read-only check before the window intended for it,
+    and the state check it ran created and removed a temporary file as its
+    documented writability test.
+Both were disclosed in the pull request and again at the deployment
+authorisation.                                                           [R3]
+
+ON 15 OCTOBER, THE DIVISION WAS DIFFERENT AGAIN. An assistant's attempt to write
+to the server was DENIED BY A TOOL RESTRICTION, so the owner executed the
+hash-verified command, and the assistant then reported read-only verification
+afterwards. [R1,R3]
+
+ASSISTANT SESSIONS ALSO wrote and revised the application source, the release
+procedure, the tests, the test harness, the operator scripts and the evidence
+documents, under the owner's direction, and wrote every authorisation comment in
+the pull request as a transcription of the owner's conversational approval.
+
+SEPARATE ASSISTANT SESSIONS PERFORMED THE REVIEWS, supplied in the project
+conversation. NONE OF THEM IS A FORMAL GITHUB CODE REVIEW; the pull request has
+zero submitted reviews and zero review comments. [S1,V1]
+
+WHAT IS NOT CLAIMED EITHER WAY. For the 16 October sequence of baseline checks,
+the transfer and the loading block, THE RECORD DOES NOT STATE WHO TYPED EACH
+COMMAND. The outputs were owner-supplied, the authorisation required the owner
+to be present for the administrative password, and the preparatory block earlier
+that night was run by an assistant session. This note therefore attributes that
+sequence to the authorised run of 16 October carried out under the owner's
+direction with the owner present, and does not guess further. [R1,R3]
+
+19. CONTROLLED DEVIATIONS, RECORDED RATHER THAN HIDDEN
+
+  1. The publication target of 15 October was missed. The page went live on
+     19 October.
+  2. The 15 October production attempt stopped at the reconciliation check. It
+     was a defect in the release procedure, NOT a defect in the production
+     database, and the database was correct.
+  3. Fixing it changed the shared library's hash and therefore invalidated the
+     entire authorised run, forcing a rebuild and a new run from the beginning.
+  4. On 16 October an operator staged a script in a directory the narrow
+     authorisation had not enumerated.
+  5. On 17 October a read-only server check was made before its intended
+     window.
+  6. The read-only state check creates and removes a temporary file as its
+     documented writability test, so it is not purely read-only in the
+     strictest sense.
+  7. On 19 October a state check was executed inline rather than from the
+     staged script.
+  8. The first run of the source and test gate had one failing test; one
+     authorised unchanged retry passed.
+  9. The candidate's runtime language version was one patch release ahead of
+     production's.
+  10. The baseline compared against on 19 October was the one frozen on
+      16 October, not a newly recreated one. The preflight re-checked the live
+      images, environment hashes, timers, payment safeguards, audit and
+      reconciliation against it.
+  11. The era-2 test fixture's provenance claim in the committed record is wrong
+      and remains uncorrected, and a test count discrepancy of 98 against 99
+      remains unreconciled. Section 11.
+  12. The image build was cached; no cold-build reproducibility is claimed.
+  13. On 15 October an assistant's remote write was denied by a tool
+      restriction, and the owner executed the verified command instead.
+  14. Mutation-testing coverage was deliberately bounded: of one revision's 267
+      mutants, 92 were never run, and 11 mutants that survived an earlier
+      revision were never re-run. They are NOT counted as killed or as passed.
+  15. On 15 October an interactive paste of one block was corrupted and
+      stopped. Every block afterwards was run from a hash-verified file rather
+      than pasted.
+  16. Network connectivity had to be restored after earlier connection resets
+      before the 19 October preflight could be run.
+  17. The candidate application had never booted in production before the
+      switch, which is why the automated acceptance had to compare its startup
+      lines against the baseline frozen on 16 October.
+  18. An earlier draft of this Personal Project evidence misattributed the
+      server work to the owner alone. Corrected in section 18.
+                                                              [R1,R3,S1,S2,V1]
+
+20. WHAT IS NOT PROVEN, AND THE GAPS IN THIS RECORD
+
+  1. No independent, real-time verification of production exists in this note.
+     Nothing was contacted while writing it. Every production figure is as
+     reported on the day by the owner or, where stated, by an assistant
+     session.
+  2. The six review rounds exist only as pull-request issue comments. None is a
+     formal GitHub review, and most were written by an assistant session rather
+     than an independent human reviewer.
+  3. The authorisations are assistant transcriptions of conversational
+     approvals, not text the owner typed. The decisions are the owner's.
+  4. The offline preflight rehearsal figures of section 10 are an assistant
+     session's report, were never posted to the pull request, and the test files
+     behind them were not inspected.
+  5. The era-2 fixture provenance and the 98-against-99 count remain open in the
+     committed technical record.
+  6. No cold-build reproducibility proof exists for the release image.
+  7. The probe's review against real program output did not cover the container
+     orchestration command used to recreate the container, nor production's
+     exact container-engine version.
+  8. Before 16 October, the server-side blocks had never run against real
+     production infrastructure; they had run only against stand-ins.
+  9. The skipped database-backed tests did not run in continuous integration.
+     They ran separately, on the candidate.
+  10. The pull request's green continuous integration is evidence about the
+      main-based branch, not about the deployed release tree.
+  11. Exact wall-clock times for the 19 October steps were not supplied and are
+      not reconstructed.
+  12. The four screenshots in the technical repository have not been copied into
+      this repository, pending a separate privacy review.
+  13. Who typed each command in the 16 October sequence is not recorded.
+      Section 18.
+  14. The source branch's future is undecided: the work is deployed from a
+      cherry-pick, while the branch it came from cannot be deployed as it
+      stands and has not been merged.
+  15. NO REVIEWER EVER BUILT OR VERIFIED THE IMAGE THAT WAS DEPLOYED. The
+      reviews examined the procedure and the source tree. The artefact itself
+      was built and reported by one assistant session on the owner's Mac, and
+      the server proved only that it had received the same bytes.
+  16. No user test, interview, survey or supervisor comment was found anywhere
+      in the release record. THE ABSENCE OF A RECORD DOES NOT PROVE NONE
+      HAPPENED; it means this note has no evidence of one and invents none. The
+      seven manual checks were the owner's own acceptance checks, not a study
+      of other people.
+  17. The seven manual checks produced RECORDED RESULTS, NOT IMAGES. No
+      screenshot of the live page is claimed to exist, and none was supplied to
+      any assistant session.
+  18. The open owner decisions about the paid product are unchanged by this
+      release: the in-product customer wording and the public, legal and
+      privacy wording both remain open, and the presentation decision of
+      13 October covers marketing copy only. Whether to link the new page from
+      the home page was deliberately left undecided.
+  19. Review outputs produced outside GitHub during this milestone are not
+      collected in this package. Only what reached the pull request is cited.
+                                                              [R1,R3,S1,S2,V1]
+
+21. AI TRANSPARENCY, AND REFLECTION PROMPTS
+
+AI assistance was used throughout this milestone and is not disguised. Assistant
+sessions wrote and revised the eight application files, the release procedure,
+its tests and its test harness, the operator scripts and the evidence documents;
+built the release image on the owner's Mac; ran two recorded server operations;
+performed the review rounds as separate sessions; transcribed the owner's
+authorisations into the pull request; and wrote this note.
+
+THE DECISIONS, THE AUTHORISATIONS, THE ADMINISTRATIVE PASSWORD, THE DEPLOYMENT
+COMMANDS OF 19 OCTOBER, THE SEVEN BROWSER CHECKS AND THE ACCEPTANCE ITSELF ARE
+THE OWNER'S. Section 18 draws that line exactly.
+
+THIS NOTE IS A TECHNICAL EVIDENCE RECORD, NOT A STUDENT REFLECTION. No feeling,
+opinion, learning claim, time estimate, supervisor comment or testing
+participant appears anywhere in it. The following prompts are left UNANSWERED on
+purpose, for the owner to answer in their own words in the process journal:
+
+  1. Why was it right to miss the 15 October target rather than deploy a branch
+     that would have put an application expecting a missing table in front of
+     real users?
+  2. What does it mean that six review rounds found many defects in the release
+     procedure and none in the eight application files?
+  3. The 15 October stop was caused by a test that agreed with a fake instead of
+     with the real program. Where else in this project might that be true?
+  4. Writing the failing test first revealed a second, opposite defect nobody
+     was looking for. What does that suggest about how to fix things?
+  5. Why was it worth leaving a finished release loaded but not running for
+     three days?
+  6. The careful instinct before deploying -- re-run the baseline checks --
+     would have wrecked the run. What should be learned from that?
+  7. Why were the authorisations split into three, each bound to exact values?
+  8. What was the cost of binding an authorisation to a hash, and was it worth
+     paying?
+  9. Why record the deviations in section 19 at all, rather than only the
+     passing result?
+  10. An earlier draft of this evidence overstated the owner's own role. Why
+      does getting that right matter for a Personal Project?
+
+22. SOURCE LOCATORS
+
+PERSONAL PROJECT EVIDENCE REPOSITORY, at commit
+5b87b00fd033080d51bf5fd9eff110b9f4043cc5 while this note was written. [S1]
+
+TECHNICAL REPOSITORY stanciuks/site-security, pull request #54, head
+013890269a44f7d37037d018839181b6b4f7e1c2, branch claude/ecstatic-rubin-ndo8ue,
+DRAFT and UNMERGED, 16 files changed, 5,400 insertions, 0 deletions, 12 commits,
+continuous-integration run 38798080074 successful, 33 issue comments, 0 submitted
+reviews, 0 review comments. [S1]
+
+COMMITTED DOCUMENTS at that head: [S2]
+  docs/evidence/PUBLIC_PLANS_PRELAUNCH_2026-10-13.md        1,508 lines
+  docs/rollout/PLANS_PRELAUNCH_UI_RELEASE_RUNBOOK.md        1,354 lines
+  docs/rollout/PLANS_PRELAUNCH_UI_RELEASE_RUNBOOK.probe.sh  1,691 lines
+  src/server/persistence/schema-contract.ts                 line 72 declares
+                                                            the contract
+  docs/evidence/assets/public-plans-prelaunch-2026-10-13/
+    plans-prelaunch-desktop-dark.png
+    plans-prelaunch-desktop-light.png
+    plans-prelaunch-mobile-dark.png
+    plans-prelaunch-mobile-light.png
+                            NOT copied into this repository; see section 20.12
+
+GIT IDENTITIES, re-derived while writing this note: [S3]
+  54774b5f4d5334f562be9a3e0a24223ffcbe1f2c  deployed M13 application source
+  7f4cd67b885dccef688c08425ebb77e3c2921818  first UI commit
+  d1e2e56190b23ef58cd1a08485b646b3d79bd10d  second UI commit, the copy fix
+  2e611c0c5bb66fcc825890826c43b89f072ddc0f  the release tree, 818 files,
+                                            8 differing paths, contract
+                                            m13-0004, no 0005 migration
+
+PULL-REQUEST COMMENTS, by provenance class. [S1]
+
+  OWNER-DECIDED [O1]
+    6155146730  presentation decision, 13 October
+    6198905719  first authorisation and window, 15 October
+    6208853274  first authorisation and window, revision 6, 16 October
+    6232539977  read-only continuation window, 17 October
+    6269587672  preflight-only window, 19 October
+    6270161907  AUTH-1, the deployment authorisation, 19 October
+    6271128940  AUTH-2, the final-acceptance authorisation, 19 October
+
+  OWNER-EXECUTED / OWNER-OBSERVED [R1,R2]
+    6200178634  the 15 October stop at the reconciliation check
+    6209119230  16 October: baseline checks, transfer and load passed
+    6270041460  19 October: live preflight PASSED, exit 0
+    6270681864  19 October: the switch and the automated acceptance passed
+    6271040521  19 October: seven manual checks recorded, freezing block passed
+    6271301359  19 October: final block passed, state check ACCEPTED
+
+  LOCAL-CLAUDE-EXECUTED / REPORTED [R3]
+    6195844168  Mac build, revision 5
+    6197918883  server preparatory block, 15 October, owner-executed command
+    6202747738  Mac build, revision 6, including the one failing test
+    6203687932  server preparatory block, 16 October, and the staging deviation
+
+  INDEPENDENT-REVIEW-REPORTED [V1]
+    6154703023  the customer-copy finding
+    6155554161  the release audit
+    6155978474  the five command defects
+    6161781587  the third round
+    6172065796  the fourth round
+    6185221408  the fifth round
+    6187811031  the revision-5 review
+    6202172057  the revision-6 review and the era-2 provenance correction
+    6232293961  the continuation review and the procedural trap
+
+  AUTHOR HANDOFFS, for the revision history
+    6154936116  6155611570  6156449923  6166261828  6178358978  6186986482
+    6201188149
+
+RELATED EVIDENCE IN THIS REPOSITORY
+
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/
+    SCANCOMPASS_M13_DECISION_A_PRODUCTION_ACCEPTANCE_PP_Evidence_2026-10-10.txt
+    The deployment whose source this release was built on top of, and the note
+    that establishes payments closed, contract m13-0004 and era 1.
+
+  SCANCOMPASS_M14_PP_Evidence_2026-10-11/
+    SCANCOMPASS_M14_PP_Evidence_Index_2026-10-11.txt
+    The paid-assessment work this page advertises as coming soon. NOT amended by
+    this release, and section 5 explains why it did not need to be.
+
+  SCANCOMPASS_M14_PP_Evidence_2026-10-11/
+    SCANCOMPASS_M14_Step2.4A_PP_Evidence_2026-10-13.txt
+    SCANCOMPASS_M14_Step2.4B_PP_Evidence_2026-10-13.txt
+    The last M14 evidence before this milestone; the branch this page's pull
+    request was cut from.
+
+  SCANCOMPASS_PLANS_PRELAUNCH_2026-10-19/
+    SCANCOMPASS_PLANS_PRELAUNCH_PP_Evidence_Index_2026-10-19.txt
+    SCANCOMPASS_PLANS_PRELAUNCH_PROCESS_JOURNAL_2026-10-19.txt
+    This package's index and its process-journal summary.
+
+SANITISATION
+
+This repository is public, and this note was written for that. It contains no
+server account name, host name, host alias, network address, directory path, run
+identifier, credential, token, secret, environment value, database connection
+string, customer data or payment data, and no production terminal output. It
+publishes no container image digest, archive hash, library hash, script hash or
+frozen-record hash: in this release those values are precisely what the owner's
+authorisations were bound to, so they are described by function and never by
+value. The payment provider's name is not given here; it appears once in the
+public page's own copy, which is a published presentation decision, not an
+operational detail. The only long identifiers in this note are Git commit and
+tree hashes in the owner's own public repository, and GitHub pull-request, run
+and comment numbers. Where a figure could not be stated without revealing an
+operational detail, the figure was left out rather than approximated.
+
+END OF EVIDENCE

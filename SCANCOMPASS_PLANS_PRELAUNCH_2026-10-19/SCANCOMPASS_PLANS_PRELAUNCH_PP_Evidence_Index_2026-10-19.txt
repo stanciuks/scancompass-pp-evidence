@@ -1,0 +1,222 @@
+SCANCOMPASS — PUBLIC PLANS PRELAUNCH
+PERSONAL PROJECT EVIDENCE INDEX
+One milestone: making the free and the planned paid offering publicly visible,
+and getting that page into production without breaking a running site
+Subject dates: 13-19 October 2026
+Review date: 19 October 2026
+Corrected: 20 October 2026, after a follow-up source and file audit
+Classification: Public — sanitized project evidence
+
+STATUS
+
+THE MILESTONE IS COMPLETE AND OWNER-ACCEPTED, 19 OCTOBER 2026. The public page
+/plans is live. The final state check printed ACCEPTED: J, JM and K passed. No
+rollback was required. [R1,O1]
+
+THE TWO DATES ARE NOT THE SAME. On 16 October the release image was transferred,
+verified and loaded on the server, and THE RUNNING APPLICATION WAS NOT SWITCHED:
+/plans still answered 404 and nothing a visitor could see changed. On 19 October
+the application was switched, tested and accepted. 16 October IS NOT THE
+DEPLOYMENT DATE. [R1]
+
+WHAT WAS DEPLOYED IS NOT THE PULL REQUEST. The release was built from the source
+production was already running, with two reviewed interface commits on top; the
+release tree differs from that source in exactly eight files. PR #54 IS STILL A
+DRAFT AND STILL UNMERGED. A deployment is not a merge. [S1,S3]
+
+THE ACCEPTED STATE: /plans publicly available; free assessments operational;
+the Extended Security Assessment presented as Coming soon; no purchase,
+checkout or published price; payments DISABLED with all fourteen payment routes
+answering 404; schema contract m13-0004; MIGRATION 0005 NOT APPLIED; scanner,
+database and maintenance images unchanged; the previous application image kept
+as the rollback target; and no paid-assessment code deployed. [R1,R2,S1,S3]
+
+THE PUBLICATION TARGET WAS MISSED. The owner asked on 13 October for visibility
+by 15 October. The page was finished on 13 October; it went live on 19 October.
+The four days went on the release procedure, which six review rounds found wrong
+six times, and on one production attempt that stopped. [S2,V1]
+
+THESE ARE HISTORICALLY ACCEPTED RESULTS. The session that wrote this package
+contacted no production system and refreshed nothing. Every production figure is
+as recorded on the day it happened. [S1]
+
+PROVENANCE — READ THIS BEFORE ANY FIGURE IN THIS PACKAGE
+
+Eight classes are used and kept apart. The technical note lists them in full
+with its own locators.
+
+  [R1] OWNER-EXECUTED               a command the owner typed against
+                                    production, and the output the owner saw
+  [R2] OWNER-OBSERVED               a browser check only the owner could do
+  [R3] LOCAL-CLAUDE-EXECUTED        a step an assistant session carried out on
+       / REPORTED                   the owner's Mac or, twice, on the server;
+                                    its figures exist only as that report
+  [O1] OWNER-DECIDED                a decision the owner gave in conversation,
+                                    transcribed into a comment by an assistant
+  [S1] GITHUB-VERIFIED              read from the GitHub API while writing
+  [S2] SOURCE-RECORDED              from a committed document at the pull
+                                    request's exact head
+  [S3] SESSION-DERIVED              recomputed from Git objects while writing
+  [V1] INDEPENDENT-REVIEW-REPORTED  stated by a review; every review of this
+                                    release was supplied in conversation by a
+                                    separate assistant session
+
+TWO WARNINGS THAT APPLY TO EVERY FILE IN THIS PACKAGE.
+
+  The authorisation comments in the pull request were NOT typed by the owner.
+  Each is an assistant's transcription of the owner's conversational approval,
+  and each says so about itself. The decisions are the owner's; the writing is
+  not. [O1]
+
+  NO REVIEW WAS A FORMAL GITHUB CODE REVIEW. PR #54 carries 33 issue comments,
+  ZERO submitted reviews and ZERO review comments. [S1]
+
+  WORK WAS NOT ALL OWNER-EXECUTED. Assistant sessions built the release image on
+  the owner's Mac and ran two recorded server operations. The owner executed the
+  19 October production rollout, supplied the administrative password, performed
+  the seven browser checks and accepted the release. Section 18 of the technical
+  note states this step by step and says where the record is silent. [R1,R3]
+
+CORRECTIONS OF 20 OCTOBER, AND THE PUBLIC CLASSIFICATION
+
+This package was written on 19 October and rechecked locally on 20 October,
+before anything was committed. The review recorded these corrections:
+
+  1. THE OFFLINE REHEARSAL FIGURES ARE NOW STATED PROPERLY. The recorded
+     results in the local operator package were read during the audit: the
+     preflight matrix is 100 cases on each platform, of which 3 are expected to
+     pass and 97 are expected to STOP, with 0 unexpected outcomes, and the
+     authorisation validator is 65 as-expected cases on each platform. 100 WAS
+     NEVER 100 PASSES, and the note now says so. The figures remain that
+     session's own record: the audit read them and re-executed nothing.
+  2. THAT PACKAGE'S OWN STATED LIMITS WERE ADDED, including that its database
+     section ran against fixtures and that the audit fixture's eighteen pass
+     lines were reconstructed rather than captured, and that the limit about
+     never having run against the real server was true OF THE REHEARSAL, on
+     18 October, and ceased to be true the next day.
+  3. THE FORGED-FUNCTION FINDING WAS RECORDED IN FULL, including that no test
+     case covers it, that the preflight's own header comment still carries the
+     claim the finding disproves, and that the hole was closed in the launch
+     procedure rather than in the script.
+  4. THE 19 OCTOBER TIMELINE GAINED VERIFIED UPPER BOUNDS. The seven reports
+     were published between 14:26 and 15:49, inside the approved window. THOSE
+     ARE PUBLICATION TIMES, NOT EXECUTION TIMES, and the note says so; no
+     execution time is invented.
+  5. THREE DEVIATIONS AND FIVE GAPS WERE ADDED, taking the lists to eighteen
+     and nineteen. The additions came from comparing this package against a
+     reviewed revision-4 draft found outside the repository.
+  6. TWO OVERSTATEMENTS WERE NARROWED. The process journal no longer says the
+     free assessment "could not behave differently" after the release; it says
+     what was actually proven, which is that the relevant source was unchanged
+     and that one real assessment completed afterwards. The journal also now
+     states plainly that the implementation was AI-generated under the owner's
+     direction.
+  7. A SEPARATE PUBLICATION REVIEW NARROWED THREE MORE CLAIMS: audit attribution
+     to the actual follow-up file review, manual-result sequencing rather than
+     proof of human action, and fixture matching limited to ERA-1 and SQL-error
+     captures. This milestone uses a new public classification label.
+
+A REVISION 2 OF THE EARLIER DRAFT WAS STILL NOT FOUND, in this repository, on
+this machine or in this session's own records. A reviewed revision-4 draft WAS
+found outside the repository and was compared against this package; its unique
+material is folded in above. If revision 2 exists, it should still be compared
+before anything is committed. [S3]
+
+CLASSIFICATION OF THIS NEW MILESTONE
+
+These new files are labelled "Public — sanitized project evidence", because
+the destination repository is public. Earlier historical notes retain their
+original labels and are not rewritten. This is an explicit change of labelling
+practice for newly published evidence, not a retroactive reclassification.
+
+FILES IN THIS MILESTONE (THREE)
+
+  SCANCOMPASS_PLANS_PRELAUNCH_PRODUCTION_ACCEPTANCE_PP_Evidence_2026-10-19.txt
+    The technical evidence note, 22 sections. The full account: the request and
+    its limits, the eight files, why the branch could not be deployed and how
+    the release tree was re-derived here, the copy correction, the verification
+    before release, the six review rounds, the 15 October stop, the build and
+    its one flaky test, the era-2 provenance correction that is still open,
+    16 October loaded-not-deployed, the 17 October trap, the 19 October
+    preflight, both authorisations, the switch, the automated acceptance, the
+    seven manual checks, final acceptance, the accepted state and its three
+    limits, who did what, eighteen deviations, nineteen gaps, AI transparency
+    with ten unanswered reflection prompts, and the source locators.
+
+  SCANCOMPASS_PLANS_PRELAUNCH_PROCESS_JOURNAL_2026-10-19.txt
+    The process-journal summary, in plain language: what was to be created,
+    what was done and decided, what went wrong, how it was resolved, and the
+    result. FACTUAL ONLY; it contains no reflection, feeling or time estimate,
+    and it is written for the owner to adapt in their own words.
+
+  SCANCOMPASS_PLANS_PRELAUNCH_PP_Evidence_Index_2026-10-19.txt
+    This index.
+
+A separate local-only handoff records unresolved owner decisions. It is not
+part of the three-file public evidence package.
+
+SOURCE REFERENCES
+
+  Personal Project evidence repository, at commit
+  5b87b00fd033080d51bf5fd9eff110b9f4043cc5 while this package was written. [S1]
+
+  Technical repository stanciuks/site-security, pull request #54, head
+  013890269a44f7d37037d018839181b6b4f7e1c2, DRAFT and UNMERGED, 16 files
+  changed, 5,400 insertions, 0 deletions, 12 commits, continuous-integration
+  run 38798080074 successful, 33 issue comments, 0 reviews, 0 review
+  comments. [S1]
+
+  Committed documents at that head: the 1,508-line evidence record, the
+  1,354-line release runbook, its 1,691-line test harness, and four page
+  screenshots that are named but NOT copied into this repository. [S2]
+
+  Git identities, re-derived while writing this package: the deployed source
+  54774b5f4d5334f562be9a3e0a24223ffcbe1f2c, the two interface commits
+  7f4cd67b885dccef688c08425ebb77e3c2921818 and
+  d1e2e56190b23ef58cd1a08485b646b3d79bd10d, and the release tree
+  2e611c0c5bb66fcc825890826c43b89f072ddc0f: 818 files, exactly 8 differing
+  paths, schema contract m13-0004, no 0005 migration, no paid-assessment
+  module. [S3]
+
+  Pull-request comments, grouped by provenance class, are listed in full in
+  section 22 of the technical note. The 19 October chain is 6269587672 (window),
+  6270041460 (preflight passed), 6270161907 (AUTH-1), 6270681864 (switch and
+  automated acceptance), 6271040521 (manual checks and freeze), 6271128940
+  (AUTH-2) and 6271301359 (final acceptance). [S1]
+
+RELATED EVIDENCE IN THIS REPOSITORY
+
+  SCANCOMPASS_M13_DECISION_A_PRODUCTION_2026-10-10/
+    The deployment whose source this release was built on top of, and the note
+    establishing payments closed, schema m13-0004 and payment era 1. Still
+    governs; not superseded by this package.
+
+  SCANCOMPASS_M14_PP_Evidence_2026-10-11/
+    The paid-assessment work this page advertises as coming soon. NOT AMENDED
+    BY THIS RELEASE. Its statement that nothing in M14 has reached production
+    remains true, because the re-derived release tree contains no M14 migration
+    and no paid-assessment code.
+
+  Earlier production acceptances in this repository follow the same structure:
+  SCANCOMPASS_R1_PRODUCTION_2026-10-07 and the M13 package of 2026-10-08.
+
+WHAT THIS PACKAGE DOES NOT DO
+
+It does not merge PR #54, change the technical repository, contact production,
+enable payments, apply migration 0005, rewrite any earlier Personal Project
+note, amend the M14 index, copy any screenshot, or claim any present-time
+verification of production. It records one accepted release and the four days
+of review that preceded it.
+
+SANITISATION
+
+This package is written for a public repository. It contains no server account
+name, host name, alias, network address, directory path, run identifier,
+credential, token, secret, environment value, database connection string,
+customer or payment data, and no production terminal output. It publishes no
+container image digest and no archive, library, script or frozen-record hash,
+because in this release those are exactly the values the owner's authorisations
+were bound to. The only long identifiers are Git hashes in the owner's own
+public repository and GitHub pull-request, run and comment numbers.
+
+END OF INDEX
