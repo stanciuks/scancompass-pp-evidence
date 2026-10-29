@@ -1,0 +1,105 @@
+SCANCOMPASS — DEVELOPMENT MILESTONES, 21–28 OCTOBER 2026
+PERSONAL PROJECT TECHNICAL EVIDENCE — CONSOLIDATED PUBLISHED RECORD
+
+Subject dates: 21–28 October 2026
+Prepared: 28 October 2026, after both source merges that day
+Published: 29 October 2026
+Status: PUBLISHED PUBLIC RECORD
+
+PURPOSE AND AI CONTRIBUTIONS
+
+This technical account was compiled by a ChatGPT-based AI assistant from
+the project's private development records. It is not a diary entry written
+on each of the dates below. AI assistants, including Claude Code sessions,
+carried out substantial implementation, testing and advisory-review work at
+the project owner's request. A ChatGPT-based assistant also supported
+project coordination and executed a documented source merge after the owner
+authorized it. The record does not establish who executed every other merge.
+It does not claim that the student personally wrote the code, ran every
+command or conducted each review. It is not a personal reflection, a
+customer-testing report or evidence of a production release.
+
+SOURCE DEVELOPMENT MILESTONES
+
+21 OCTOBER — DOMAIN EMAIL CONFIGURATION
+A correction was merged into the free assessment for the special "Null MX"
+DNS record, which indicates that a domain does not accept incoming email.
+Regression tests were added. This was a source-code correction; a separate
+production deployment is not established by this evidence.
+
+21 OCTOBER — FACTUAL REVIEW EVIDENCE IN CI
+The existing automated testing workflow gained a read-only summary of
+changed files and the presence of supporting technical evidence. The
+summary helps identify changes needing human review; it cannot approve
+code or publish evidence.
+
+21 OCTOBER — PRIVATE REVIEW AND EVIDENCE TOOLS
+Additional read-only checks were merged to report source versions, automated
+test results and review information. A tool can also prepare an unpublished
+factual Personal Project evidence candidate. These tools do not replace an
+independent review, owner decision or publication check.
+
+22 OCTOBER — SAFETY CHECKS FOR POSSIBLE AUTOMATION
+A safety preflight and supporting documentation were merged to identify
+missing requirements before a future automated coding workflow could be
+considered. They did not enable an automated developer; autonomous coding
+remained disabled.
+
+26 OCTOBER — SAFER HANDLING OF COMPLEX WEB PAGES
+A source correction was merged to bound work when parsing unusually complex
+HTML metadata. Regression tests checked that uncertain observations are not
+misreported as successful security results. The limit is deliberately
+cautious: some unusual but harmless legacy pages may now be reported as
+"unknown" rather than passing. Calibrating this trade-off remains separate
+future work. This source change is not proof of a production rollout.
+
+28 OCTOBER — SAFEGUARDS FOR PROJECT INSTRUCTION FILES
+A source safeguard was merged to flag unexpected references to development
+instruction files for review. Several rounds of tests and corrections were
+completed. The final change received an independent advisory review, not a
+formal GitHub approval, before its separately authorized source merge.
+
+28 OCTOBER — PREPARATION FOR SAFER DEVELOPMENT AUTOMATION
+A further source milestone added a validator for a proposed development
+automation configuration and an offline status report. The report explicitly
+states that automatic coding is not permitted. The change passed automated
+tests and received an independent advisory review, not a formal GitHub
+approval, before its separately authorized merge. This did not install or
+activate an automated developer or deploy functionality to customers.
+
+TESTS AND LIMITATIONS
+
+After each of the two 28 October source merges, automated CI successfully
+completed typechecking, linting, tests and the build. Each post-merge run
+recorded:
+- 10,260 tests passed;
+- 0 tests failed;
+- 658 tests skipped and NOT EXECUTED, out of 10,918.
+
+Of these skipped tests, 655 depended on a separate test database and three
+were separately skipped integration tests. Skipped tests cannot be counted
+as passes. These are source-quality checks, not evidence of a live website
+deployment.
+
+STILL NOT DONE AFTER 28 OCTOBER
+
+No automated developer was activated or installed as a scheduled task.
+A future execution-time check must still verify that proposed file changes
+stay within their permitted scope. The milestones here do not certify a
+new customer-facing production release.
+
+EVIDENCE AND ATTRIBUTION
+
+The private technical records preserve the original dated source history,
+test outcomes, corrections, advisory reviews and merge decisions. This new
+account is separate from those historical records. It acknowledges AI
+assistance without inventing personal student experiences, claims of manual
+code authorship or retrospectively dated diary entries.
+
+PUBLICATION STATUS
+
+This consolidated record was published on 29 October 2026, after independent
+factual and confidentiality review and the project owner's separate
+publication authorization. Apart from this publication status and the
+publication date above, its content is unchanged from the reviewed draft
+prepared on 28 October 2026.
