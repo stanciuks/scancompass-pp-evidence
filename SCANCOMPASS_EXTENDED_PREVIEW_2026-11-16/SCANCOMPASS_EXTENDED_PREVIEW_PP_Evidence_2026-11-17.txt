@@ -1,0 +1,65 @@
+SCANCOMPASS — EXTENDED REPORT PREVIEW AND DEVELOPMENT PROGRESS
+PERSONAL PROJECT TECHNICAL EVIDENCE — RETROSPECTIVE PUBLIC SUMMARY
+
+Subject period: 30 October–17 November 2026
+Prepared: 17 November 2026, retrospectively from recorded technical evidence
+
+PURPOSE AND ATTRIBUTION
+
+This account describes technical progress on ScanCompass after the earlier published Personal Project evidence ending in October. Its main outcome was a clearly labelled, public, illustrative preview of a possible future EXTENDED security report. The preview is not a paid scan, does not issue an EXTENDED assessment and does not assert that its example findings were measured from a real domain.
+
+This document was assembled by an AI assistant from project records and owner-provided test results. AI assistants carried out substantial coding, test preparation, review and release-procedure work, and helped prepare and interpret terminal commands. The project owner made the documented release decisions, executed the November 16 supervised production rollout commands and performed or reported the manual browser checks. On November 8, a locally running AI coding assistant also used owner-authorized server access for read-only preflight checks and a source-preservation transfer to the owner's local computer. This evidence does not establish who individually executed every source merge. It is not a diary written on the dates listed, a claim that the student personally programmed every component, a record of independent human user testing or a personal reflection.
+
+30 OCTOBER–2 NOVEMBER — SOURCE DEVELOPMENT AND SAFETY WORK
+
+On October 30, source changes associated with extended email-security checks were merged through PR #53. On November 2, PR #71 added a proposed local changed-file scope gate for safer development automation, and PR #75 added protection against unwanted Git filter execution during that local audit. Their merge records establish source integration, not production deployment or the activation of an autonomous developer. No conclusion is drawn here about who personally performed each merge.
+
+3–8 NOVEMBER — EXTENDED ASSESSMENT ENGINEERING
+
+Several separate development branches explored future authorised EXTENDED assessments, including server-owned authorisation, reservation and consumption of an eligible assessment, isolated worker execution, construction of a real EXTENDED result, and owner access to finished reports. Draft integration work and disposable-database testing established useful technical progress, but unresolved integration, proof-of-execution and security decisions remained. Draft tests and proposed designs must not be presented as a functioning production paid service. The proposed next database migration was not deployed as part of the preview release.
+
+8–12 NOVEMBER — ILLUSTRATIVE USER INTERFACE
+
+On November 8, PR #126, the first clearly labelled EXTENDED preview interface, was merged into source main. The source merge did not deploy it: the production website was on a different verified application baseline. Further work from November 8 through November 12 adapted the preview to the actual existing Plans-page design and strengthened tests around its labels, route availability, browser rendering and security headers. The resulting production candidate came from draft PR #132, which was still unmerged when the preview was accepted on November 16. The distinction is important: the first preview implementation was merged to main, but that particular main source was not deployed; the later reviewed candidate was deployed without merging PR #132.
+
+The public page at https://scancompass.com/extended-preview uses obvious sample/demo labels, an example.invalid domain, examples instead of real security findings, and explicit NOT IMPLEMENTED qualifications. It includes no way to buy an assessment or submit a real EXTENDED scan. The new page is configured not to be indexed. The FREE assessment and the existing /plans page remain separate products and interfaces.
+
+12–15 NOVEMBER — TESTING AND RELEASE PREPARATION
+
+The candidate passed ordinary source checks and CI, including a compiled-rendering check. Ordinary CI skipped real-PostgreSQL guarded tests; these skips were not counted as passes. A separate test run subsequently completed against real PostgreSQL in an isolated GitHub-hosted environment. The November 14 handoff package recorded this workflow as prepared but not yet run; the isolated real-PostgreSQL acceptance run subsequently passed on November 15. That environment was disposable and was not the production database.
+
+The first attempt to build a compatible local application image failed during a dependency installation step under cross-architecture emulation. Following investigation and an environment-level correction, a verified candidate image was produced. Local deployment/rollback rehearsal did not pass on the first attempt: a prerequisite stopped one attempt, and a later attempt failed when the disposable maintenance process could not read a local build-context file during the rehearsal migration step. The team investigated the permission problem, prepared a separate nonproduction readable copy with unchanged source bytes, and subsequently completed the required local rehearsal and rollback checks. The November 14 handoff and early November 15 preflight records described these steps as pending; later November 15 records document the successful local build, real Docker rehearsal and scoped cleanup. These failures were kept in the technical record rather than relabelled as successful tests. The rehearsal was not a production deployment.
+
+The release procedure was checked through simulated failure cases, and an older application image was kept available for rollback. Simulated assertions and AI-reported checks were useful preparation, but were not treated as a substitute for real production gates. The review work was conducted by AI advisory reviewers, not by a formally independent human reviewer: there were no submitted formal GitHub code reviews and no separate reviewer identity meeting the originally requested separation. These limits were documented instead of describing the review as independent human sign-off. A separate staging-browser test called for during preparation was not carried out, and it should not be retrospectively claimed.
+
+16 NOVEMBER — OWNER-ACCEPTED PUBLIC RELEASE
+
+The owner explicitly authorised a restricted, demo-only application release in stages. Pre-change checks had to succeed before the application was switched. Only the application container was replaced; the database and scanner containers were left running on their existing images and configuration. Payment activation, new paid-assessment functionality and the planned next database migration were outside the authorised scope.
+
+Automated post-deployment checks passed on the running candidate. They checked public routes, the illustrative labels and no-index marking, the absence of payment functionality, the continued FREE-scanner path, application health and preservation of the earlier rollback image. The two payment endpoints were probed across seven HTTP methods each, and all fourteen probes answered 404 (unavailable). The database and scanner identities were checked as unchanged by the application-only switch.
+
+The owner then performed or attested nine specified manual acceptance checks and recorded their results. The evidence includes a displayed real FREE assessment of the owner's authorised site (score 89/100, grade B, 96% coverage), its readable HTML and PDF downloads, screenshots of the Plans page, the signed-in account and the existing verified-domain list, plus preview screenshots and the owner's reports about mobile navigation and browser errors. Some checks have stronger direct screenshot/file evidence than others: the console, responsive-layout and final preview-navigation results were mainly recorded through short owner confirmations, not independent browser automation. No physical-phone test or exact narrow viewport width is established by the retained record.
+
+The domain screen's Check DNS action was disabled because there was no pending new challenge; no fresh DNS ownership check was performed. An initial browser session displayed a CSP/eval issue in the browser's Issues panel, while a private session showed no such issue; the underlying cause was not conclusively established. The record does not prove that the preview's Console pane was separately inspected. These qualifications do not change what the owner reported and accepted, but they limit what can be independently claimed from the evidence.
+
+After the automated and recorded manual checks were adjudicated, the owner gave a separate final acceptance authorisation. The reviewed final gate passed before the authorised release window ended. The original application image remained preserved for rollback. The resulting preview was live and accepted on November 16; this is not evidence that real paid EXTENDED assessments or purchases were enabled.
+
+17 NOVEMBER — FIRST POST-RELEASE STABILITY CHECK
+
+The owner executed a read-only follow-up check the next morning. The accepted release marker remained present; the application, database and scanner containers all reported healthy; the running application and the preserved rollback image still matched the accepted versions. The homepage, /plans and /extended-preview each returned HTTP 200. The three payment activation settings remained off, and the latest retention and backup service results reported success. These checks establish a successful point-in-time stability check, not continuous availability, a new full database audit or a new independent usability study.
+
+WHAT THE PROJECT LEARNED TECHNICALLY — NOT A STUDENT REFLECTION
+
+This phase illustrated several engineering requirements: a source merge is not a production deployment; a demo must be visibly distinguished from a real paid security assessment; local environment and file permissions can invalidate an otherwise correct rehearsal; automated green results must not hide skipped tests; browser reports need a clear record of how they were observed; and production changes should preserve a tested rollback path. These are technical conclusions from the development record, not statements of the student's feelings or a substitute for a genuine Personal Project reflection.
+
+CURRENT LIMITATIONS AND NEXT STEPS
+
+As of the November 17 check, the public deliverable is an illustrative EXTENDED report preview alongside the existing FREE scanner and Plans page. Real authorised EXTENDED assessments, customer purchases and payment activation remain separate, unfinished work. The additional preview candidate PR #132 remains draft/unmerged, while the earlier UI-only PR #126 was merged as source but not deployed from main. Future source integration requires a new review and decision; publication of this evidence is also separate from production acceptance.
+
+A future student-written journal entry, any supervisor feedback, the project's AI-use log and evidence register should be completed only from authentic statements and actual files. No customer or teacher feedback has been invented in this summary.
+
+EVIDENCE BASIS AND CONFIDENTIALITY LIMITS
+
+The source basis is the private, dated ScanCompass technical record (including the release gate outputs and November 17 stability check), the GitHub merge history for PRs #53, #71, #75 and #126, and the candidate/review record for PR #132. Several local test and browser facts were supplied by the owner or reported by AI sessions; they are labelled accordingly. This new text was compiled on November 17 and must not be backdated or presented as an original student-authored daily log.
+
+This summary intentionally excludes server addresses and access information, operator identity, file system paths, release run identifiers, container identifiers and digests, secret-bearing artefacts, raw production terminal output, account data and private screenshots. Only the already-public preview URL appears. The summary is intended to supplement, not replace or rewrite, previously published Personal Project evidence.
